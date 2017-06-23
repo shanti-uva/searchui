@@ -3,7 +3,7 @@
 License
 =====
 
-CTScan is released under the MIT License:
+This is released under the MIT License:
 
 Copyright (c) The Rector and Board of Visitors, University of Virginia
 
