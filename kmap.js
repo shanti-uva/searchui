@@ -8,7 +8,9 @@ var solrObj=null;																	// Points at Solr object
 function Solr()																	// CONSTRUCTOR
 {
 	this.filter="";																	// No filter
+	this.user="";																	// No user
 	this.type="Picture";															// Start with pictures
+	this.view="Rows";																// Start with rows
 	this.data=null;																	// Folds Solr search results
 	solrObj=this;																	// Save pointer
 }
@@ -17,7 +19,7 @@ Solr.prototype.ImportSolrDialog=function()										// SOLR IMPORTER DIALOG
 {
 	var callback=null;
 	var _this=this;																	// Save context
-	var collections=["Audio-Video","Picture","Sources","Texts","Visual"];			// Supported collections
+	var collections=["Audio-Video","Picture","Sources","Texts","Visuals"];			// Supported collections
 	$("#dialogDiv").remove();														// Remove any old ones
 	$("body").append("<div class='unselectable' id='dialogDiv'></div>");			// Add to body													
 	str="<p><img src='";															// Image start
@@ -25,14 +27,15 @@ Solr.prototype.ImportSolrDialog=function()										// SOLR IMPORTER DIALOG
 	str+="' style='vertical-align:-10px'/>&nbsp;&nbsp;";								
 	str+="<span style='font-size:18px;text-shadow:1px 1px #ccc;color:#666'><b>Get Item from Mandala</b></span><p>";
 	str+="<p style='text-align:right'>Collection: "+MakeSelect("mdCollect",false,collections,this.type);
-	str+="&nbsp;&nbsp;filter by: <input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;margin-bottom:8px'></p>";
+	str+="&nbsp;&nbsp;filter by: <input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;height:17px;vertical-align:0px'></p>";
 	str+="<div id='mdAssets' style='width:100%px;height:300px;overflow-y:auto;background-color:#f8f8f8;padding:8px;border:1px solid #999;border-radius:6px'>";		// Scrollable container
 	str+="</div>";
-
-	str+="<br><div style='float:right;display:inline-block'><div id='dialogOK' class='ks-bs'>OK</div>&nbsp;&nbsp;";
+	str+="<br>View as: "+MakeSelect("mdView",false,["Grid","Rows"],this.view);
+	str+="&nbsp;&nbspShow only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
+	str+="<div style='float:right;display:inline-block'><div id='dialogOK' class='ks-bs'>OK</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='ks-bs'>Cancel</div></div>";
 	$("#dialogDiv").append(str+"</div>");	
-	$("#dialogDiv").dialog({ width:800 } );	
+	$("#dialogDiv").dialog({ width:900 } );	
 	$(".ui-dialog-titlebar").hide();
 	$(".ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix").css("border","none");
 	$(".ui-dialog").css({"border-radius":"14px", "box-shadow":"4px 4px 8px #ccc"});
@@ -58,28 +61,44 @@ Solr.prototype.ImportSolrDialog=function()										// SOLR IMPORTER DIALOG
  	
 	$("#mdCollect").on("change", function() {										// ON CHANGE COLLECTION
 			_this.type=$(this).val();												// Save for later											
-		 	LoadCollection($(this).val());											// Load it
+		 	LoadCollection(_this.type);												// Load it
 			});
 	$("#mdFilter").on("change", function() {										// ON CHANGE FILTER
 			_this.filter=$(this).val();												// Save for later											
-		 	LoadCollection($(this).val());											// Load it
+		 	LoadCollection(_this.type);												// Load it
+			});
+	$("#mdUser").on("change", function() {											// ON CHANGE USER
+			_this.user=$(this).val();												// Save for later											
+		 	LoadCollection(_this.type);												// Load it
+			});
+  	$("#mdView").on("change", function() {											// ON CHANGE VIEW
+			_this.view=$(this).val();												// Save for later											
+		 	LoadCollection(_this.type);												// Load it
 			});
  
  	function LoadCollection(coll)												// LOAD COLLECTION FROM SOLR
 	{
-		maxDocs=200;
+		var str;
+		var maxDocs=200;
 		LoadingIcon(true,64);														// Show loading icon
-		var search="asset_type%3A"+coll.toLowerCase()+"*";							// Add asset type						
-		if ($("#mdFilter").val())													// If a filter spec'd
-			search+=", caption%3A*"+$("#mdFilter").val().toLowerCase()+"*";			// Add filter to query
-  		var url="https://ss251856-us-east-1-aws.measuredsearch.com/solr/kmassets_dev/select?"+"q="+search + 
+		var search="asset_type%3A%22"+coll.toLowerCase()+"%22";						// Add asset type						
+		if (_this.filter) {															// If a filter spec'd
+			str="%22*"+_this.filter.toLowerCase()+"*%22";							// Search term
+			search+=" AND (title%3A"+str;											// Look at title
+			search+=" OR collection_title%3A"+str;									// Or collection title
+			search+=" OR summary%3A"+str+")";										// Or summary
+			}
+		if (_this.user) 															// If a user spec'd
+			search+=" AND node_user%3A*"+_this.user+"*";							// Look at user
+		var url="https://ss251856-us-east-1-aws.measuredsearch.com/solr/kmassets_dev/select?"+"q="+search + 
    				 "&fl=*&wt=json&json.wrf=?&rows="+maxDocs+"&limit="+maxDocs;
- 	   	$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done(function(data) {
+
+		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done(function(data) {
 			   		_this.FormatSolrItems(data);
 			   		});
 	}
 
- }	// End closure
+ }																					// End closure
 
 Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 {
@@ -94,7 +113,9 @@ Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 			r=data.response.docs[i];												// Point at it
 			o={ title:"No title", desc:""};											// Create obj												
 			o.date=r.timestamp.substr(5,2)+"/"+r.timestamp.substr(8,2)+"/"+r.timestamp.substr(0,4);	// Munge date
-			if (r.caption)															// If a caption defined
+			if (r.title)															// If a title
+				o.title=r.title[0];													// Extract it
+			else if (r.caption)														// If a caption defined but no title
 				o.title=r.caption;													// Use it
 			o.id=r.id;																// Save id
 			o.thumb=r.url_thumb;													// Save thumb
@@ -114,6 +135,8 @@ Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 				else 					o.ajax=o.thumb;								// Else use thumb
 				}
 			o.kmap=r.kmapid;														// Save kmap array
+			o.user=r.node_user;														// Add user
+			o.summart=r.summary;													// Add summary
 			this.data.push(o);														// Add result to array
 			}
 		}
@@ -127,9 +150,17 @@ Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 				else 			   				return 0;
 				});					
 		}
+	if (this.view == "Rows")														// If showing rows
+		this.DrawAsRows();															// Draw row view
+	else																			// Grid view
+		this.DrawAsGrid();															// Draw
+}
+
+Solr.prototype.DrawAsRows=function()											// SHOW RESULTS AS ROWS
+{
+	var _this=this;																	// Save context
 	var trsty=" style='height:20px;cursor:pointer' onMouseOver='this.style.backgroundColor=\"#dee7f1\"' ";
 	trsty+="onMouseOut='this.style.backgroundColor=\"#f8f8f8\"' onclick='solrObj.AddMandalaFile(this.id.substr(6))'";
-
 	var str="<table style='width:100%;text-align:left'>";								// Header row
 	str+="<tr style='font-weight:bold'><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td style=width:100%' id='mdh-title'>Title</td><td>&nbsp;View?</td></tr>";
 	str+="<tr><td colspan='4'><hr></td></tr>";
@@ -156,6 +187,10 @@ Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 		var field=$(this).prop("id").substr(4);										// Isolate field
 		_this.FormatSolrItems(null,field);											// Sort by field
 		});
+}
+
+Solr.prototype.DrawAsGrid=function()												// SHOW RESULTS AS GRID
+{	
 }
 
 Solr.prototype.AddMandalaFile=function(num)										// ADD SOLR ITEM
