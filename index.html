@@ -8,18 +8,23 @@
 	<link rel="stylesheet" href="css/jquery-ui.min.css"></link>
 	<script src="lib/jquery.min.js"></script>
 	<script src="lib/jquery-ui.min.js"></script>
+	<script src="kmap.js"></script>
 	<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
 	<title>KMap Search</title>
 	<style type="text/css">
-		 body { 			font-family: Verdana,Geneva,sans-serif; font-size:13px; box-sizing: border-box;
+		 body { 			font-family: Verdana,Geneva,sans-serif; font-size:11px; box-sizing: border-box;
 							padding: 0px; margin: 0px; 
 							}
-								}
-		.ks-is 	{			border-radius:4px; padding-left:8px; border: 1px solid #999; margin-bottom: 3px;
+		.ks-is {			border-radius:12px;padding-left:8px;padding-right:8px;padding-top:3px;padding-bottom:2px;
+							border:1px solid #ccc;font-size:12px; color:#666;
 							}
-
-		.ks-popup {			display: none; position: absolute; padding: 3px 8px 3px 8px; border-radius: 6px;
+		.ks-bs {			border-radius: 16px; padding-left: 8px; padding-right: 8px; padding-top: 4px; display: inline-block;
+							font-size: 12px; background-color: #999; cursor: pointer; text-align: center; color:#fff; height: 20px;
+							}
+		.ks-popup {			display: none; position: absolute; padding: 3px 8px 3px 8px; border-radius: 6px; display: inline-block;
 							font-size: 11px; border: 1px solid #e74c3c; background-color: #eee;
+							}
+		.ks-dialog {		font-size: 20px; font-weight: bold; color: #000; margin-bottom: 8px; user-select: none;
 							}
 		.ks-dialogTitle {	font-size: 20px; font-weight: bold; color: #000; margin-bottom: 8px; user-select: none;
 							}
@@ -43,7 +48,9 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 $(document).ready(function() {								           	// ON PAGE LOADED
-		});
+	var solr=new Solr()	
+	solr.ImportSolrDialog();	
+});
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,56 +65,7 @@ $(document).ready(function() {								           	// ON PAGE LOADED
 		$("#popup").html(msg);												// Add text										
 		$("#popup").show();													// Show it
 		$("#popup").delay(2000).fadeOut(400);								// Close after 4 seconds
-		}
-
-	
-	function SaveEvent(time, p1, p2, p3, p4, p5)
-	{
-		if (p3 == undefined)	p3="";
-		if (p4 == undefined)	p4="";
-		if (p5 == undefined)	p5="";
-		trace(time+","+p1+","+p2+","+p3+","+p4+","+p5);						// Show data
-		obsEvents.push({time:time, d1:p1, d2:p2, d3:p3, d4:p4, d5:p5 });	// Save in array
 	}
-
-	function ExportToCSV(filename, rows) {
- 	    var processRow = function (row) {
-            var finalVal = '';
-            for (var j = 0; j < row.length; j++) {
-                var innerValue = row[j] === null ? '' : row[j].toString();
-                if (row[j] instanceof Date) {
-                    innerValue = row[j].toLocaleString();
-                };
-                var result = innerValue.replace(/"/g, '""');
-                if (result.search(/("|,|\n)/g) >= 0)
-                    result = '"' + result + '"';
-                if (j > 0)
-                    finalVal += ',';
-                finalVal += result;
-            }
-            return finalVal + '\n';
-        };
-
-        var csvFile = '';
-        for (var i=0; i<rows.length;i++)
-            csvFile+=processRow(rows[i]);
-    
-	    var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
-        if (navigator.msSaveBlob) { // IE 10+
-            navigator.msSaveBlob(blob, filename);
-        } else {
-            var link = document.createElement("a");
-    		    if (link.download !== undefined) { 							// Browsers that support HTML5 download attribute
-					var url = URL.createObjectURL(blob);
-					link.setAttribute("href", url);
-					link.setAttribute("download", filename);
-					link.style.visibility = 'hidden';
-					document.body.appendChild(link);
-					link.click();
-					document.body.removeChild(link);
-					}
-				}
-    }
 
 	function ConfirmBox(content, callback)								// CONFIRMATION BOX
 	{
@@ -156,36 +114,36 @@ $(document).ready(function() {								           	// ON PAGE LOADED
 				});
 		}
 
-	function DialogBox(title, content, callback, callback2) 		// DIALOG BOX
+	function MakeSelect(id, multi, items, sel, extra, values)				// CREATE HTML SELECT
 	{
-		$("#dialogDiv").remove();												
-		$("body").append("<div class='unselectable' id='dialogDiv'></div>");														
-		var str="<p><img src='img/ctlogo32.png' style='vertical-align:-8px'/>&nbsp;&nbsp;";								
-		str+="<span class='ct-dialogTitle'>"+title+"</span><p>";
-		str+="<div style='font-size:12px;margin:14px'>";
-		str+=content;
-		str+="<br><br><div id='dialogOK' class='ct-obsNewPrac'>OK</div>";
-		str+="<div id='dialogCancel' class='ct-obsNewPrac' style='margin-left:8px;background-color:#e74c3c'>Cancel</div></div>";
-		$("#dialogDiv").append(str);	
-		$("#dialogDiv").dialog({ width:$("#obsPanel").width()+16, height:$("#obsPanel").height()+24 });
-		$("#dialogDiv").dialog("option","position",{ my:"left top", at:"left top", of:obsPanel });
+		var	str="<select class='ks-is' id='"+id+"'";							// Header
+		str+="style='width:auto'";
+		if (multi)																// Multi select
+			str+="multiple='multiple' size='"+multi+"'";						// Add flag
+		if (extra)																// If extra param
+			str+=extra;															// Add them
+		str+=">";																// End header
+		for (i=0;i<items.length;++i) {											// For each option
+			str+="<option";														// Add tag
+			if (sel == items[i])												// If selected
+				str+=" selected='selected'"										// Add tag
+			if (values && values[i])											// If has a value
+				str+=" value='"+values[i]+"'";									// Add it
+			str+=">"+items[i]+"</option>";										// End option
+			}	
+		return str+"</select>";													// End select				
+	}
 
-		$("#dialogOK").on("click", function() {							// ON OK BUT
-				if (callback)	callback();								// If callback defined
-				$("#dialogDiv").animate({ opacity:0},200, function() {		
-					$("#dialogDiv").remove();  
-					});
-				});
-
-		$("#dialogCancel").on("click", function() {						// ON CANCEL BUT
-				$("#dialogBoxDiv").remove();							// Remove 
-				if (callback2)	callback2();							// If callback defined, run it
-				$("#dialogDiv").animate({ opacity:0},200, function() {		
-					$("#dialogDiv").remove();  
-					});
-				Sound("delete");										// Delete sound
-			});
-
+	function LoadingIcon(mode, size, container)								// SHOW/HIDE LOADING ICON		
+	{
+		container=container ? "#"+containern: "body";							// If no container spec'd, use body
+		if (!mode) {															// If hiding
+			$("#sf-loadingIcon").remove();										// Remove it
+			return;																// Quit
+			}
+		var str="<img src='img/loading.gif' width='"+size+"' ";					// Img
+		str+="id='sf-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
+		$(container).append(str);												// Add icon to container
 	}
 
 	function GetTextBox(title, content, def, callback)					// GET TEXT LINE BOX
@@ -213,7 +171,6 @@ $(document).ready(function() {								           	// ON PAGE LOADED
 				$("#alertBoxDiv").remove();								// Remove 
 				Sound("delete");										// Delete sound
 			});
-
 		}
 
 	function trace(msg, p1, p2, p3, p4)										// CONSOLE 
