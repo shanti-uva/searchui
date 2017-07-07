@@ -9,6 +9,7 @@
 	<script src="lib/jquery.min.js"></script>
 	<script src="lib/jquery-ui.min.js"></script>
 	<script src="kmap.js"></script>
+	<script src="zoomer.js"></script>
 	<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
 	<title>KMap Search</title>
 	<style type="text/css">
@@ -26,7 +27,19 @@
 							}
 		.ks-dialog {		font-size: 20px; font-weight: bold; color: #000; margin-bottom: 8px; user-select: none;
 							}
-		.ks-dialogTitle {	font-size: 20px; font-weight: bold; color: #000; margin-bottom: 8px; user-select: none;
+		.ks-dialogLabel {	font-size: 18px; text-shadow: 1px 1px #ccc; color:#666; font-weight: bold;
+							}
+		.ks-dialogTitle {	font-weight: bold; color: #000; padding-left: 8px; padding-right: 8px;
+							}
+		.ks-dialogDoneBut {	cursor: pointer; float: right;
+							} 
+		.ks-dialogResults { width: 100%px; height: 350px; overflow-y: auto; border-radius: 6px;
+							background-color :#f8f8f8; padding: 8px; border: 1px solid #999;
+							}
+		.ks-prevDiv {		border-radius:6px;  background-color:#eee; border: 1px solid #999; box-shadow: 4px 4px 8px #ccc;
+							position: absolute; padding: 0px; padding-top: 0px; overflow-y: auto; z-index: 10000;
+							}
+		.ks-prevId {		font-size: 14px; color: #666; font-weight: bold; padding-left: 8px; padding-right: 8px;
 							}
 		.unselectable { 	-moz-user-select: none;     -khtml-user-select: none;
 		   			 		-webkit-user-select: none;  -ms-user-select: none;   user-select: none;
@@ -145,33 +158,6 @@ $(document).ready(function() {								           	// ON PAGE LOADED
 		str+="id='sf-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
 		$(container).append(str);												// Add icon to container
 	}
-
-	function GetTextBox(title, content, def, callback)					// GET TEXT LINE BOX
-	{
-		$("#alertBoxDiv").remove();											// Remove any old ones
-		$("body").append("<div class='qm-unselectable' id='alertBoxDiv'></div>");														
-		var str="<p><img src='img/ctlogo32.png' style='vertical-align:-8px'/>&nbsp;&nbsp;";								
-		str+="<span class='ct-dialogTitle'>"+title+"</span><p>";
-		str+="<div style='font-size:12px;margin:14px'>"+content;
-		str+="<p><input class='ct-is' type='text' style='width:425px' id='gtBoxTt' value='"+def+"'></p>";
-		str+="<div id='dialogOK' class='ct-obsNewPrac'>OK</div>";
-		str+="<div id='dialogCancel' class='ct-obsNewPrac' style='margin-left:8px;background-color:#e74c3c'>Cancel</div></div>";
-		
-		$("#alertBoxDiv").append(str);	
-		$("#alertBoxDiv").dialog({ width:500 });	
-		$("#alertBoxDiv").dialog("option","position",{ my:"center", at:"center", of:obsPanel });
-		$("#alertBoxDiv").css({ border:"1px solid #009900","border-radius":"6px"});
-
-		$("#dialogOK").on("click", function() {							// ON OK BUT
-					callback($("#gtBoxTt").val());
-					$("#alertBoxDiv").remove();  
-				});
-
-		$("#dialogCancel").on("click", function() {						// ON CANCEL BUT
-				$("#alertBoxDiv").remove();								// Remove 
-				Sound("delete");										// Delete sound
-			});
-		}
 
 	function trace(msg, p1, p2, p3, p4)										// CONSOLE 
 	{

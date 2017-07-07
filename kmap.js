@@ -13,6 +13,7 @@ function Solr()																	// CONSTRUCTOR
 	this.view="Rows";																// Start with rows
 	this.data=null;																	// Folds Solr search results
 	solrObj=this;																	// Save pointer
+	this.previewX=0;	this.previewY=0;											// Postion of preview pane
 }
 
 Solr.prototype.ImportSolrDialog=function()										// SOLR IMPORTER DIALOG
@@ -22,14 +23,11 @@ Solr.prototype.ImportSolrDialog=function()										// SOLR IMPORTER DIALOG
 	var collections=["Audio-Video","Picture","Sources","Texts","Visuals"];			// Supported collections
 	$("#dialogDiv").remove();														// Remove any old ones
 	$("body").append("<div class='unselectable' id='dialogDiv'></div>");			// Add to body													
-	str="<p><img src='";															// Image start
-	str+="img/shantilogo32.png";													// Logo
-	str+="' style='vertical-align:-10px'/>&nbsp;&nbsp;";								
-	str+="<span style='font-size:18px;text-shadow:1px 1px #ccc;color:#666'><b>Get Item from Mandala</b></span><p>";
+	var str="<p><img src='img/shantilogo32.png' style='vertical-align:-10px'>&nbsp;&nbsp;"; // Logo
+	str+="<span class='ks-dialogLabel'>Get Item from Mandala</span><p>";			// Dialog label
 	str+="<p style='text-align:right'>Collection: "+MakeSelect("mdCollect",false,collections,this.type);
 	str+="&nbsp;&nbsp;filter by: <input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;height:17px;vertical-align:0px'></p>";
-	str+="<div id='mdAssets' style='width:100%px;height:300px;overflow-y:auto;background-color:#f8f8f8;padding:8px;border:1px solid #999;border-radius:6px'>";		// Scrollable container
-	str+="</div>";
+	str+="<div id='mdAssets' class='ks-dialogResults'></div>";						// Scrollable container
 	str+="<br>View as: "+MakeSelect("mdView",false,["Grid","Rows"],this.view);
 	str+="&nbsp;&nbspShow only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
 	str+="<div style='float:right;display:inline-block'><div id='dialogOK' class='ks-bs'>OK</div>&nbsp;&nbsp;";
@@ -58,8 +56,7 @@ Solr.prototype.ImportSolrDialog=function()										// SOLR IMPORTER DIALOG
 
 	LoadCollection($("#mdCollect").val());											// Load 1st collection
  	
- 	
-	$("#mdCollect").on("change", function() {										// ON CHANGE COLLECTION
+ 	$("#mdCollect").on("change", function() {										// ON CHANGE COLLECTION
 			_this.type=$(this).val();												// Save for later											
 		 	LoadCollection(_this.type);												// Load it
 			});
@@ -136,7 +133,7 @@ Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 				}
 			o.kmap=r.kmapid;														// Save kmap array
 			o.user=r.node_user;														// Add user
-			o.summart=r.summary;													// Add summary
+			o.summary=r.summary;													// Add summary
 			this.data.push(o);														// Add result to array
 			}
 		}
@@ -162,20 +159,16 @@ Solr.prototype.DrawAsRows=function()											// SHOW RESULTS AS ROWS
 	var trsty=" style='height:20px;cursor:pointer' onMouseOver='this.style.backgroundColor=\"#dee7f1\"' ";
 	trsty+="onMouseOut='this.style.backgroundColor=\"#f8f8f8\"' onclick='solrObj.AddMandalaFile(this.id.substr(6))'";
 	var str="<table style='width:100%;text-align:left'>";								// Header row
-	str+="<tr style='font-weight:bold'><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td style=width:100%' id='mdh-title'>Title</td><td>&nbsp;View?</td></tr>";
+	str+="<tr style='font-weight:bold'><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td style=width:100%' id='mdh-title'>Title</td><td>&nbsp;User</td></tr>";
 	str+="<tr><td colspan='4'><hr></td></tr>";
 	
 	for (i=0;i<this.data.length;++i) {												// For each doc returned
 		o=this.data[i];																// Point at doc
 		str+="<tr id='mdres-"+i+"'"+trsty+"><td>"+o.date;							// Add start and date
 		str+="</td><td>&nbsp;"+o.id+"&nbsp;"										// Add id
-		str+="</td><td>"+ShortenString(o.title,60)+"<td>";							// Add title
-		if (o.html) 																// If a vlew 																																			
-			str+="&nbsp;<a target='_blank' href='"+o.html+"'>Page</a>";				// Add anchor
-		if (o.ajax) {																// If a ajax
-			str+="&nbsp;&nbsp;"														// Add divider														 																																			
-			str+="<a target='_blank' href='"+o.ajax+"'>Item</a>";					// Add anchor
-			}
+		str+="</td><td>"+ShortenString(o.title,80)+"<td>";							// Add title
+		if (o.user)																	// If a user spec'd
+			str+=ShortenString(o.user,60);											// Add user		
 		str+="</td></tr>";															// Close line	
 		}
 	str+="</table>";																// Close table
@@ -193,7 +186,58 @@ Solr.prototype.DrawAsGrid=function()												// SHOW RESULTS AS GRID
 {	
 }
 
+Solr.prototype.Preview=function(num)												// PREVIEW RESULT
+{
+	var _this=this;																		// Save context
+	var o=this.data[num];																// Point at item
+	$("#previewDiv").remove();															// Remove any old ones
+	var h=345;																			// Get dialog height												
+	var w=$("#mdAssets").width()/2;														// Get dialog width												
+	var maxHgt=window.innerHeight-200;													// Max height
+	var maxWid=window.innerWidth-200;													// Max width
+	var x=this.previewX, y=this.previewY;												// Get saved position
+	if ((x == 0) && (y == 0)) {															// Position first time
+		x=$("#mdAssets").offset().left+$("#mdAssets").width()-w/2;						// Left
+		y=$("#mdAssets").offset().top+4;												// Top
+		}	
+	var str="<div class='unselectable ks-prevDiv' id='previewDiv' style='";				// Div head
+	str+="height:"+h+"px;width:"+w+"px;";												// Size
+	str+="left:"+x+"px;top:"+y+"px'>";													// Position
+	str+="<p class='ks-prevId'><img src='img/shantilogo32.png' style='vertical-align:-6px;width:24px'>&nbsp;&nbsp;"; // Logo
+	str+="Mandala item "+o.id;									// Show id
+	str+="<img src='img/closedot.gif' id='lbxBoxExit' class='ks-dialogDoneBut'><br></p>"; // Done button
+	if (o.title)																		// If a title
+		str+="<p class='ks-dialogTitle'>"+o.title+"</p>";								// Show title 
+	if (o.ajax && o.ajax.match(/\.png|.gif|\.jpg|.jpeg/i)) 								// An image
+		str+="<div style='width:"+w+"px;overflow-y:auto'><img style='width:100%' src='"+o.ajax+"'></div>";
+	else
+		str+="<iframe frameborder='0' allowfullscreen height='"+h+"' width='100%' style='0,border:1px solid #666;width:100%' src='"+o.ajax+"'/>";
+	str+="<div style='padding:8px'>";
+	if (o.summary)
+		str+="<p class='ks-presummary>"+o.summary+"</p>";
+	if (o.user)	str+="<br><b>User: </b>"+o.user;										// Add user
+	if (o.date)	str+="<br><b>Date: </b>"+o.date;										// Add date
+	if (o.html)	str+="<br><a target='_blank' href='"+o.html+"'><b>View webpage</b></a>"	// Html
+	$("body").append(str+"</div></div>");												// Add content
+
+
+	new Zoomer(url,2,4);                                                     										 // Alloc app
+ 
+
+	$("#previewDiv").draggable( { stop:function(ev,ui) {								// Make preciew pane draggable
+			_this.previewX=ui.offset.left;												// Save preview pane X on drag
+			_this.previewY=ui.offset.top;												// Save Y
+			}});
+															
+	$("#lbxBoxExit").on("click",function() {											// CLICK ON DONE BUT
+			Sound("click");																// Click
+			$("#previewDiv").remove();													// Remove it
+			});
+}
+
+
 Solr.prototype.AddMandalaFile=function(num)										// ADD SOLR ITEM
 {
+	this.Preview(num)
 	trace(this.data[num])
 }
