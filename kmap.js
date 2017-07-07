@@ -195,7 +195,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 	$("#zoomerDiv").remove();															// Remove any old ones
 	var h=345;																			// Get dialog height												
 	var w=$("#mdAssets").width()/2;														// Get dialog width												
-	var maxHgt=window.innerHeight-200;													// Max height
+	var maxHgt=window.innerHeight-100;													// Max height
 	var maxWid=window.innerWidth-200;													// Max width
 	var x=this.previewX, y=this.previewY;												// Get saved position
 	if ((x == 0) && (y == 0)) {															// Position first time
@@ -215,12 +215,12 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 	else
 		str+="<iframe frameborder='0' allowfullscreen height='"+h+"' width='100%' style='0,border:1px solid #666;width:100%' src='"+o.ajax+"'/>";
 	str+="<div style='padding:8px'>";
+	if (o.type == "picture") str+="<br><div class='ks-bs' id='zoomImg'>Zoomable image</div><br>"
 	if (o.summary)
 		str+="<p class='ks-presummary>"+o.summary+"</p>";
 	if (o.user)	str+="<br><b>User: </b>"+o.user;										// Add user
 	if (o.date)	str+="<br><b>Date: </b>"+o.date;										// Add date
 	if (o.html)	str+="<br><a target='_blank' href='"+o.html+"'><b>View webpage</b></a>"	// Html
-	if (o.type == "picture") str+="<br><span id='zoomImg'><b>Zoomable image</b></span>"
 
 	$("body").append(str+"</div></div>");												// Add content
 
@@ -238,22 +238,28 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 		var rh=$("#myImg").prop("naturalHeight");										// Real height
 		var rw=$("#myImg").prop("naturalWidth");										// Real width
 		var asp=rh/rw;																	// Aspect
-		var w=Math.min(Math.max(rw,maxWid));											// Adjust width
-		if (w*asp > maxHgt) {
-			if (w/2*asp < maxHgt)
-				w/=2;
-			else (w/3*asp < maxHgt)
-				w/=3;
+		var w=Math.max(Math.min(rw,maxWid),maxWid);										// Adjust width
+		if (w*asp > maxHgt) {															// If too tall
+			if (w*.75*asp < maxHgt)			w*=.75;										// Adjust
+			else if (w*.5*asp < maxHgt)		w*=.5;										// In
+			else if (w*.33*asp < maxHgt)	w*=.33;										// Steps						
+			else 							w*=.25;
 			}
-		$("#previewDiv").html("")
-		$("#previewDiv").width(w);
+		$("#previewDiv").width(w);														// Set width
+		var str="<p class='ks-prevId'><img src='img/shantilogo32.png' style='vertical-align:-6px;width:24px'>&nbsp;&nbsp;"; // Logo
+		str+="Pan and Zoom on Mandala item "+o.id;										// Show id
+		str+="<img src='img/closedot.gif' id='lbxBoxExit' class='ks-dialogDoneBut'><br></p>"; // Done button
+		$("#previewDiv").html(str);
 
-
-$("#previewDiv").css({left:0,top:0});
-
-		new Zoomer(o.ajax,2,4);                                                     	// Alloc app
-
-			});
+		$("#lbxBoxExit").on("click",function() {										// CLICK ON DONE BUT
+				Sound("click");															// Click
+				$("#previewDiv").remove();												// Remove it
+				});
+		
+		var x=(window.innerWidth-$("#previewDiv").width())/2;							// Center x
+		$("#previewDiv").css({left:x+"px",top:"25px"});									// Center y
+		new Zoomer(o.ajax,2,4);                                                     	// Alloc zoomer
+		});
 }
 
 Solr.prototype.AddMandalaFile=function(num)										// ADD SOLR ITEM
