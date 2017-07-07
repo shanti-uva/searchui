@@ -134,6 +134,7 @@ Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 			o.kmap=r.kmapid;														// Save kmap array
 			o.user=r.node_user;														// Add user
 			o.summary=r.summary;													// Add summary
+			o.type=r.asset_type;													// Add type
 			this.data.push(o);														// Add result to array
 			}
 		}
@@ -191,6 +192,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 	var _this=this;																		// Save context
 	var o=this.data[num];																// Point at item
 	$("#previewDiv").remove();															// Remove any old ones
+	$("#zoomerDiv").remove();															// Remove any old ones
 	var h=345;																			// Get dialog height												
 	var w=$("#mdAssets").width()/2;														// Get dialog width												
 	var maxHgt=window.innerHeight-200;													// Max height
@@ -209,7 +211,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 	if (o.title)																		// If a title
 		str+="<p class='ks-dialogTitle'>"+o.title+"</p>";								// Show title 
 	if (o.ajax && o.ajax.match(/\.png|.gif|\.jpg|.jpeg/i)) 								// An image
-		str+="<div style='width:"+w+"px;overflow-y:auto'><img style='width:100%' src='"+o.ajax+"'></div>";
+		str+="<div id='previewImg' style='width:"+w+"px;overflow-y:auto'><img id='myImg' style='width:100%' src='"+o.ajax+"'></div>";
 	else
 		str+="<iframe frameborder='0' allowfullscreen height='"+h+"' width='100%' style='0,border:1px solid #666;width:100%' src='"+o.ajax+"'/>";
 	str+="<div style='padding:8px'>";
@@ -218,11 +220,9 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 	if (o.user)	str+="<br><b>User: </b>"+o.user;										// Add user
 	if (o.date)	str+="<br><b>Date: </b>"+o.date;										// Add date
 	if (o.html)	str+="<br><a target='_blank' href='"+o.html+"'><b>View webpage</b></a>"	// Html
+	if (o.type == "picture") str+="<br><span id='zoomImg'><b>Zoomable image</b></span>"
+
 	$("body").append(str+"</div></div>");												// Add content
-
-
-	new Zoomer(url,2,4);                                                     										 // Alloc app
- 
 
 	$("#previewDiv").draggable( { stop:function(ev,ui) {								// Make preciew pane draggable
 			_this.previewX=ui.offset.left;												// Save preview pane X on drag
@@ -233,11 +233,38 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 			Sound("click");																// Click
 			$("#previewDiv").remove();													// Remove it
 			});
-}
+	
+	$("#zoomImg").on("click",function() {												// ZOOM IMAGE
+		var rh=$("#myImg").prop("naturalHeight");										// Real height
+		var rw=$("#myImg").prop("naturalWidth");										// Real width
+		var asp=rh/rw;																	// Aspect
+		var w=Math.min(Math.max(rw,maxWid));											// Adjust width
+		if (w*asp > maxHgt) {
+			if (w/2*asp < maxHgt)
+				w/=2;
+			else (w/3*asp < maxHgt)
+				w/=3;
+			}
+		$("#previewDiv").html("")
+		$("#previewDiv").width(w);
 
+
+$("#previewDiv").css({left:0,top:0});
+
+		new Zoomer(o.ajax,2,4);                                                     	// Alloc app
+
+			});
+}
 
 Solr.prototype.AddMandalaFile=function(num)										// ADD SOLR ITEM
 {
+	this.curItem=num;																	// Current item
 	this.Preview(num)
 	trace(this.data[num])
+}
+
+
+function getSize()
+{
+	trace(this)
 }
