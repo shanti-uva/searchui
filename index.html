@@ -42,6 +42,9 @@
 							}
 		.ks-prevId {		font-size: 14px; color: #666; font-weight: bold; padding-left: 8px; padding-right: 8px;
 							}
+		.ks-gridItem {		color: #666; padding: 8px;  border: 1px solid #999; margin-right: 8px; margin-bottom: 8px; display: inline-block;
+							width: 180px; height: 150px; cursor: pointer;
+							}
 		.unselectable { 	-moz-user-select: none;     -khtml-user-select: none;
 		   			 		-webkit-user-select: none;  -ms-user-select: none;   user-select: none;
 		   				}
@@ -64,7 +67,7 @@
 $(document).ready(function() {								           	// ON PAGE LOADED
 
 	var solr=new Solr();													// Alloc Solr object
-	solr.ImportSolrDialog(done);											// Run dialog
+	solr.ImportSolrDialog(300,done);										// Run dialog
 
 	function done(obj) {
 		Sound("ding");														// Ding sound

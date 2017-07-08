@@ -7,19 +7,22 @@ var solrObj=null;																	// Points at Solr object
 
 function Solr()																	// CONSTRUCTOR
 {
+	solrObj=this;																	// Save pointer to obj
+	this.rawData=null;																// Holds raw Solr search results
+	this.data=null;																	// Folds formatted search results
+	this.collection=[];																// Holds collection of items
 	this.filter="";																	// No filter
 	this.user="";																	// No user
 	this.type="Picture";															// Start with pictures
 	this.view="Rows";																// Start with rows
-	this.data=null;																	// Folds Solr search results
-	solrObj=this;																	// Save pointer
-	this.previewX=0;	this.previewY=0;											// Postion of preview pane
-	this.curItem=-1;																// Hold currently selected item
+	this.previewX=0;	this.previewY=0;											// Position of preview pane
+	this.curItem=-1;																// Currently selected item
 }
 
-Solr.prototype.ImportSolrDialog=function(callback)								// SOLR IMPORTER DIALOG
+Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTER DIALOG
 {
 	var _this=this;																	// Save context
+	this.maxDocs=maxDocs;															// Maximum docs to load
 	var collections=["Audio-Video","Picture","Sources","Texts","Visuals"];			// Supported collections
 	$("#dialogDiv").remove();														// Remove any old ones
 	$("body").append("<div class='unselectable' id='dialogDiv'></div>");			// Add to body													
@@ -42,7 +45,7 @@ Solr.prototype.ImportSolrDialog=function(callback)								// SOLR IMPORTER DIALO
 	$("#dialogOK").on("click", function() {											// ON OK BUT
 				$("#dialogDiv").animate({ opacity:0},200, function() {				// Fade out
 					$("#previewDiv").remove();										// Remove preview
-					if (callback)	callback(_this.data[_this.curItem]);			// If callback defined
+					if (callback)	callback(_this.rawData.response.docs[_this.curItem]); // If callback defined, run it and return raw Solr data
 					});
 				});
 
@@ -61,23 +64,24 @@ Solr.prototype.ImportSolrDialog=function(callback)								// SOLR IMPORTER DIALO
 			_this.type=$(this).val();												// Save for later											
 		 	LoadCollection(_this.type);												// Load it
 			});
+	
 	$("#mdFilter").on("change", function() {										// ON CHANGE FILTER
 			_this.filter=$(this).val();												// Save for later											
 		 	LoadCollection(_this.type);												// Load it
 			});
+
 	$("#mdUser").on("change", function() {											// ON CHANGE USER
 			_this.user=$(this).val();												// Save for later											
 		 	LoadCollection(_this.type);												// Load it
 			});
+  
   	$("#mdView").on("change", function() {											// ON CHANGE VIEW
 			_this.view=$(this).val();												// Save for later											
 		 	LoadCollection(_this.type);												// Load it
 			});
  
- 	function LoadCollection(coll)												// LOAD COLLECTION FROM SOLR
-	{
+ 	function LoadCollection(coll) {												// LOAD COLLECTION FROM SOLR
 		var str;
-		var maxDocs=200;
 		LoadingIcon(true,64);														// Show loading icon
 		var search="asset_type%3A%22"+coll.toLowerCase()+"%22";						// Add asset type						
 		if (_this.filter) {															// If a filter spec'd
@@ -89,12 +93,12 @@ Solr.prototype.ImportSolrDialog=function(callback)								// SOLR IMPORTER DIALO
 		if (_this.user) 															// If a user spec'd
 			search+=" AND node_user%3A*"+_this.user+"*";							// Look at user
 		var url="https://ss251856-us-east-1-aws.measuredsearch.com/solr/kmassets_dev/select?"+"q="+search + 
-   				 "&fl=*&wt=json&json.wrf=?&rows="+maxDocs+"&limit="+maxDocs;
+   				 "&fl=*&wt=json&json.wrf=?&rows="+_this.maxDocs+"&limit="+_this.maxDocs;
 
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done(function(data) {
 			   		_this.FormatSolrItems(data);
 			   		});
-	}
+		}
 
  }																					// End closure
 
@@ -102,9 +106,9 @@ Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 {
 	var i,r,o;
 	var _this=this;																	// Save context
-	if (data) trace(data)
+trace(data)
 	LoadingIcon(false);																// Hide loading icon
-
+	this.rawData=data;																// Save raw data
 	if (data) {																		// If not just sorting
 		this.data=[];																// New results store 
 		for (i=0;i<data.response.docs.length;++i) {									// For each doc returned
@@ -157,6 +161,7 @@ Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 
 Solr.prototype.DrawAsRows=function()											// SHOW RESULTS AS ROWS
 {
+	var i;
 	var _this=this;																	// Save context
 	var trsty=" style='height:20px;cursor:pointer' onMouseOver='this.style.backgroundColor=\"#dee7f1\"' ";
 	trsty+="onMouseOut='this.style.backgroundColor=\"#f8f8f8\"' onclick='solrObj.Preview(this.id.substr(6))'";
@@ -186,6 +191,24 @@ Solr.prototype.DrawAsRows=function()											// SHOW RESULTS AS ROWS
 
 Solr.prototype.DrawAsGrid=function()												// SHOW RESULTS AS GRID
 {	
+	var i,str="";
+	var _this=this;																	// Save context
+	for (i=0;i<this.data.length;++i) {												// For each doc returned
+		o=this.data[i];																// Point at doc
+		str+="<div class='ks-gridItem' id='mdres-"+i+"'>";							// Div start
+		if (o.thumb)																// If a thumbnail defined
+			str+="<img src='"+o.thumb+"' width='100%' height='100'><br>";			// Add it
+		str+=ShortenString(o.title,70);												// Add title
+		str+="&nbsp;("+o.id+")&nbsp;"												// Add id
+		str+="</div>";																// Close div	
+		}
+	$("#mdAssets").html(str);														// Add results to panel
+	$('[id^="mdres-"]').off();														// Remove old handlers
+	$('[id^="mdres-"]').on("click",function(e) {									// ON CLICK ON ITEM
+		var id=$(this).prop("id").substr(6);										// Isolate id
+		_this.Preview(id);															// Preview
+		});
+
 }
 
 Solr.prototype.Preview=function(num)												// PREVIEW RESULT
@@ -267,3 +290,16 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 		new Zoomer(o.ajax,2,4);                                                     	// Alloc zoomer
 		});
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// COLLECTIONS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Solr.prototype.AddToCollection=function(item)										// ADD ITEM TO COLLECTION
+{
+}
+
+Solr.prototype.RemoveFromCollection=function(num)									// REMOVE ITEM TO COLLECTION
+{
+}
+
