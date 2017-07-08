@@ -14,11 +14,11 @@ function Solr()																	// CONSTRUCTOR
 	this.data=null;																	// Folds Solr search results
 	solrObj=this;																	// Save pointer
 	this.previewX=0;	this.previewY=0;											// Postion of preview pane
+	this.curItem=-1;																// Hold currently selected item
 }
 
-Solr.prototype.ImportSolrDialog=function()										// SOLR IMPORTER DIALOG
+Solr.prototype.ImportSolrDialog=function(callback)								// SOLR IMPORTER DIALOG
 {
-	var callback=null;
 	var _this=this;																	// Save context
 	var collections=["Audio-Video","Picture","Sources","Texts","Visuals"];			// Supported collections
 	$("#dialogDiv").remove();														// Remove any old ones
@@ -30,7 +30,7 @@ Solr.prototype.ImportSolrDialog=function()										// SOLR IMPORTER DIALOG
 	str+="<div id='mdAssets' class='ks-dialogResults'></div>";						// Scrollable container
 	str+="<br>View as: "+MakeSelect("mdView",false,["Grid","Rows"],this.view);
 	str+="&nbsp;&nbspShow only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
-	str+="<div style='float:right;display:inline-block'><div id='dialogOK' class='ks-bs'>OK</div>&nbsp;&nbsp;";
+	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='ks-bs'>Save item</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='ks-bs'>Cancel</div></div>";
 	$("#dialogDiv").append(str+"</div>");	
 	$("#dialogDiv").dialog({ width:900 } );	
@@ -40,18 +40,19 @@ Solr.prototype.ImportSolrDialog=function()										// SOLR IMPORTER DIALOG
 	$(".ui-button").css({"border-radius":"30px","outline":"none"});
 
 	$("#dialogOK").on("click", function() {											// ON OK BUT
-				if (callback)	callback();											// If callback defined
-				$("#dialogDiv").animate({ opacity:0},200, function() {		
-					$("#dialogDiv").remove();  
+				$("#dialogDiv").animate({ opacity:0},200, function() {				// Fade out
+					$("#previewDiv").remove();										// Remove preview
+					if (callback)	callback(_this.data[_this.curItem]);			// If callback defined
 					});
 				});
 
 	$("#dialogCancel").on("click", function() {										// ON CANCEL BUT
 				$("#dialogBoxDiv").remove();										// Remove 
-				$("#dialogDiv").animate({ opacity:0},200, function() {		
-					$("#dialogDiv").remove();  
+				$("#dialogDiv").animate({ opacity:0},200, function() {				// Fade out		
+					$("#dialogDiv").remove();  										// Remove dialog
+					$("#previewDiv").remove();										// Remove preview
 					});
-				Sound("delete");										// Delete sound
+				Sound("delete");													// Delete sound
 			});
 
 	LoadCollection($("#mdCollect").val());											// Load 1st collection
@@ -158,7 +159,7 @@ Solr.prototype.DrawAsRows=function()											// SHOW RESULTS AS ROWS
 {
 	var _this=this;																	// Save context
 	var trsty=" style='height:20px;cursor:pointer' onMouseOver='this.style.backgroundColor=\"#dee7f1\"' ";
-	trsty+="onMouseOut='this.style.backgroundColor=\"#f8f8f8\"' onclick='solrObj.AddMandalaFile(this.id.substr(6))'";
+	trsty+="onMouseOut='this.style.backgroundColor=\"#f8f8f8\"' onclick='solrObj.Preview(this.id.substr(6))'";
 	var str="<table style='width:100%;text-align:left'>";								// Header row
 	str+="<tr style='font-weight:bold'><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td style=width:100%' id='mdh-title'>Title</td><td>&nbsp;User</td></tr>";
 	str+="<tr><td colspan='4'><hr></td></tr>";
@@ -191,8 +192,11 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 {
 	var _this=this;																		// Save context
 	var o=this.data[num];																// Point at item
+	this.curItem=num;																	// Current item
 	$("#previewDiv").remove();															// Remove any old ones
 	$("#zoomerDiv").remove();															// Remove any old ones
+	$("#dialogOK").css("display","inline-block");										// Show add button
+	
 	var h=345;																			// Get dialog height												
 	var w=$("#mdAssets").width()/2;														// Get dialog width												
 	var maxHgt=window.innerHeight-100;													// Max height
@@ -232,6 +236,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 	$("#lbxBoxExit").on("click",function() {											// CLICK ON DONE BUT
 			Sound("click");																// Click
 			$("#previewDiv").remove();													// Remove it
+			$("#dialogOK").css("display","none");										// Hide add button
 			});
 	
 	$("#zoomImg").on("click",function() {												// ZOOM IMAGE
@@ -253,6 +258,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 
 		$("#lbxBoxExit").on("click",function() {										// CLICK ON DONE BUT
 				Sound("click");															// Click
+				$("#dialogOK").css("display","none");									// Hide add button
 				$("#previewDiv").remove();												// Remove it
 				});
 		
@@ -260,17 +266,4 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 		$("#previewDiv").css({left:x+"px",top:"25px"});									// Center y
 		new Zoomer(o.ajax,2,4);                                                     	// Alloc zoomer
 		});
-}
-
-Solr.prototype.AddMandalaFile=function(num)										// ADD SOLR ITEM
-{
-	this.curItem=num;																	// Current item
-	this.Preview(num)
-	trace(this.data[num])
-}
-
-
-function getSize()
-{
-	trace(this)
 }
