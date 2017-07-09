@@ -281,7 +281,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 		var rw=$("#myImg").prop("naturalWidth");										// Real width
 		var asp=rh/rw;																	// Aspect
 		var w=Math.max(Math.min(rw,maxWid),maxWid);										// Adjust width
-		this.previewMode="Zoom";														// Zoom mode
+		_this.previewMode="Zoom";														// Zoom mode
 
 		if (w*asp > maxHgt) {															// If too tall
 			if (w*.75*asp < maxHgt)			w*=.75;										// Adjust
