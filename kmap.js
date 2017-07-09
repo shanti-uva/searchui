@@ -1,4 +1,3 @@
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SOLR
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14,7 +13,8 @@ function Solr()																	// CONSTRUCTOR
 	this.filter="";																	// No filter
 	this.user="";																	// No user
 	this.type="Picture";															// Start with pictures
-	this.view="Rows";																// Start with rows
+	this.view="List";																// Start with List
+	this.previewMode="";															// Mode of preview ('Zoom', 'Preview', '')
 	this.previewX=0;	this.previewY=0;											// Position of preview pane
 	this.curItem=-1;																// Currently selected item
 }
@@ -31,9 +31,9 @@ Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTE
 	str+="<p style='text-align:right'>Collection: "+MakeSelect("mdCollect",false,collections,this.type);
 	str+="&nbsp;&nbsp;filter by: <input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;height:17px;vertical-align:0px'></p>";
 	str+="<div id='mdAssets' class='ks-dialogResults'></div>";						// Scrollable container
-	str+="<br>View as: "+MakeSelect("mdView",false,["Grid","Rows"],this.view);
+	str+="<br>View as: "+MakeSelect("mdView",false,["Grid","List"],this.view);
 	str+="&nbsp;&nbspShow only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
-	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='ks-bs'>Save item</div>&nbsp;&nbsp;";
+	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none; background-color:#27ae60' class='ks-bs'>Save item</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='ks-bs'>Cancel</div></div>";
 	$("#dialogDiv").append(str+"</div>");	
 	$("#dialogDiv").dialog({ width:900 } );	
@@ -46,6 +46,7 @@ Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTE
 				$("#dialogDiv").animate({ opacity:0},200, function() {				// Fade out
 					$("#previewDiv").remove();										// Remove preview
 					if (callback)	callback(_this.rawData.response.docs[_this.curItem]); // If callback defined, run it and return raw Solr data
+					_this.previewMode="";											// No mode
 					});
 				});
 
@@ -54,6 +55,7 @@ Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTE
 				$("#dialogDiv").animate({ opacity:0},200, function() {				// Fade out		
 					$("#dialogDiv").remove();  										// Remove dialog
 					$("#previewDiv").remove();										// Remove preview
+					_this.previewMode="";											// No mode
 					});
 				Sound("delete");													// Delete sound
 			});
@@ -153,20 +155,24 @@ trace(data)
 				else 			   				return 0;
 				});					
 		}
-	if (this.view == "Rows")														// If showing rows
-		this.DrawAsRows();															// Draw row view
+	if (this.view == "List")														// If showing List
+		this.DrawAsList();															// Draw row view
 	else																			// Grid view
 		this.DrawAsGrid();															// Draw
 }
 
-Solr.prototype.DrawAsRows=function()											// SHOW RESULTS AS ROWS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SHOW RESULTS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Solr.prototype.DrawAsList=function()											// SHOW RESULTS AS LIST
 {
 	var i;
 	var _this=this;																	// Save context
 	var trsty=" style='height:20px;cursor:pointer' onMouseOver='this.style.backgroundColor=\"#dee7f1\"' ";
 	trsty+="onMouseOut='this.style.backgroundColor=\"#f8f8f8\"' onclick='solrObj.Preview(this.id.substr(6))'";
 	var str="<table style='width:100%;text-align:left'>";								// Header row
-	str+="<tr style='font-weight:bold'><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td style=width:100%' id='mdh-title'>Title</td><td>&nbsp;User</td></tr>";
+	str+="<tr style='font-weight:bold;cursor:ns-resize'><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td style=width:100%' id='mdh-title'>Title</td><td  id='mdh-user'>&nbsp;User</td></tr>";
 	str+="<tr><td colspan='4'><hr></td></tr>";
 	
 	for (i=0;i<this.data.length;++i) {												// For each doc returned
@@ -208,14 +214,20 @@ Solr.prototype.DrawAsGrid=function()												// SHOW RESULTS AS GRID
 		var id=$(this).prop("id").substr(6);										// Isolate id
 		_this.Preview(id);															// Preview
 		});
-
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//PREVIEW
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 {
 	var _this=this;																		// Save context
 	var o=this.data[num];																// Point at item
 	this.curItem=num;																	// Current item
+	this.previewMode="Preview";															// Preview mode
 	$("#previewDiv").remove();															// Remove any old ones
 	$("#zoomerDiv").remove();															// Remove any old ones
 	$("#dialogOK").css("display","inline-block");										// Show add button
@@ -233,7 +245,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 	str+="height:"+h+"px;width:"+w+"px;";												// Size
 	str+="left:"+x+"px;top:"+y+"px'>";													// Position
 	str+="<p class='ks-prevId'><img src='img/shantilogo32.png' style='vertical-align:-6px;width:24px'>&nbsp;&nbsp;"; // Logo
-	str+="Mandala item "+o.id;									// Show id
+	str+="Mandala item "+o.id;															// Show id
 	str+="<img src='img/closedot.gif' id='lbxBoxExit' class='ks-dialogDoneBut'><br></p>"; // Done button
 	if (o.title)																		// If a title
 		str+="<p class='ks-dialogTitle'>"+o.title+"</p>";								// Show title 
@@ -248,17 +260,19 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 	if (o.user)	str+="<br><b>User: </b>"+o.user;										// Add user
 	if (o.date)	str+="<br><b>Date: </b>"+o.date;										// Add date
 	if (o.html)	str+="<br><a target='_blank' href='"+o.html+"'><b>View webpage</b></a>"	// Html
-
 	$("body").append(str+"</div></div>");												// Add content
 
 	$("#previewDiv").draggable( { stop:function(ev,ui) {								// Make preciew pane draggable
-			_this.previewX=ui.offset.left;												// Save preview pane X on drag
-			_this.previewY=ui.offset.top;												// Save Y
-			}});
+			if (_this.previewMode == "Preview") {										// If moving preview window
+				_this.previewX=ui.offset.left;											// Save preview pane X on drag
+				_this.previewY=ui.offset.top;											// Save Y
+				}
+		}});
 															
 	$("#lbxBoxExit").on("click",function() {											// CLICK ON DONE BUT
 			Sound("click");																// Click
 			$("#previewDiv").remove();													// Remove it
+			_this.previewMode="";														// No mode
 			$("#dialogOK").css("display","none");										// Hide add button
 			});
 	
@@ -267,6 +281,8 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 		var rw=$("#myImg").prop("naturalWidth");										// Real width
 		var asp=rh/rw;																	// Aspect
 		var w=Math.max(Math.min(rw,maxWid),maxWid);										// Adjust width
+		this.previewMode="Zoom";														// Zoom mode
+
 		if (w*asp > maxHgt) {															// If too tall
 			if (w*.75*asp < maxHgt)			w*=.75;										// Adjust
 			else if (w*.5*asp < maxHgt)		w*=.5;										// In
@@ -274,6 +290,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 			else 							w*=.25;
 			}
 		$("#previewDiv").width(w);														// Set width
+
 		var str="<p class='ks-prevId'><img src='img/shantilogo32.png' style='vertical-align:-6px;width:24px'>&nbsp;&nbsp;"; // Logo
 		str+="Pan and Zoom on Mandala item "+o.id;										// Show id
 		str+="<img src='img/closedot.gif' id='lbxBoxExit' class='ks-dialogDoneBut'><br></p>"; // Done button
@@ -283,6 +300,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 				Sound("click");															// Click
 				$("#dialogOK").css("display","none");									// Hide add button
 				$("#previewDiv").remove();												// Remove it
+				_this.previewMode="";													// No mode
 				});
 		
 		var x=(window.innerWidth-$("#previewDiv").width())/2;							// Center x
