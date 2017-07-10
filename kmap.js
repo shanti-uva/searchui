@@ -33,15 +33,11 @@ Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTE
 	str+="<div id='mdAssets' class='ks-dialogResults'></div>";						// Scrollable container
 	str+="<br>View as: "+MakeSelect("mdView",false,["Grid","List"],this.view);
 	str+="&nbsp;&nbspShow only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
-	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none; background-color:#27ae60' class='ks-bs'>Save item</div>&nbsp;&nbsp;";
+	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='ks-greenbs'>Save item</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='ks-bs'>Cancel</div></div>";
 	$("#dialogDiv").append(str+"</div>");	
 	$("#dialogDiv").dialog({ width:900 } );	
 	$(".ui-dialog-titlebar").hide();
-	$(".ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix").css("border","none");
-	$(".ui-dialog").css({"border-radius":"14px", "box-shadow":"4px 4px 8px #ccc"});
-	$(".ui-button").css({"border-radius":"30px","outline":"none"});
-
 	$("#dialogOK").on("click", function() {											// ON OK BUT
 				$("#dialogDiv").animate({ opacity:0},200, function() {				// Fade out
 					$("#previewDiv").remove();										// Remove preview
@@ -108,7 +104,6 @@ Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 {
 	var i,r,o;
 	var _this=this;																	// Save context
-trace(data)
 	LoadingIcon(false);																// Hide loading icon
 	this.rawData=data;																// Save raw data
 	if (data) {																		// If not just sorting
@@ -169,9 +164,8 @@ Solr.prototype.DrawAsList=function()											// SHOW RESULTS AS LIST
 {
 	var i;
 	var _this=this;																	// Save context
-	var trsty=" style='height:20px;cursor:pointer' onMouseOver='this.style.backgroundColor=\"#dee7f1\"' ";
-	trsty+="onMouseOut='this.style.backgroundColor=\"#f8f8f8\"' onclick='solrObj.Preview(this.id.substr(6))'";
-	var str="<table style='width:100%;text-align:left'>";								// Header row
+	var trsty=" class='ks-listItem'  onclick='solrObj.Preview(this.id.substr(6))'";	// Row style
+	var str="<table style='width:100%;text-align:left'>";							// Header row
 	str+="<tr style='font-weight:bold;cursor:ns-resize'><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td style=width:100%' id='mdh-title'>Title</td><td  id='mdh-user'>&nbsp;User</td></tr>";
 	str+="<tr><td colspan='4'><hr></td></tr>";
 	
@@ -185,7 +179,8 @@ Solr.prototype.DrawAsList=function()											// SHOW RESULTS AS LIST
 		str+="</td></tr>";															// Close line	
 		}
 	str+="</table>";																// Close table
-	$("#mdAssets").html(str);	
+	
+	$("#mdAssets").html(str);														// Add results
 	
 	$('[id^="mdh-"]').off();														// Remove old handlers
 
@@ -195,7 +190,7 @@ Solr.prototype.DrawAsList=function()											// SHOW RESULTS AS LIST
 		});
 }
 
-Solr.prototype.DrawAsGrid=function()												// SHOW RESULTS AS GRID
+Solr.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 {	
 	var i,str="";
 	var _this=this;																	// Save context
@@ -253,13 +248,13 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 		str+="<div id='previewImg' style='width:"+w+"px;overflow-y:auto'><img id='myImg' style='width:100%' src='"+o.ajax+"'></div>";
 	else
 		str+="<iframe frameborder='0' allowfullscreen height='"+h+"' width='100%' style='0,border:1px solid #666;width:100%' src='"+o.ajax+"'/>";
-	str+="<div style='padding:8px'>";
+	str+="<div style='padding:8px;padding-top:0px;'>";
 	if (o.type == "picture") str+="<br><div class='ks-bs' id='zoomImg'>Zoomable image</div><br>"
 	if (o.summary)
 		str+="<p class='ks-presummary>"+o.summary+"</p>";
 	if (o.user)	str+="<br><b>User: </b>"+o.user;										// Add user
 	if (o.date)	str+="<br><b>Date: </b>"+o.date;										// Add date
-	if (o.html)	str+="<br><a target='_blank' href='"+o.html+"'><b>View webpage</b></a>"	// Html
+	if (o.html)	str+="<p><a target='_blank' href='"+o.html+"'><b>View webpage</b></a></p>"	// Add link to page
 	$("body").append(str+"</div></div>");												// Add content
 
 	$("#previewDiv").draggable( { stop:function(ev,ui) {								// Make preciew pane draggable
