@@ -80,7 +80,7 @@ Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTE
  
  	function LoadCollection(coll) {												// LOAD COLLECTION FROM SOLR
 		var str;
-		LoadingIcon(true,64);														// Show loading icon
+		_this.LoadingIcon(true,64);														// Show loading icon
 		var search="asset_type%3A%22"+coll.toLowerCase()+"%22";						// Add asset type						
 		if (_this.filter) {															// If a filter spec'd
 			str="%22*"+_this.filter.toLowerCase()+"*%22";							// Search term
@@ -98,13 +98,25 @@ Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTE
 			   		});
 		}
 
- }																					// End closure
+}																					// End closure
+
+Solr.prototype.LoadingIcon=function(mode, size, container)						// SHOW/HIDE LOADING ICON		
+{
+	container=container ? "#"+containern: "body";									// If no container spec'd, use body
+	if (!mode) {																	// If hiding
+		$("#sf-loadingIcon").remove();												// Remove it
+		return;																		// Quit
+		}
+	var str="<img src='img/loading.gif' width='"+size+"' ";							// Img
+	str+="id='sf-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
+	$(container).append(str);														// Add icon to container
+}
 
 Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 {
 	var i,r,o;
 	var _this=this;																	// Save context
-	LoadingIcon(false);																// Hide loading icon
+	this.LoadingIcon(false);														// Hide loading icon
 	this.rawData=data;																// Save raw data
 	if (data) {																		// If not just sorting
 		this.data=[];																// New results store 
@@ -316,3 +328,60 @@ Solr.prototype.RemoveFromCollection=function(num)									// REMOVE ITEM TO COLL
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// HELPERS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	function MakeSelect(id, multi, items, sel, extra, values)				// CREATE HTML SELECT
+	{
+		var	str="<select class='ks-is' id='"+id+"'";							// Header
+		str+="style='width:auto'";
+		if (multi)																// Multi select
+			str+="multiple='multiple' size='"+multi+"'";						// Add flag
+		if (extra)																// If extra param
+			str+=extra;															// Add them
+		str+=">";																// End header
+		for (i=0;i<items.length;++i) {											// For each option
+			str+="<option";														// Add tag
+			if (sel == items[i])												// If selected
+				str+=" selected='selected'"										// Add tag
+			if (values && values[i])											// If has a value
+				str+=" value='"+values[i]+"'";									// Add it
+			str+=">"+items[i]+"</option>";										// End option
+			}	
+		return str+"</select>";													// End select				
+	}
+
+	function trace(msg, p1, p2, p3, p4)										// CONSOLE 
+	{
+		if (p4 != undefined)
+			console.log(msg,p1,p2,p3,p4);
+		else if (p3 != undefined)
+			console.log(msg,p1,p2,p3);
+		else if (p2 != undefined)
+			console.log(msg,p1,p2);
+		else if (p1 != undefined)
+			console.log(msg,p1);
+		else
+			console.log(msg);
+	}
+
+	function ShortenString(str, len)									// SHORTEN A STRING TO LENGTH
+	{
+		if (str && str.length > len)										// Too long
+			str=str.substr(0,(len-3)/2)+"..."+str.slice((len-3)/-2);		// Shorten	
+		return str;															// Return string
+	}
+
+	function Sound(sound, mute)												// PLAY SOUND
+	{
+		var snd=new Audio();													// Init audio object
+		if (!snd.canPlayType("audio/mpeg") || (snd.canPlayType("audio/mpeg") == "maybe")) 
+			snd=new Audio("img/"+sound+".ogg");									// Use ogg
+		else	
+			snd=new Audio("img/"+sound+".mp3");									// Use mp3
+		if (!mute)	{															// If not initing or muting	
+			snd.volume=50/100;													// Set volume
+			snd.play();															// Play it
+			}
+		}
