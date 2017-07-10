@@ -80,7 +80,7 @@ Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTE
  
  	function LoadCollection(coll) {												// LOAD COLLECTION FROM SOLR
 		var str;
-		_this.LoadingIcon(true,64);														// Show loading icon
+		_this.LoadingIcon(true,64);													// Show loading icon
 		var search="asset_type%3A%22"+coll.toLowerCase()+"%22";						// Add asset type						
 		if (_this.filter) {															// If a filter spec'd
 			str="%22*"+_this.filter.toLowerCase()+"*%22";							// Search term
