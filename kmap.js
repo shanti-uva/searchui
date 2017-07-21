@@ -27,12 +27,13 @@ Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTE
 	$("#dialogDiv").remove();														// Remove any old ones
 	$("body").append("<div class='unselectable' id='dialogDiv'></div>");			// Add to body													
 	var str="<p><img src='img/shantilogo32.png' style='vertical-align:-10px'>&nbsp;&nbsp;"; // Logo
-	str+="<span class='ks-dialogLabel'>Get Item from Mandala</span><p>";			// Dialog label
+	str+="<span class='ks-dialogLabel'>Get Item from Mandala</span>";				// Dialog label
 	str+="<p style='text-align:right'>Collection: "+MakeSelect("mdCollect",false,collections,this.type);
 	str+="&nbsp;&nbsp;filter by: <input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;height:17px;vertical-align:0px'></p>";
 	str+="<div id='mdAssets' class='ks-dialogResults'></div>";						// Scrollable container
 	str+="<br>View as: "+MakeSelect("mdView",false,["Grid","List"],this.view);
-	str+="&nbsp;&nbspShow only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
+	str+="&nbsp;&nbsp;Show only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
+	str+="&nbsp;&nbsp;&nbsp;<i><span id='numItemsFound'>No</span> items found</i>";		// Number of items
 	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='ks-greenbs'>Save item</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='ks-bs'>Cancel</div></div>";
 	$("#dialogDiv").append(str+"</div>");	
@@ -162,6 +163,7 @@ Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 				else 			   				return 0;
 				});					
 		}
+	$("#numItemsFound").text(this.data.length);										// Show number of results
 	if (this.view == "List")														// If showing List
 		this.DrawAsList();															// Draw row view
 	else																			// Grid view
@@ -274,13 +276,13 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 	if (o.html)	str+="<p><a target='_blank' href='"+o.html+"'><b>View webpage</b></a></p>"	// Add link to page
 	$("body").append(str+"</div></div>");												// Add content
 
-	$("#previewDiv").draggable( { stop:function(ev,ui) {								// Make preciew pane draggable
-			if (_this.previewMode == "Preview") {										// If moving preview window
-				_this.previewX=ui.offset.left;											// Save preview pane X on drag
-				_this.previewY=ui.offset.top;											// Save Y
-				}
+	$("#previewDiv").draggable( { handle:"p",
+			stop:function(ev,ui) {														// Make preview pane draggable
+				if (_this.previewMode == "Preview") {									// If moving preview window
+					_this.previewX=ui.offset.left;										// Save preview pane X on drag
+					_this.previewY=ui.offset.top;										// Save Y
+					}
 		}});
-															
 	$("#lbxBoxExit").on("click",function() {											// CLICK ON DONE BUT
 			Sound("click");																// Click
 			$("#previewDiv").remove();													// Remove it
