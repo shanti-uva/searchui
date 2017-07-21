@@ -17,7 +17,7 @@
 							}
 		.ks-dialog {		font-size: 20px; font-weight: bold; color: #000; margin-bottom: 8px; user-select: none;
 							}
-		.ks-dialogLabel {	font-size: 18px; text-shadow: 1px 1px #ccc; color:#666; font-weight: bold;
+		.ks-dialogLabel {	font-size: 18px; text-shadow: 1px 1px #ccc; color:#27ae60; font-weight: bold;
 							}
 		.ks-dialogTitle {	font-weight: bold; color: #000; padding-left: 8px; padding-right: 8px;
 							}
@@ -29,14 +29,16 @@
 		.ks-prevDiv {		border-radius:6px; background-color:#eee; border: 1px solid #999; box-shadow: 4px 4px 8px #ccc;
 							position: absolute; padding: 0px; padding-top: 0px;  overflow-x:hidden; overflow-y: auto; z-index: 10000;
 							}
-		.ks-prevId {		font-size: 14px; color: #666; font-weight: bold; padding-left: 8px; padding-right: 8px;
+		.ks-prevId {		font-size: 14px; color: #27ae60; font-weight: bold; padding-left: 8px; padding-right: 8px;
 							}
-		.ks-listItem {		height: 20px; cursor: pointer; background-color: #f8f8f8;
+		.ks-listItem {		height: 20px; cursor: pointer; background-color: #f8f8f8; color:#000;
 							}
 		.ks-listItem:hover{ background-color: #dee7f1;
 							}
-		.ks-gridItem {		color: #666; padding: 8px;  border: 1px solid #999; margin-right: 8px; margin-bottom: 8px; display: inline-block;
+		.ks-gridItem {		color: #666; padding: 8px;  border: 1px solid #27ae60; margin-right: 8px; margin-bottom: 8px; display: inline-block;
 							width: 183px; height: 150px; cursor: pointer;
+							}
+		.ks-gridItem:hover{ background-color: #dee7f1;
 							}
 		.unselectable { 	-moz-user-select: none; -khtml-user-select: none; -webkit-user-select: none; -ms-user-select: none;  user-select: none;	
 							}

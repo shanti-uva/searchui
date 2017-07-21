@@ -211,7 +211,8 @@ Solr.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 		str+="<div class='ks-gridItem' id='mdres-"+i+"'>";							// Div start
 		if (o.thumb)																// If a thumbnail defined
 			str+="<img src='"+o.thumb+"' width='100%' height='100'><br>";			// Add it
-		str+=ShortenString(o.title,70);												// Add title
+		str+="<span style='color:#27ae60'>"+(i+1)+". </span>";						// Add pic num
+		str+=ShortenString(o.title,60);												// Add title
 		str+="&nbsp;("+o.id+")&nbsp;"												// Add id
 		str+="</div>";																// Close div	
 		}
@@ -238,7 +239,11 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 	$("#previewDiv").remove();															// Remove any old ones
 	$("#zoomerDiv").remove();															// Remove any old ones
 	$("#dialogOK").css("display","inline-block");										// Show add button
-	
+
+	for (i=0;i<this.data.length;++i)													// For each result
+		$("#mdres-"+i).css("color","#000");												// Make default color
+	$("#mdres-"+num).css("color","#27ae60");											// Highlight
+
 	var h=345;																			// Get dialog height												
 	var w=$("#mdAssets").width()/2;														// Get dialog width												
 	var maxHgt=window.innerHeight-100;													// Max height
@@ -261,7 +266,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 	else
 		str+="<iframe frameborder='0' allowfullscreen height='"+h+"' width='100%' style='0,border:1px solid #666;width:100%' src='"+o.ajax+"'/>";
 	str+="<div style='padding:8px;padding-top:0px;'>";
-	if (o.type == "picture") str+="<br><div class='ks-bs' id='zoomImg'>Zoomable image</div><br>"
+	if (o.type == "picture") str+="<br><div  class='ks-greenbs' id='zoomImg'>Zoomable image</div><br>"
 	if (o.summary)
 		str+="<p class='ks-presummary>"+o.summary+"</p>";
 	if (o.user)	str+="<br><b>User: </b>"+o.user;										// Add user
