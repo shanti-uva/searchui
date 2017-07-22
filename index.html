@@ -20,15 +20,29 @@
 
 $(document).ready(function() {								           	// ON PAGE LOADED
 
-	var solr=new Solr();													// Alloc Solr object
+	var solr=new ksSolr();													// Alloc ksSolr object
 	solr.ImportSolrDialog(300,done);										// Run dialog
 
 	function done(obj) {
-		Sound("ding");														// Ding sound
-		trace("KMAP RECORD",obj);											// Show object
+		solr.Sound("ding");													// Ding sound
+		trace(obj);															// Show object
 		$("#dialogDiv").remove();  											// Remove dialog
 		}
 });
+
+	function trace(msg, p1, p2, p3, p4)										// CONSOLE 
+	{
+		if (p4 != undefined)
+			console.log(msg,p1,p2,p3,p4);
+		else if (p3 != undefined)
+			console.log(msg,p1,p2,p3);
+		else if (p2 != undefined)
+			console.log(msg,p1,p2);
+		else if (p1 != undefined)
+			console.log(msg,p1);
+		else
+			console.log(msg);
+	}
 
 </script>
 </body>

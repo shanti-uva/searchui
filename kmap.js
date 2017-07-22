@@ -2,11 +2,11 @@
 // SOLR
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-var solrObj=null;																	// Points at Solr object
+var ksSolrObj=null;																	// Points at Solr object
 
-function Solr()																	// CONSTRUCTOR
+function ksSolr()																// CONSTRUCTOR
 {
-	solrObj=this;																	// Save pointer to obj
+	ksSolrObj=this;																	// Save pointer to obj
 	this.rawData=null;																// Holds raw Solr search results
 	this.data=null;																	// Folds formatted search results
 	this.collection=[];																// Holds collection of items
@@ -19,7 +19,7 @@ function Solr()																	// CONSTRUCTOR
 	this.curItem=-1;																// Currently selected item
 }
 
-Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTER DIALOG
+ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORTER DIALOG
 {
 	var _this=this;																	// Save context
 	this.maxDocs=maxDocs;															// Maximum docs to load
@@ -28,10 +28,10 @@ Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTE
 	$("body").append("<div class='unselectable' id='dialogDiv'></div>");			// Add to body													
 	var str="<p><img src='img/shantilogo32.png' style='vertical-align:-10px'>&nbsp;&nbsp;"; // Logo
 	str+="<span class='ks-dialogLabel'>Get Item from Mandala</span>";				// Dialog label
-	str+="<p style='text-align:right'>Collection: "+MakeSelect("mdCollect",false,collections,this.type);
+	str+="<p style='text-align:right'>Collection: "+this.MakeSelect("mdCollect",false,collections,this.type);
 	str+="&nbsp;&nbsp;filter by: <input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;height:17px;vertical-align:0px'></p>";
 	str+="<div id='mdAssets' class='ks-dialogResults'></div>";						// Scrollable container
-	str+="<br>View as: "+MakeSelect("mdView",false,["Grid","List"],this.view);
+	str+="<br>View as: "+this.MakeSelect("mdView",false,["Grid","List"],this.view);
 	str+="&nbsp;&nbsp;Show only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
 	str+="&nbsp;&nbsp;&nbsp;<i><span id='numItemsFound'>No</span> items found</i>";		// Number of items
 	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='ks-greenbs'>Save item</div>&nbsp;&nbsp;";
@@ -54,7 +54,7 @@ Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTE
 					$("#previewDiv").remove();										// Remove preview
 					_this.previewMode="";											// No mode
 					});
-				Sound("delete");													// Delete sound
+				_this.Sound("delete");												// Delete sound
 			});
 
 	LoadCollection($("#mdCollect").val());											// Load 1st collection
@@ -101,19 +101,7 @@ Solr.prototype.ImportSolrDialog=function(maxDocs, callback)						// SOLR IMPORTE
 
 }																					// End closure
 
-Solr.prototype.LoadingIcon=function(mode, size, container)						// SHOW/HIDE LOADING ICON		
-{
-	container=container ? "#"+containern: "body";									// If no container spec'd, use body
-	if (!mode) {																	// If hiding
-		$("#sf-loadingIcon").remove();												// Remove it
-		return;																		// Quit
-		}
-	var str="<img src='img/loading.gif' width='"+size+"' ";							// Img
-	str+="id='sf-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
-	$(container).append(str);														// Add icon to container
-}
-
-Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
+ksSolr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 {
 	var i,r,o;
 	var _this=this;																	// Save context
@@ -174,11 +162,11 @@ Solr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 // SHOW RESULTS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Solr.prototype.DrawAsList=function()											// SHOW RESULTS AS LIST
+ksSolr.prototype.DrawAsList=function()											// SHOW RESULTS AS LIST
 {
 	var i;
 	var _this=this;																	// Save context
-	var trsty=" class='ks-listItem'  onclick='solrObj.Preview(this.id.substr(6))'";	// Row style
+	var trsty=" class='ks-listItem'  onclick='ksSolrObj.Preview(this.id.substr(6))'";	// Row style
 	var str="<table style='width:100%;text-align:left'>";							// Header row
 	str+="<tr style='font-weight:bold;cursor:ns-resize'><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td style=width:100%' id='mdh-title'>Title</td><td  id='mdh-user'>&nbsp;User</td></tr>";
 	str+="<tr><td colspan='4'><hr></td></tr>";
@@ -187,9 +175,9 @@ Solr.prototype.DrawAsList=function()											// SHOW RESULTS AS LIST
 		o=this.data[i];																// Point at doc
 		str+="<tr id='mdres-"+i+"'"+trsty+"><td>"+o.date;							// Add start and date
 		str+="</td><td>&nbsp;"+o.id+"&nbsp;"										// Add id
-		str+="</td><td>"+ShortenString(o.title,80)+"<td>";							// Add title
+		str+="</td><td>"+this.ShortenString(o.title,80)+"<td>";						// Add title
 		if (o.user)																	// If a user spec'd
-			str+=ShortenString(o.user,60);											// Add user		
+			str+=this.ShortenString(o.user,60);										// Add user		
 		str+="</td></tr>";															// Close line	
 		}
 	str+="</table>";																// Close table
@@ -204,7 +192,7 @@ Solr.prototype.DrawAsList=function()											// SHOW RESULTS AS LIST
 		});
 }
 
-Solr.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
+ksSolr.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 {	
 	var i,str="";
 	var _this=this;																	// Save context
@@ -215,7 +203,7 @@ Solr.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 		if (o.thumb)																// If a thumbnail defined
 			str+="<img src='"+o.thumb+"' width='100%'>";							// Add it
 		str+="</div><span style='color:#27ae60'>"+(i+1)+". </span>";				// Add pic num
-		str+=ShortenString(o.title,70);												// Add title
+		str+=this.ShortenString(o.title,70);										// Add title
 		str+="</div>";																// Close div	
 		}
 	$("#mdAssets").html(str);														// Add results to panel
@@ -232,7 +220,7 @@ Solr.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-Solr.prototype.Preview=function(num)												// PREVIEW RESULT
+ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 {
 	var _this=this;																		// Save context
 	var o=this.data[num];																// Point at item
@@ -284,7 +272,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 					}
 		}});
 	$("#lbxBoxExit").on("click",function() {											// CLICK ON DONE BUT
-			Sound("click");																// Click
+			_this.Sound("click");														// Click
 			$("#previewDiv").remove();													// Remove it
 			_this.previewMode="";														// No mode
 			$("#dialogOK").css("display","none");										// Hide add button
@@ -311,7 +299,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 		$("#previewDiv").html(str);
 
 		$("#lbxBoxExit").on("click",function() {										// CLICK ON DONE BUT
-				Sound("click");															// Click
+				_this.Sound("click");													// Click
 				$("#dialogOK").css("display","none");									// Hide add button
 				$("#previewDiv").remove();												// Remove it
 				_this.previewMode="";													// No mode
@@ -327,11 +315,11 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 // COLLECTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Solr.prototype.AddToCollection=function(item)										// ADD ITEM TO COLLECTION
+ksSolr.prototype.AddToCollection=function(item)										// ADD ITEM TO COLLECTION
 {
 }
 
-Solr.prototype.RemoveFromCollection=function(num)									// REMOVE ITEM TO COLLECTION
+ksSolr.prototype.RemoveFromCollection=function(num)									// REMOVE ITEM TO COLLECTION
 {
 }
 
@@ -339,56 +327,55 @@ Solr.prototype.RemoveFromCollection=function(num)									// REMOVE ITEM TO COLL
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	function MakeSelect(id, multi, items, sel, extra, values)				// CREATE HTML SELECT
-	{
-		var	str="<select class='ks-is' id='"+id+"'";							// Header
+ksSolr.prototype.MakeSelect=function(id, multi, items, sel, extra, values)		// CREATE HTML SELECT
+{
+		var	str="<select class='ks-is' id='"+id+"'";								// Header
 		str+="style='width:auto'";
-		if (multi)																// Multi select
-			str+="multiple='multiple' size='"+multi+"'";						// Add flag
-		if (extra)																// If extra param
-			str+=extra;															// Add them
-		str+=">";																// End header
-		for (i=0;i<items.length;++i) {											// For each option
-			str+="<option";														// Add tag
-			if (sel == items[i])												// If selected
-				str+=" selected='selected'"										// Add tag
-			if (values && values[i])											// If has a value
-				str+=" value='"+values[i]+"'";									// Add it
-			str+=">"+items[i]+"</option>";										// End option
+		if (multi)																	// Multi select
+			str+="multiple='multiple' size='"+multi+"'";							// Add flag
+		if (extra)																	// If extra param
+			str+=extra;																// Add them
+		str+=">";																	// End header
+		for (i=0;i<items.length;++i) {												// For each option
+			str+="<option";															// Add tag
+			if (sel == items[i])													// If selected
+				str+=" selected='selected'"											// Add tag
+			if (values && values[i])												// If has a value
+				str+=" value='"+values[i]+"'";										// Add it
+			str+=">"+items[i]+"</option>";											// End option
 			}	
-		return str+"</select>";													// End select				
-	}
+		return str+"</select>";														// Return element				
+}
 
-	function trace(msg, p1, p2, p3, p4)										// CONSOLE 
-	{
-		if (p4 != undefined)
-			console.log(msg,p1,p2,p3,p4);
-		else if (p3 != undefined)
-			console.log(msg,p1,p2,p3);
-		else if (p2 != undefined)
-			console.log(msg,p1,p2);
-		else if (p1 != undefined)
-			console.log(msg,p1);
-		else
-			console.log(msg);
-	}
 
-	function ShortenString(str, len)									// SHORTEN A STRING TO LENGTH
-	{
-		if (str && str.length > len)										// Too long
-			str=str.substr(0,(len-3)/2)+"..."+str.slice((len-3)/-2);		// Shorten	
-		return str;															// Return string
-	}
-
-	function Sound(sound, mute)												// PLAY SOUND
-	{
-		var snd=new Audio();													// Init audio object
-		if (!snd.canPlayType("audio/mpeg") || (snd.canPlayType("audio/mpeg") == "maybe")) 
-			snd=new Audio("img/"+sound+".ogg");									// Use ogg
-		else	
-			snd=new Audio("img/"+sound+".mp3");									// Use mp3
-		if (!mute)	{															// If not initing or muting	
-			snd.volume=50/100;													// Set volume
-			snd.play();															// Play it
-			}
+ksSolr.prototype.LoadingIcon=function(mode, size, container)					// SHOW/HIDE LOADING ICON		
+{
+	container=container ? "#"+containern: "body";									// If no container spec'd, use body
+	if (!mode) {																	// If hiding
+		$("#sf-loadingIcon").remove();												// Remove it
+		return;																		// Quit
 		}
+	var str="<img src='img/loading.gif' width='"+size+"' ";							// Img
+	str+="id='sf-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
+	$(container).append(str);														// Add icon to container
+}
+
+ksSolr.prototype.Sound=function(sound, mute)									// PLAY SOUND
+{
+	var snd=new Audio();															// Init audio object
+	if (!snd.canPlayType("audio/mpeg") || (snd.canPlayType("audio/mpeg") == "maybe")) 
+		snd=new Audio("img/"+sound+".ogg");											// Use ogg
+	else	
+		snd=new Audio("img/"+sound+".mp3");											// Use mp3
+	if (!mute)	{																	// If not initing or muting	
+		snd.volume=50/100;															// Set volume
+		snd.play();																	// Play it
+		}
+	}
+
+ksSolr.prototype.ShortenString=function(str, len)								// SHORTEN A STRING TO LENGTH
+{
+	if (str && str.length > len)													// Too long
+		str=str.substr(0,(len-3)/2)+"..."+str.slice((len-3)/-2);					// Shorten	
+	return str;																		// Return string}
+}
