@@ -35,10 +35,12 @@
 							}
 		.ks-listItem:hover{ background-color: #dee7f1;
 							}
-		.ks-gridItem {		color: #666; padding: 8px;  border: 1px solid #27ae60; margin-right: 8px; margin-bottom: 8px; display: inline-block;
-							width: 183px; height: 150px; cursor: pointer;
+		.ks-gridItem {		color: #666; padding: 8px;  border: 1px solid #47ae80; margin-right: 8px; margin-bottom: 8px; display: inline-block;
+							width: 182px; height: 154px; cursor: pointer; border-radius: 4px;
 							}
 		.ks-gridItem:hover{ background-color: #dee7f1;
+							}
+		.ks-gridPic {		width: 100%; height: 100px; overflow: hidden; margin-bottom: 6px;
 							}
 		.unselectable { 	-moz-user-select: none; -khtml-user-select: none; -webkit-user-select: none; -ms-user-select: none;  user-select: none;	
 							}

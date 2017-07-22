@@ -211,11 +211,11 @@ Solr.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 	for (i=0;i<this.data.length;++i) {												// For each doc returned
 		o=this.data[i];																// Point at doc
 		str+="<div class='ks-gridItem' id='mdres-"+i+"'>";							// Div start
+		str+="<div class='ks-gridPic'>";											// Pic div start
 		if (o.thumb)																// If a thumbnail defined
-			str+="<img src='"+o.thumb+"' width='100%' height='100'><br>";			// Add it
-		str+="<span style='color:#27ae60'>"+(i+1)+". </span>";						// Add pic num
-		str+=ShortenString(o.title,60);												// Add title
-		str+="&nbsp;("+o.id+")&nbsp;"												// Add id
+			str+="<img src='"+o.thumb+"' width='100%'>";							// Add it
+		str+="</div><span style='color:#27ae60'>"+(i+1)+". </span>";				// Add pic num
+		str+=ShortenString(o.title,70);												// Add title
 		str+="</div>";																// Close div	
 		}
 	$("#mdAssets").html(str);														// Add results to panel
@@ -244,7 +244,7 @@ Solr.prototype.Preview=function(num)												// PREVIEW RESULT
 
 	for (i=0;i<this.data.length;++i)													// For each result
 		$("#mdres-"+i).css("color","#000");												// Make default color
-	$("#mdres-"+num).css("color","#27ae60");											// Highlight
+	$("#mdres-"+num).css("color","#1c7e46");											// Highlight
 
 	var h=345;																			// Get dialog height												
 	var w=$("#mdAssets").width()/2;														// Get dialog width												
