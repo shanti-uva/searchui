@@ -1,6 +1,6 @@
 /* CSS for KMap search tool */
 
-		 body { 			font-family: Verdana,Geneva,sans-serif; font-size:11px; box-sizing: border-box;
+		 body { 			font-family: Verdana,Geneva,sans-serif; font-size: 11px; box-sizing: border-box;
 							padding: 0px; margin: 0px; 
 							}
 		.ks-is {			border-radius: 12px; padding-left: 8px; padding-right: 8px; padding-top: 3px; padding-bottom: 2px;
@@ -15,7 +15,8 @@
 		.ks-popup {			display: none; position: absolute; padding: 3px 8px 3px 8px; border-radius: 6px; display: inline-block;
 							font-size: 11px; border: 1px solid #e74c3c; background-color: #eee;
 							}
-		.ks-dialog {		font-size: 20px; font-weight: bold; color: #000; margin-bottom: 8px; user-select: none;
+		.ks-dialog {	 	user-select: none; width: 900px; border-radius:14px; background-color:#eee; box-shadow:4px 4px 8px #ccc;
+							margin-top: 10%; margin-left: auto; margin-right: auto; padding:12px; font-size: 12px;
 							}
 		.ks-dialogLabel {	font-size: 18px; text-shadow: 1px 1px #ccc; color:#27ae60; font-weight: bold;
 							}
@@ -36,7 +37,7 @@
 		.ks-listItem:hover{ background-color: #dee7f1;
 							}
 		.ks-gridItem {		color: #666; padding: 8px;  border: 1px solid #47ae80; margin-right: 8px; margin-bottom: 8px; display: inline-block;
-							width: 182px; height: 154px; cursor: pointer; border-radius: 4px; overflow: hidden;
+							width: 190px; height: 154px; cursor: pointer; border-radius: 4px; overflow: hidden;
 							}
 		.ks-gridItem:hover{ background-color: #dee7f1;
 							}
@@ -44,10 +45,5 @@
 							}
 		.unselectable { 	-moz-user-select: none; -khtml-user-select: none; -webkit-user-select: none; -ms-user-select: none;  user-select: none;	
 							}
-
-		.ui-dialog { 		border-radius:14px; background-color:#eee; box-shadow:4px 4px 8px #ccc }
-		.ui-button {		border-radius:30px; outline: none }
-		.ui-dialog-titlebar { display:none }
-		.ui-dialog-buttonpane.ui-widget-content.ui-helper-clearfix { border: none }
 		 table {			border-spacing: 0px;  }
 		 input {		    vertical-align: -2px; }

@@ -25,7 +25,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORT
 	this.maxDocs=maxDocs;															// Maximum docs to load
 	var collections=["Audio-Video","Picture","Sources","Texts","Visuals"];			// Supported collections
 	$("#dialogDiv").remove();														// Remove any old ones
-	$("body").append("<div class='unselectable' id='dialogDiv'></div>");			// Add to body													
+	$("body").append("<div class='unselectable ks-dialog' id='dialogDiv'></div>");	// Add to body													
 	var str="<p><img src='img/shantilogo32.png' style='vertical-align:-10px'>&nbsp;&nbsp;"; // Logo
 	str+="<span class='ks-dialogLabel'>Get Item from Mandala</span>";				// Dialog label
 	str+="<p style='text-align:right'>Collection: "+this.MakeSelect("mdCollect",false,collections,this.type);
@@ -37,9 +37,9 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORT
 	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='ks-greenbs'>Save item</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='ks-bs'>Cancel</div></div>";
 	$("#dialogDiv").append(str+"</div>");	
-	$("#dialogDiv").dialog({ width:900 } );	
+/*	$("#dialogDiv").dialog({ width:900 } );	
 	$(".ui-dialog-titlebar").hide();
-	$("#dialogOK").on("click", function() {											// ON OK BUT
+*/	$("#dialogOK").on("click", function() {											// ON OK BUT
 				$("#dialogDiv").animate({ opacity:0},200, function() {				// Fade out
 					$("#previewDiv").remove();										// Remove preview
 					if (callback)	callback(_this.rawData.response.docs[_this.curItem]); // If callback defined, run it and return raw Solr data
