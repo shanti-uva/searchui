@@ -91,7 +91,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORT
 			}
 		if (_this.user) 															// If a user spec'd
 			search+=" AND node_user%3A*"+_this.user+"*";							// Look at user
-		var url="https://ss251856-us-east-1-aws.measuredsearch.com/solr/kmassets_dev/select?"+"q="+search + 
+		var url="https://ss206212-us-east-1-aws.measuredsearch.com/solr/kmassets/select?"+"q="+search + 
    				 "&fl=*&wt=json&json.wrf=?&rows="+_this.maxDocs+"&limit="+_this.maxDocs;
 
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done(function(data) {
