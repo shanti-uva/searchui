@@ -174,7 +174,7 @@ ksSolr.prototype.DrawAsList=function()											// SHOW RESULTS AS LIST
 	var _this=this;																	// Save context
 	var trsty=" class='ks-listItem'  onclick='ksSolrObj.Preview(this.id.substr(6))'";	// Row style
 	var str="<table style='width:100%;text-align:left'>";							// Header row
-	str+="<tr style='font-weight:bold;cursor:ns-resize'><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td style=width:100%' id='mdh-title'>Title</td><td  id='mdh-user'>&nbsp;User</td></tr>";
+	str+="<tr style='font-weight:bold;cursor:url(img/sortcur.gif),ns-resize'><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td style=width:100%' id='mdh-title'>Title</td><td  id='mdh-user'>&nbsp;User</td></tr>";
 	str+="<tr><td colspan='4'><hr></td></tr>";
 	
 	for (i=0;i<this.data.length;++i) {												// For each doc returned
