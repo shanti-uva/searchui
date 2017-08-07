@@ -11,6 +11,7 @@ function ksSolr()																// CONSTRUCTOR
 	this.data=null;																	// Folds formatted search results
 	this.collection=[];																// Holds collection of items
 	this.filter="";																	// No filter
+	this.filterCollect="";															// No  collection filter
 	this.user="";																	// No user
 	this.type="Picture";															// Start with pictures
 	this.view="List";																// Start with List
@@ -28,8 +29,9 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORT
 	$("body").append("<div class='unselectable ks-dialog' id='dialogDiv'></div>");	// Add to body													
 	var str="<p><img src='img/shantilogo32.png' style='vertical-align:-10px'>&nbsp;&nbsp;"; // Logo
 	str+="<span class='ks-dialogLabel'>Get Item from Mandala</span>";				// Dialog label
-	str+="<p style='text-align:right'>Collection: "+this.MakeSelect("mdCollect",false,collections,this.type);
-	str+="&nbsp;&nbsp;filter by: <input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;height:17px;vertical-align:0px'></p>";
+	str+="<p style='text-align:right'>Type: "+this.MakeSelect("mdType",false,collections,this.type);
+	str+="&nbsp;&nbsp;filter by: <input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;height:17px;vertical-align:0px'>";
+	str+="&nbsp;&nbsp;in collection: <input class='ks-is' id='mdFilterCollect' type='text' value='"+this.filterCollect+"' style='width:100px;height:17px;vertical-align:0px'></p>";
 	str+="<div id='mdAssets' class='ks-dialogResults'></div>";						// Scrollable container
 	str+="<br>View as: "+this.MakeSelect("mdView",false,["Grid","List"],this.view);
 	str+="&nbsp;&nbsp;Show only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
@@ -37,9 +39,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORT
 	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='ks-greenbs'>Save item</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='ks-bs'>Cancel</div></div>";
 	$("#dialogDiv").append(str+"</div>");	
-/*	$("#dialogDiv").dialog({ width:900 } );	
-	$(".ui-dialog-titlebar").hide();
-*/	$("#dialogOK").on("click", function() {											// ON OK BUT
+	$("#dialogOK").on("click", function() {											// ON OK BUT
 				$("#dialogDiv").animate({ opacity:0},200, function() {				// Fade out
 					$("#previewDiv").remove();										// Remove preview
 					if (callback)	callback(_this.rawData.response.docs[_this.curItem]); // If callback defined, run it and return raw Solr data
@@ -57,37 +57,43 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORT
 				_this.Sound("delete");												// Delete sound
 			});
 
-	LoadCollection($("#mdCollect").val());											// Load 1st collection
+	LoadCollection();															// Load 1st collection
  	
- 	$("#mdCollect").on("change", function() {										// ON CHANGE COLLECTION
+ 	$("#mdType").on("change", function() {											// ON CHANGE COLLECTION
 			_this.type=$(this).val();												// Save for later											
-		 	LoadCollection(_this.type);												// Load it
+		 	LoadCollection();														// Load it
 			});
 	
 	$("#mdFilter").on("change", function() {										// ON CHANGE FILTER
 			_this.filter=$(this).val();												// Save for later											
-		 	LoadCollection(_this.type);												// Load it
+		 	LoadCollection();														// Load it
 			});
-
+	$("#mdFilterCollect").on("change", function() {									// ON CHANGE FILTER COLLECT
+			_this.filterCollect=$(this).val();										// Save for later											
+		 	LoadCollection();														// Load it
+			});
 	$("#mdUser").on("change", function() {											// ON CHANGE USER
 			_this.user=$(this).val();												// Save for later											
-		 	LoadCollection(_this.type);												// Load it
+		 	LoadCollection();														// Load it
 			});
   
   	$("#mdView").on("change", function() {											// ON CHANGE VIEW
 			_this.view=$(this).val();												// Save for later											
-		 	LoadCollection(_this.type);												// Load it
+		 	LoadCollection();														// Load it
 			});
  
- 	function LoadCollection(coll) {												// LOAD COLLECTION FROM SOLR
+ 	function LoadCollection() {													// LOAD COLLECTION FROM SOLR
 		var str;
 		_this.LoadingIcon(true,64);													// Show loading icon
-		var search="asset_type%3A%22"+coll.toLowerCase()+"%22";						// Add asset type						
+		var search="asset_type%3A%22"+_this.type.toLowerCase()+"%22";				// Add asset type						
 		if (_this.filter) {															// If a filter spec'd
 			str="%22*"+_this.filter.toLowerCase()+"*%22";							// Search term
 			search+=" AND (title%3A"+str;											// Look at title
-			search+=" OR collection_title%3A"+str;									// Or collection title
 			search+=" OR summary%3A"+str+")";										// Or summary
+			}
+		if (_this.filterCollect) {													// If a collection filter spec'd
+			str="%22*"+_this.filterCollect.toLowerCase()+"*%22";					// Search term
+			search+=" AND collection_title%3A"+str;									// Or collection title
 			}
 		if (_this.user) 															// If a user spec'd
 			search+=" AND node_user%3A*"+_this.user+"*";							// Look at user
