@@ -13,7 +13,7 @@ function ksSolr()																// CONSTRUCTOR
 	this.filter="";																	// No filter
 	this.filterCollect="";															// No  collection filter
 	this.user="";																	// No user
-	this.type="Picture";															// Start with pictures
+	this.type="Images";																// Start with Images
 	this.view="List";																// Start with List
 	this.previewMode="";															// Mode of preview ('Zoom', 'Preview', '')
 	this.previewX=0;	this.previewY=0;											// Position of preview pane
@@ -24,7 +24,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORT
 {
 	var _this=this;																	// Save context
 	this.maxDocs=maxDocs;															// Maximum docs to load
-	var collections=["Audio-Video","Picture","Sources","Texts","Visuals"];			// Supported collections
+	var collections=["Audio-Video","Images","Sources","Texts","Visuals"];			// Supported collections
 	$("#dialogDiv").remove();														// Remove any old ones
 	$("body").append("<div class='unselectable ks-dialog' id='dialogDiv'></div>");	// Add to body													
 	var str="<p><img src='img/shantilogo32.png' style='vertical-align:-10px'>&nbsp;&nbsp;"; // Logo
@@ -85,7 +85,9 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORT
  	function LoadCollection() {													// LOAD COLLECTION FROM SOLR
 		var str;
 		_this.LoadingIcon(true,64);													// Show loading icon
-		var search="asset_type%3A%22"+_this.type.toLowerCase()+"%22";				// Add asset type						
+		var type=_this.type;														// Get type to show
+		if (type == "Images") type="Picture";										// Images are picture
+		var search="asset_type%3A%22"+type.toLowerCase()+"%22";						// Add asset type						
 		if (_this.filter) {															// If a filter spec'd
 			str="%22*"+_this.filter.toLowerCase()+"*%22";							// Search term
 			search+=" AND (title%3A"+str;											// Look at title
@@ -262,7 +264,7 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 	else
 		str+="<iframe frameborder='0' allowfullscreen height='"+h+"' width='100%' style='0,border:1px solid #666;width:100%' src='"+o.ajax+"'/>";
 	str+="<div style='padding:8px;padding-top:0px;'>";
-	if (o.type == "picture") str+="<br><div  class='ks-greenbs' id='zoomImg'>Zoomable image</div><br>"
+	if ((o.type == "picture") || (o.type == "image")) str+="<br><div  class='ks-greenbs' id='zoomImg'>Zoomable image</div><br>"
 	if (o.summary)
 		str+="<p class='ks-presummary>"+o.summary+"</p>";
 	if (o.user)	str+="<br><b>User: </b>"+o.user;										// Add user
