@@ -319,6 +319,44 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 		});
 }
 
+ksSolr.prototype.MakeTree=function(callback)                                         // MAKE TREE
+{
+	$('.ks-tree li').each( function() {                                					 // For each element
+trace($(this))
+trace($(this).parent())         
+		if ($(this).children('ul').length > 0)                       				   // If has children 
+			$(this).addClass('parent');                              				   // Make parent class
+			trace($(this))          
+		});
+
+	$('.ks-tree li > a').click(function(e) {                         				  // ON CLICK OF NODE TEXT
+		if (e.offsetX < 12)                                           				  // In icon
+			return;                                                   				  // Quit
+		$('.ks-tree li a').each( function() {                          				// For each line
+			$(this).css({"color":"#000","font-weight":"normal"});      					 // Normal
+			}); 
+		$(this).css({"color":"#009900","font-weight":"bold"});          // Bold and green   
+		callback(e.target.id);                                          // Act on result
+		var p=$(this).parent().parent();                                // Point at parent
+		if (1 == 1) {                                                   // If has children  
+			p.append("<ul><li><a' id='555'>New node</a></li></ul>");
+			trace($(this).parent())
+				$(p.parent()).addClass('parent');                           // Make parent class
+			}
+		else
+			p.append("<li><a id='555'>New node</a></li>");
+
+		});
+
+	$('.ks-tree li.parent > a' ).click(function(e) {                    // ON CLICK OF BUTTON
+		if (e.offsetX > 12)                                             // Not in icon
+			return;                                                     // Quit
+		$(this).parent().toggleClass('active');                         // Toggle active class on or off
+		$(this).parent().children('ul').slideToggle('fast');            // Slide into place
+		});
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // COLLECTIONS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

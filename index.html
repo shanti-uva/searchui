@@ -17,12 +17,57 @@
 	<title>KMap Search</title>
 </head>
 <body>
+	   
+			   <div id='curSelect'></div>
+			   <div class="ks-tree">
+					   <ul>
+						   <li><a id='100'>First Level</a>
+						   <ul>
+							   <li><a id='101'>Second Level</a></li>
+							   <li><a id='102'>Second Level</a></li>
+							   <li><a id='103'>Second Level</a></li>
+						   </ul>
+						   </li>
+						   <li><a>First Level</a>
+						   <ul>
+							   <li><a>Second Level</a>
+						   <ul>
+							   <li><a>Third Level</a></li>
+							   <li><a>Third Level</a></li>
+							   <li><a>Third Level</a>
+						   <ul>
+							   <li><a>Fourth Level</a></li>
+							   <li><a>Fourth Level</a></li>
+							   <li><a>Fourth Level</a>
+						   <ul>
+							   <li><a>Fifth Level</a></li>
+							   <li><a>Fifth Level</a></li>
+							   <li><a>Fifth Level</a></li>
+						   </ul>
+						   </li>
+						   </ul>
+						   </li>
+						   </ul>
+						   </li>
+							   <li><a>Second Level</a></li>
+						   </ul>
+						   </li>
+							   <li><a>First Level</a>
+						   <ul>
+							   <li><a>Second Level</a></li>
+							   <li><a>Second Level</a></li>
+						   </ul>
+						   </li>
+					   </ul>
+					   </div>
+	   		   
 <script>
 
 $(document).ready(function() {								           	// ON PAGE LOADED
 
 	var solr=new ksSolr();													// Alloc ksSolr object
 	solr.ImportSolrDialog(300,done);										// Run dialog
+	solr.MakeTree(function (r) { trace(r) });
 
 	function done(obj) {
 		trace(obj);															// Show object
