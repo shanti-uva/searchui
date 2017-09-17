@@ -11,7 +11,8 @@ function ksSolr()																// CONSTRUCTOR
 	this.data=null;																	// Folds formatted search results
 	this.collection=[];																// Holds collection of items
 	this.filter="";																	// No filter
-	this.filterCollect="";															// No  collection filter
+	this.filterCollect="";															// No collection filter
+	this.filterPlace="";															// No place filter
 	this.user="";																	// No user
 	this.type="Images";																// Start with Images
 	this.view="List";																// Start with List
@@ -31,10 +32,11 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORT
 	str+="<span class='ks-dialogLabel'>Get Item from Mandala</span>";				// Dialog label
 	str+="<p style='text-align:right'>Type: "+this.MakeSelect("mdType",false,collections,this.type);
 	str+="&nbsp;&nbsp;filter by: <input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;height:17px;vertical-align:0px'>";
-	str+="&nbsp;&nbsp;in collection: <input class='ks-is' id='mdFilterCollect' type='text' value='"+this.filterCollect+"' style='width:100px;height:17px;vertical-align:0px'></p>";
+	str+="&nbsp;&nbsp; Kmap: <input class='ks-is' id='mdFilterPlace' type='text' value='"+this.filterPlace+"' style='width:100px;height:17px;vertical-align:0px'></p>";
 	str+="<div id='mdAssets' class='ks-dialogResults'></div>";						// Scrollable container
 	str+="<br>View as: "+this.MakeSelect("mdView",false,["Grid","List"],this.view);
 	str+="&nbsp;&nbsp;Show only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
+	str+="&nbsp;&nbsp;in collection: <input class='ks-is' id='mdFilterCollect' type='text' value='"+this.filterCollect+"' style='width:100px;height:17px;vertical-align:0px'>";
 	str+="&nbsp;&nbsp;&nbsp;<i><span id='numItemsFound'>No</span> items found</i>";		// Number of items
 	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='ks-greenbs'>Save item</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='ks-bs'>Cancel</div></div>";
@@ -70,18 +72,29 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORT
 			});
 	$("#mdFilterCollect").on("change", function() {									// ON CHANGE FILTER COLLECT
 			_this.filterCollect=$(this).val();										// Save for later											
-		 	LoadCollection();														// Load it
+			 LoadCollection();														// Load it
 			});
-	$("#mdUser").on("change", function() {											// ON CHANGE USER
+		$("#mdUser").on("change", function() {										// ON CHANGE USER
 			_this.user=$(this).val();												// Save for later											
 		 	LoadCollection();														// Load it
 			});
-  
-  	$("#mdView").on("change", function() {											// ON CHANGE VIEW
+   	$("#mdView").on("change", function() {											// ON CHANGE VIEW
 			_this.view=$(this).val();												// Save for later											
 		 	LoadCollection();														// Load it
 			});
- 
+	$("#mdFilterPlace").on("change", function() {									// ON CHANGE PLACE FILTER
+			_this.placeFilter=$(this).val();										// Save for later											
+			 LoadCollection();														// Load it
+			});
+	$("#mdFilterPlace").on("click", function() {									// ON CLICK PLACE FILTER
+		var x=$("#mdFilterPlace").offset().left;
+		var y=$("#mdFilterPlace").offset().top+26;
+		_this.MakeTree(x, y, function (r) { 
+			$("#mdFilterPlace").val(r.split(":")[0])								// Save for later											
+			LoadCollection();														// Load it
+		 	});																		// Make tree
+		});
+			
  	function LoadCollection() {													// LOAD COLLECTION FROM SOLR
 		var str;
 		_this.LoadingIcon(true,64);													// Show loading icon
@@ -319,43 +332,59 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 		});
 }
 
-ksSolr.prototype.MakeTree=function(callback)                                         // MAKE TREE
+ksSolr.prototype.MakeTree=function(x, y, callback)  								// MAKE TREE
 {
-	$('.ks-tree li').each( function() {                                					 // For each element
-trace($(this))
-trace($(this).parent())         
-		if ($(this).children('ul').length > 0)                       				   // If has children 
-			$(this).addClass('parent');                              				   // Make parent class
-			trace($(this))          
+	if ($("#kmTreeDiv").length) {														// If open
+		$("#kmTreeDiv").remove();														// Remove it
+		return;																			// Quit
+		}
+	var str="<div id='kmTreeDiv' class='ks-tree'";				
+	str+="style='left:"+x+"px;top:"+y+"px'><ul>";
+	str+="<li class='parent'><a id='KMID-100'>First</a>";
+	str+="<li class='parent'><a id='KMID-101'>Second</a>";
+	str+="<li class='parent'><a id='KMID-102'>Third</a>";
+	$("body").append(str+"</ul></div>");												// Add to tree div
+	
+	
+	$('.ks-tree li').each( function() {                                					// For each element
+		if ($(this).children('ul').length > 0)                       				  	// If has children 
+			$(this).addClass('parent');                              				   	// Make parent class
 		});
 
-	$('.ks-tree li > a').click(function(e) {                         				  // ON CLICK OF NODE TEXT
-		if (e.offsetX < 12)                                           				  // In icon
-			return;                                                   				  // Quit
-		$('.ks-tree li a').each( function() {                          				// For each line
-			$(this).css({"color":"#000","font-weight":"normal"});      					 // Normal
-			}); 
-		$(this).css({"color":"#009900","font-weight":"bold"});          // Bold and green   
-		callback(e.target.id);                                          // Act on result
-		var p=$(this).parent().parent();                                // Point at parent
-		if (1 == 1) {                                                   // If has children  
-			p.append("<ul><li><a' id='555'>New node</a></li></ul>");
-			trace($(this).parent())
-				$(p.parent()).addClass('parent');                           // Make parent class
+	$('.ks-tree li > a').on("click", function(e) { handleClick($(this),e);  });      	// ON CLICK OF NODE TEXT
+
+	function handleClick(p, e)															// HANDLE CLICK
+	{
+		if (e.offsetX < 12) {                                         				  	// In icon
+			if (p.parent().children().length == 1) 										// If no children
+				LazyLoad(p);															// Lazy load from SOLR
+			else																		// Open or close
+				p.parent().children('ul').slideToggle('fast');            				// Slide into place
 			}
-		else
-			p.append("<li><a id='555'>New node</a></li>");
+		else{																			// In text
+			$('.ks-tree li a').each( function() {                          				// For each line
+				$(this).css({"color":"#000","font-weight":"normal"});      				// Normal
+				}); 
+			p.css({"color":"#009900","font-weight":"bold"});          					// Bold and green   
+			callback($("#"+e.target.id).text()+":"+e.target.id); 						// Act on result
+			}		
+	}
 
-		});
-
-	$('.ks-tree li.parent > a' ).click(function(e) {                    // ON CLICK OF BUTTON
-		if (e.offsetX > 12)                                             // Not in icon
-			return;                                                     // Quit
-		$(this).parent().toggleClass('active');                         // Toggle active class on or off
-		$(this).parent().children('ul').slideToggle('fast');            // Slide into place
-		});
+	function LazyLoad(p) 
+	{
+		trace(p.text())
+		if (p.parent().children().length == 1) {									// If no children, lazy load 
+			str="<ul style='display:none'>";										// Wrapper
+			str+="<li class='parent'><a id='555'>New node</a></li>";
+			str+="<li><a id='556'>New node</a></li>";
+			str+="<li><a id='557'>New node</a></li></ul>";
+			p.after(str);															// Add to tree
+			}
+		p.parent().children('ul').slideToggle('fast');            					// Slide into place
+		$('.ks-tree li > a').off();													// Clear handlers
+		$('.ks-tree li > a').on("click",function(e) { handleClick($(this),e);  }); 	// Restore handler
+	}
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // COLLECTIONS

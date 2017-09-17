@@ -48,17 +48,16 @@
 		 table {			border-spacing: 0px;  }
 		 input {		    vertical-align: -2px; }
 	
-		 .ks-tree {      user-select: none; width: 200px; height:200px; border-radius:6px; background-color:#eee; overflow:auto;
-			margin-top: 10%; margin-left: auto; margin-right: auto; padding: 12px; font-size: 12px;text-align:left;
-			}
-		.ks-tree ul { list-style: none outside none; padding: 0 }
-		.ks-tree li a { line-height: 18px; cursor: pointer; }
+		 .ks-tree {      	user-select: none; max-width: 200px; max-height: 300px; border-radius:6px; background-color :#eee; overflow: auto; border: 1px solid #999;
+			 				padding: 0px 12px; font-size: 12px; text-align: left; position: absolute; box-shadow:4px 4px 8px #ccc;
+							}
+		.ks-tree ul { 		list-style: none outside none; padding: 0 }
+		.ks-tree li a { 	line-height: 18px; cursor: pointer; }
 		.ks-tree > ul > li > a { color: #3B4C56; display: block;  font-weight: normal; position: relative; text-decoration: none; }
 		.ks-tree li.parent > a { padding: 0 0 0 16px;  }
 		.ks-tree li.parent > a:before { background-image: url("../img/treebuts.png"); content: ""; display: block;
-									height: 11px; left: 0; position: absolute; top: 3px; width: 11px;  background-position: 0px;
-									}
+										height: 11px; left: 0; position: absolute; top: 3px; width: 11px;  background-position: 0px;
+										}
 		.ks-tree ul li.active > a:before { background-position: 22px; }
-		.ks-tree ul li.lone > a:before { background-position: 33px; }
-		.ks-tree ul li ul { border-left: 1px solid #ccc;  display: none; margin: 0 0 0 5px; padding: 0 0 0 10px; }
+		.ks-tree ul li ul 	{ border-left: 1px solid #ccc;  display: none; margin: 0 0 0 5px; padding: 0 0 0 10px; }
 		.ks-tree ul li ul li { position: relative; }
