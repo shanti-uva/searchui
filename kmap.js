@@ -334,25 +334,29 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 
 ksSolr.prototype.MakeTree=function(x, y, callback)  								// MAKE TREE
 {
-	if ($("#kmTreeDiv").length) {														// If open
-		$("#kmTreeDiv").remove();														// Remove it
+	if ($("#kmTreeDiv").css("display") == "block") {									// If showing
+		$("#kmTreeDiv").css("display","none");											// Hide it
 		return;																			// Quit
 		}
-	var str="<div id='kmTreeDiv' class='ks-tree'";				
-	str+="style='left:"+x+"px;top:"+y+"px'><ul>";
-	str+="<li class='parent'><a id='KMID-100'>First</a>";
-	str+="<li class='parent'><a id='KMID-101'>Second</a>";
-	str+="<li class='parent'><a id='KMID-102'>Third</a>";
-	$("body").append(str+"</ul></div>");												// Add to tree div
+	else																				// Not showing	
+		$("#kmTreeDiv").css("display","block");											// Show it
 	
+	if (!$("#kmTreeDiv").length) {														// If doesn't exist
+		var str="<div id='kmTreeDiv' class='ks-tree'";				
+		str+="style='left:"+x+"px;top:"+y+"px'><ul>";
+		str+="<li class='parent'><a id='KMID-100'>First</a>";
+		str+="<li class='parent'><a id='KMID-101'>Second</a>";
+		str+="<li class='parent'><a id='KMID-102'>Third</a>";
+		$("body").append(str+"</ul></div>");											// Add to tree div
+
+		$('.ks-tree li').each( function() {                                				// For each element
+			if ($(this).children('ul').length > 0)                       				// If has children 
+				$(this).addClass('parent');                              				// Make parent class
+			});
+
+		$('.ks-tree li > a').on("click", function(e) { handleClick($(this),e);  });      // ON CLICK OF NODE TEXT
+		}
 	
-	$('.ks-tree li').each( function() {                                					// For each element
-		if ($(this).children('ul').length > 0)                       				  	// If has children 
-			$(this).addClass('parent');                              				   	// Make parent class
-		});
-
-	$('.ks-tree li > a').on("click", function(e) { handleClick($(this),e);  });      	// ON CLICK OF NODE TEXT
-
 	function handleClick(p, e)															// HANDLE CLICK
 	{
 		if (e.offsetX < 12) {                                         				  	// In icon
