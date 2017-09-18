@@ -44,16 +44,18 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORT
 	$("#dialogOK").on("click", function() {											// ON OK BUT
 				$("#dialogDiv").animate({ opacity:0},200, function() {				// Fade out
 					$("#previewDiv").remove();										// Remove preview
+					$("#kmTreeDiv").remove();										// Remove tree
+					$("#dialogDiv").remove();  										// Remove dialog
 					if (callback)	callback(_this.rawData.response.docs[_this.curItem]); // If callback defined, run it and return raw Solr data
 					_this.previewMode="";											// No mode
 					});
 				});
 
 	$("#dialogCancel").on("click", function() {										// ON CANCEL BUT
-				$("#dialogBoxDiv").remove();										// Remove 
 				$("#dialogDiv").animate({ opacity:0},200, function() {				// Fade out		
-					$("#dialogDiv").remove();  										// Remove dialog
 					$("#previewDiv").remove();										// Remove preview
+					$("#kmTreeDiv").remove();										// Remove tree
+					$("#dialogDiv").remove();  										// Remove dialog
 					_this.previewMode="";											// No mode
 					});
 				_this.Sound("delete");												// Delete sound
@@ -294,7 +296,7 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 		}});
 	$("#lbxBoxExit").on("click",function() {											// CLICK ON DONE BUT
 			_this.Sound("click");														// Click
-			$("#previewDiv").remove();													// Remove it
+			$("#previewDiv").remove();													// Remove preview 
 			_this.previewMode="";														// No mode
 			$("#dialogOK").css("display","none");										// Hide add button
 			});
