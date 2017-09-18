@@ -334,6 +334,10 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 		});
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TREE
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 ksSolr.prototype.MakeTree=function(x, y, callback)  								// MAKE TREE
 {
 	if ($("#kmTreeDiv").css("display") == "block") {									// If showing
@@ -364,8 +368,10 @@ ksSolr.prototype.MakeTree=function(x, y, callback)  								// MAKE TREE
 		if (e.offsetX < 12) {                                         				  	// In icon
 			if (p.parent().children().length == 1) 										// If no children
 				LazyLoad(p);															// Lazy load from SOLR
-			else																		// Open or close
+			else{																		// Open or close
+				p.parent().toggleClass('active');                         				// Toggle active class on or off
 				p.parent().children('ul').slideToggle('fast');            				// Slide into place
+				}
 			}
 		else{																			// In text
 			$('.ks-tree li a').each( function() {                          				// For each line
@@ -386,6 +392,7 @@ ksSolr.prototype.MakeTree=function(x, y, callback)  								// MAKE TREE
 			str+="<li><a id='557'>New node</a></li></ul>";
 			p.after(str);															// Add to tree
 			}
+		p.parent().toggleClass('active');                         					// Toggle active class on or off
 		p.parent().children('ul').slideToggle('fast');            					// Slide into place
 		$('.ks-tree li > a').off();													// Clear handlers
 		$('.ks-tree li > a').on("click",function(e) { handleClick($(this),e);  }); 	// Restore handler
