@@ -21,8 +21,11 @@
 
 $(document).ready(function() {								           	// ON PAGE LOADED
 
+	var mode="";															// Normal mode
+	if (window.location.search && window.location.search.match(/cke/i))		// If a CKEditor plug-in
+		mode="cke";															// Set mode
 	var solr=new ksSolr();													// Alloc ksSolr object
-	solr.ImportSolrDialog(300,done);										// Run dialog
+	solr.ImportSolrDialog(300,done,mode);									// Run dialog
 
 	function done(obj) {
 		trace(obj);															// Show object

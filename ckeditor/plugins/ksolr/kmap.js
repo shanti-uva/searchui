@@ -19,22 +19,20 @@ function ksSolr()																// CONSTRUCTOR
 	this.previewMode="";															// Mode of preview ('Zoom', 'Preview', '')
 	this.previewX=0;	this.previewY=0;											// Position of preview pane
 	this.curItem=-1;																// Currently selected item
-	this.execMode="";																// Standalone
 }
 
-ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR IMPORTER DIALOG
+ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback)					// SOLR IMPORTER DIALOG
 {
 	var _this=this;																	// Save context
 	this.maxDocs=maxDocs;															// Maximum docs to load
-	this.execMode=mode;																// Set execution mode
 	var collections=["Audio-Video","Images","Sources","Texts","Visuals"];			// Supported collections
 	$("#dialogDiv").remove();														// Remove any old ones
-	$("body").append("<div class='unselectable ks-dialog' id='dialogDiv'</div>");	// Add to body													
+	$("body").append("<div class='unselectable ks-dialog' id='dialogDiv'></div>");	// Add to body													
 	var str="<p><img src='img/shantilogo32.png' style='vertical-align:-10px'>&nbsp;&nbsp;"; // Logo
 	str+="<span class='ks-dialogLabel'>Get Item from Mandala</span>";				// Dialog label
 	str+="<p style='text-align:right'>Type: "+this.MakeSelect("mdType",false,collections,this.type);
 	str+="&nbsp;&nbsp;filter by: <input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;height:17px;vertical-align:0px'>";
-//	str+="&nbsp;&nbsp; Kmap: <input class='ks-is' id='mdFilterPlace' type='text' value='"+this.filterPlace+"' style='width:100px;height:17px;vertical-align:0px'></p>";
+	str+="&nbsp;&nbsp; Kmap: <input class='ks-is' id='mdFilterPlace' type='text' value='"+this.filterPlace+"' style='width:100px;height:17px;vertical-align:0px'></p>";
 	str+="<div id='mdAssets' class='ks-dialogResults'></div>";						// Scrollable container
 	str+="<br>View as: "+this.MakeSelect("mdView",false,["Grid","List"],this.view);
 	str+="&nbsp;&nbsp;Show only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
@@ -116,7 +114,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 			}
 		if (_this.user) 															// If a user spec'd
 			search+=" AND node_user%3A*"+_this.user+"*";							// Look at user
-		var url="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select?"+"q="+search + 
+		var url="https://ss206212-us-east-1-aws.measuredsearch.com/solr/kmassets/select?"+"q="+search + 
    				 "&fl=*&wt=json&json.wrf=?&rows="+_this.maxDocs+"&limit="+_this.maxDocs;
 
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done(function(data) {
