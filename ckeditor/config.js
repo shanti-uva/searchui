@@ -8,11 +8,11 @@ CKEDITOR.editorConfig = function( config ) {
 	config.toolbar =[
 		{ name: 'clipboard', items : [ 'Source','Undo','Redo' ] },
 		{ name: 'editing', items : [ 'SpellChecker', 'Scayt' ] },
-		{ name: 'insert', items : ['Table','SpecialChar','HorizontalRule','Image','Link','ksolr'] },
+		{ name: 'insert', items : ['Table','SpecialChar','HorizontalRule','Image','Link','Iframe','ksolr'] },
 		{ name: 'basicstyles', items : [ 'Bold','Italic','Underline','RemoveFormat',
 			'NumberedList','BulletedList','Outdent','Indent',
 			'JustifyLeft','JustifyCenter','JustifyRight', ] },
 		{ name: 'styles', items : [	'-','Styles','Font','FontSize','TextColor' ] },
 		];
-	config.extraPlugins = 'ksolr';
+		config.extraPlugins = 'ksolr';	
 };

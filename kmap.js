@@ -44,24 +44,19 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 	str+="<div id='dialogCancel' class='ks-bs'>Cancel</div></div>";
 	$("#dialogDiv").append(str+"</div>");	
 	$("#dialogOK").on("click", function() {											// ON OK BUT
-				$("#dialogDiv").animate({ opacity:0},200, function() {				// Fade out
 					$("#previewDiv").remove();										// Remove preview
 					$("#kmTreeDiv").remove();										// Remove tree
-					$("#dialogDiv").remove();  										// Remove dialog
+					var str=JSON.stringify(_this.rawData.response.docs[_this.curItem]);
+					window.parent.postMessage("kSolrMsg="+str,"*");					// Send message to parent wind		
 					if (callback)	callback(_this.rawData.response.docs[_this.curItem]); // If callback defined, run it and return raw Solr data
 					_this.previewMode="";											// No mode
 					});
-				});
 
 	$("#dialogCancel").on("click", function() {										// ON CANCEL BUT
-				$("#dialogDiv").animate({ opacity:0},200, function() {				// Fade out		
 					$("#previewDiv").remove();										// Remove preview
 					$("#kmTreeDiv").remove();										// Remove tree
-					$("#dialogDiv").remove();  										// Remove dialog
 					_this.previewMode="";											// No mode
 					});
-				_this.Sound("delete");												// Delete sound
-			});
 
 	LoadCollection();															// Load 1st collection
  	

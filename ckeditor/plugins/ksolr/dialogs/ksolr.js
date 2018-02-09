@@ -1,3 +1,5 @@
+var skEditor;
+
 CKEDITOR.dialog.add( 'ksolrdialog', function( editor ) {
 	return {
 		title: 'Add Mandala resource',
@@ -6,14 +8,17 @@ CKEDITOR.dialog.add( 'ksolrdialog', function( editor ) {
 			id: 'dialogContent',
 			elements: [	{
                     type: 'html',
-                    html: '<iframe src="http://viseyes.org/kmap?cke" style="width:100%;height:620px;margin-top:-90px"></iframe>'
+                    html: '<iframe src="http://viseyes.org/kmap/index.html?cke" style="width:100%;height:620px;margin-top:-90px"></iframe>'
                 	}],
 			}],
 		onLoad: function() {
+			if (window.addEventListener) 											// If supported this way
+				window.addEventListener("message",kSolrHandler,false);				// Add event handler
+			else																	// Use other method
+			window.attachEvent("message",kSolrHandler);								// Add handler
+			skEditor=editor;
 		},
-		onOk: function() {
-			editor.insertHtml("<img src='http://wp.patheos.com.s3.amazonaws.com/blogs/faithwalkers/files/2013/03/bigstock-Test-word-on-white-keyboard-27134336.jpg' width='300'>");
-			}
+		onOk: function() {}
 		};
 	});
 
@@ -21,4 +26,31 @@ CKEDITOR.dialog.add( 'ksolrdialog', function( editor ) {
 	function trace(msg)
 	{
 		console.log(msg)
+	}
+
+	function kSolrHandler(e)													// ON KSOLR EVENT
+	{
+		if (e.data && e.data.match(/kSolrMsg/)) {									// Message from kmap
+			var src="";
+			var o=$.parseJSON(e.data.substr(9));									// Objectify
+			if (o.asset_type == "picture") {										// Picture asset
+				if (o.url_large) 		src=o.url_large;							// Large
+				else if (o.url_normal) 	src=o.url_normal;							// Normal
+				else if (o.url_thumb) 	src=o.url_thumb;							// Thumb
+				if (src)															// If something
+					skEditor.insertHtml("<img src='"+src+"' width='300'>");			// Add image to text
+				}
+			else if (o.asset_type == "sources") {									// Sources asset
+				if (o.summary) 		src=o.summary;									// Summary
+				else if (o.caption) src=o.caption;									// Caption
+				else if (o.title) 	src=o.title;									// Title
+				if (src)															// If something
+					skEditor.insertHtml("<p>"+src+"</p>");							// Add string to text
+				trace(src)
+				}
+			else{																	// Anthing else
+				if (o.url_thumb) 													// Use thumb 
+					skEditor.insertHtml("<iframe frameborder='0' scrolling='no' src='"+o.url_thumb+"' width='300'><iframe>");	// Add iframe to text
+				}
+			}
 	}

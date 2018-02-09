@@ -28,8 +28,10 @@ $(document).ready(function() {								           	// ON PAGE LOADED
 	solr.ImportSolrDialog(300,done,mode);									// Run dialog
 
 	function done(obj) {
-		trace(obj);															// Show object
-		$("#dialogDiv").remove();  											// Remove dialog
+		if (mode != "cke") {												// Not CKE
+			trace(obj);														// Show object
+//			$("#dialogDiv").remove();  										// Remove dialog
+			}
 		}
 });
 
