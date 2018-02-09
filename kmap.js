@@ -24,6 +24,7 @@ function ksSolr()																// CONSTRUCTOR
 
 ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR IMPORTER DIALOG
 {
+	var i;
 	var _this=this;																	// Save context
 	this.maxDocs=maxDocs;															// Maximum docs to load
 	this.execMode=mode;																// Set execution mode
@@ -40,7 +41,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 	str+="&nbsp;&nbsp;Show only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
 	str+="&nbsp;&nbsp;in collection: <input class='ks-is' id='mdFilterCollect' type='text' value='"+this.filterCollect+"' style='width:100px;height:17px;vertical-align:0px'>";
 	str+="&nbsp;&nbsp;&nbsp;<i><span id='numItemsFound'>No</span> items found</i>";		// Number of items
-	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='ks-greenbs'>Save item</div>&nbsp;&nbsp;";
+	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='ks-greenbs'>Add item</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='ks-bs'>Cancel</div></div>";
 	$("#dialogDiv").append(str+"</div>");	
 	$("#dialogOK").on("click", function() {											// ON OK BUT
@@ -50,13 +51,19 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 					window.parent.postMessage("kSolrMsg="+str,"*");					// Send message to parent wind		
 					if (callback)	callback(_this.rawData.response.docs[_this.curItem]); // If callback defined, run it and return raw Solr data
 					_this.previewMode="";											// No mode
+					for (i=0;i<_this.data.length;++i)								// For each result
+						$("#mdres-"+i).css({ "color":"#000", "font-weight":"normal" });	// Make default
+					$("#dialogOK").css("display","none");							// Hide add button
 					});
 
 	$("#dialogCancel").on("click", function() {										// ON CANCEL BUT
 					$("#previewDiv").remove();										// Remove preview
 					$("#kmTreeDiv").remove();										// Remove tree
 					_this.previewMode="";											// No mode
-					});
+					for (i=0;i<_this.data.length;++i)								// For each result
+						$("#mdres-"+i).css({ "color":"#000", "font-weight":"normal" });	// Make default
+					$("#dialogOK").css("display","none");							// Hide add button
+				});
 
 	LoadCollection();															// Load 1st collection
  	
@@ -251,8 +258,8 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 	$("#dialogOK").css("display","inline-block");										// Show add button
 
 	for (i=0;i<this.data.length;++i)													// For each result
-		$("#mdres-"+i).css("color","#000");												// Make default color
-	$("#mdres-"+num).css("color","#1c7e46");											// Highlight
+		$("#mdres-"+i).css({ "color":"#000", "font-weight":"normal" });					// Make default
+	$("#mdres-"+num).css({ "color":"#009900", "font-weight":"bold" });					// Highlight
 
 	var h=345;																			// Get dialog height												
 	var w=$("#mdAssets").width()/2;														// Get dialog width												
@@ -261,6 +268,7 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 	var x=this.previewX, y=this.previewY;												// Get saved position
 	if ((x == 0) && (y == 0)) {															// Position first time
 		x=$("#mdAssets").offset().left+$("#mdAssets").width()-w/2;						// Left
+		if (this.execMode == "cke") 	x-=$("#mdAssets").width()/2;					// Center in window for CKE
 		y=$("#mdAssets").offset().top+4;												// Top
 		}	
 	var str="<div class='unselectable ks-prevDiv' id='previewDiv' style='";				// Div head
