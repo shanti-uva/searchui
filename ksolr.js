@@ -18,7 +18,6 @@ function ksSolr()																// CONSTRUCTOR
 	this.view="List";																// Start with List
 	this.previewMode="";															// Mode of preview ('Zoom', 'Preview', '')
 	this.curItem=-1;																// Currently selected item
-	this.execMode="";																// Standalone
 }
 
 ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR IMPORTER DIALOG
@@ -26,7 +25,6 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 	var i;
 	var _this=this;																	// Save context
 	this.maxDocs=maxDocs;															// Maximum docs to load
-	this.execMode=mode;																// Set execution mode
 	var collections=["Audio-Video","Images","Sources","Texts","Visuals"];			// Supported collections
 	$("#dialogDiv").remove();														// Remove any old ones
 	$("body").append("<div class='unselectable ks-dialog' id='dialogDiv'</div>");	// Add to body													

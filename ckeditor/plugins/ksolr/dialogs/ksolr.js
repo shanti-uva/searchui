@@ -8,7 +8,7 @@ CKEDITOR.dialog.add( 'ksolrdialog', function( editor ) {
 			id: 'dialogContent',
 			elements: [	{
                     type: 'html',
-                    html: '<iframe src="http://viseyes.org/kmap/index.html?cke" style="width:100%;height:620px;margin-top:-90px"></iframe>'
+                    html: '<iframe src="http://viseyes.org/ksolr/index.html" style="width:100%;height:620px;margin-top:-90px"></iframe>'
                 	}],
 			}],
 		onLoad: function() {

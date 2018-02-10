@@ -5,49 +5,26 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<meta http-equiv="x-ua-compatible" content="ie=edge">
-	<link rel="stylesheet" href="css/jquery-ui.min.css"></link>
 	<link rel="stylesheet" href="css/kmapsearch.css"></link>
 	<script src="lib/jquery.min.js"></script>
-	<script src="lib/jquery-ui.min.js"></script>
-	<script src="lib/jquery.ui.touch-punch.min.js"></script>
-	<script src="lib/jquery-ui.min.js"></script>
-	<script src="kmap.js"></script>
+	<script src="ksolr.js"></script>
 	<script src="zoomer.js"></script>
 	<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
-	<title>KMap Search</title>
+	<title>Mandala Search</title>
 </head>
 <body>
 <script>
 
 $(document).ready(function() {								           	// ON PAGE LOADED
 
-	var mode="";															// Normal mode
-	if (window.location.search && window.location.search.match(/cke/i))		// If a CKEditor plug-in
-		mode="cke";															// Set mode
 	var solr=new ksSolr();													// Alloc ksSolr object
-	solr.ImportSolrDialog(300,done,mode);									// Run dialog
+	solr.ImportSolrDialog(300,done);										// Run dialog
 
 	function done(obj) {
-		if (mode != "cke") {												// Not CKE
-			trace(obj);														// Show object
-//			$("#dialogDiv").remove();  										// Remove dialog
-			}
+		trace(obj);															// Show object
+//		$("#dialogDiv").remove();  											// Remove dialog
 		}
 });
-
-	function trace(msg, p1, p2, p3, p4)										// CONSOLE 
-	{
-		if (p4 != undefined)
-			console.log(msg,p1,p2,p3,p4);
-		else if (p3 != undefined)
-			console.log(msg,p1,p2,p3);
-		else if (p2 != undefined)
-			console.log(msg,p1,p2);
-		else if (p1 != undefined)
-			console.log(msg,p1);
-		else
-			console.log(msg);
-	}
 
 </script>
 </body>
