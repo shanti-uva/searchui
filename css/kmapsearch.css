@@ -27,8 +27,8 @@
 		.ks-dialogResults { width: 100%px; height: 350px; overflow-y: auto; border-radius: 6px;
 							background-color :#f8f8f8; padding: 8px; border: 1px solid #999;
 							}
-		.ks-prevDiv {		border-radius:6px; background-color:#eee; border: 1px solid #999; box-shadow: 4px 4px 8px #ccc;
-							position: absolute; padding: 0px; padding-top: 0px;  overflow-x:hidden; overflow-y: auto; z-index: 10000;
+		.ks-prevDiv {		position: absolute; background-color:#eee; padding: 0px; padding-top: 0px;  overflow-x: hidden; 
+							overflow-y: auto; z-index: 10000; border-left: 1px solid #999; text-align: right;
 							}
 		.ks-prevId {		font-size: 14px; color: #27ae60; font-weight: bold; padding-left: 8px; padding-right: 8px;
 							}

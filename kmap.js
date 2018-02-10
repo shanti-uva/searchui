@@ -17,7 +17,6 @@ function ksSolr()																// CONSTRUCTOR
 	this.type="Images";																// Start with Images
 	this.view="List";																// Start with List
 	this.previewMode="";															// Mode of preview ('Zoom', 'Preview', '')
-	this.previewX=0;	this.previewY=0;											// Position of preview pane
 	this.curItem=-1;																// Currently selected item
 	this.execMode="";																// Standalone
 }
@@ -195,16 +194,16 @@ ksSolr.prototype.DrawAsList=function()											// SHOW RESULTS AS LIST
 	var _this=this;																	// Save context
 	var trsty=" class='ks-listItem'  onclick='ksSolrObj.Preview(this.id.substr(6))'";	// Row style
 	var str="<table style='width:100%;text-align:left'>";							// Header row
-	str+="<tr style='font-weight:bold;cursor:url(img/sortcur.gif),ns-resize'><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td style=width:100%' id='mdh-title'>Title</td><td  id='mdh-user'>&nbsp;User</td></tr>";
+	str+="<tr style='font-weight:bold;cursor:url(img/sortcur.gif),ns-resize'><td style=width:100%' id='mdh-title'>Title</td><td id='mdh-date'>Date</td><td id='mdh-id'>&nbsp;ID&nbsp;</td><td  id='mdh-user'>&nbsp;User</td></tr>";
 	str+="<tr><td colspan='4'><hr></td></tr>";
 	
 	for (i=0;i<this.data.length;++i) {												// For each doc returned
 		o=this.data[i];																// Point at doc
-		str+="<tr id='mdres-"+i+"'"+trsty+"><td>"+o.date;							// Add start and date
-		str+="</td><td>&nbsp;"+o.id+"&nbsp;"										// Add id
-		str+="</td><td>"+this.ShortenString(o.title,80)+"<td>";						// Add title
+		str+="<tr id='mdres-"+i+"'"+trsty+"><td>"+this.ShortenString(o.title,80)+"</td>";	// Add title
+		str+="<td>"+o.date;															// Add date
+		str+="</td><td>&nbsp;"+o.id+"<td>"											// Add id
 		if (o.user)																	// If a user spec'd
-			str+=this.ShortenString(o.user,60);										// Add user		
+			str+=this.ShortenString(o.user,12);										// Add user		
 		str+="</td></tr>";															// Close line	
 		}
 	str+="</table>";																// Close table
@@ -261,51 +260,29 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 		$("#mdres-"+i).css({ "color":"#000", "font-weight":"normal" });					// Make default
 	$("#mdres-"+num).css({ "color":"#009900", "font-weight":"bold" });					// Highlight
 
-	var h=345;																			// Get dialog height												
-	var w=$("#mdAssets").width()/2;														// Get dialog width												
+	var h=368, w=242;																	// Get size												
 	var maxHgt=window.innerHeight-100;													// Max height
 	var maxWid=window.innerWidth-200;													// Max width
-	var x=this.previewX, y=this.previewY;												// Get saved position
-	if ((x == 0) && (y == 0)) {															// Position first time
-		x=$("#mdAssets").offset().left+$("#mdAssets").width()-w/2;						// Left
-		if (this.execMode == "cke") 	x-=$("#mdAssets").width()/2;					// Center in window for CKE
-		y=$("#mdAssets").offset().top+4;												// Top
-		}	
+	var y=$("#mdAssets").offset().top;													// Top
+	var x=$("#mdAssets").offset().left+$("#mdAssets").width()-w+16;						// Left
 	var str="<div class='unselectable ks-prevDiv' id='previewDiv' style='";				// Div head
 	str+="height:"+h+"px;width:"+w+"px;";												// Size
 	str+="left:"+x+"px;top:"+y+"px'>";													// Position
-	str+="<p class='ks-prevId'><img src='img/shantilogo32.png' style='vertical-align:-6px;width:24px'>&nbsp;&nbsp;"; // Logo
-	str+="Mandala item "+o.id;															// Show id
-	str+="<img src='img/closedot.gif' id='lbxBoxExit' class='ks-dialogDoneBut'><br></p>"; // Done button
+	str+="<div class='ks-prevId'>Mandala item "+o.id+"</div>";							// Show id
 	if (o.title)																		// If a title
 		str+="<p class='ks-dialogTitle'>"+o.title+"</p>";								// Show title 
 	if (o.ajax && o.ajax.match(/\.png|.gif|\.jpg|.jpeg/i)) 								// An image
-		str+="<div id='previewImg' style='width:"+w+"px;overflow-y:auto'><img id='myImg' style='width:100%' src='"+o.ajax+"'></div>";
+		str+="<div id='previewImg' style='width:"+(w-8)+"px;overflow-y:auto;padding:12px;padding-top:0'><img id='myImg' style='width:100%' src='"+o.ajax+"'></div>";
 	else
-		str+="<iframe frameborder='0' allowfullscreen height='"+h+"' width='100%' style='0,border:1px solid #666;width:100%' src='"+o.ajax+"'/>";
-	str+="<div style='padding:8px;padding-top:0px;'>";
-	if ((o.type == "picture") || (o.type == "image")) str+="<br><div  class='ks-greenbs' id='zoomImg'>Zoomable image</div><br>"
-	if (o.summary)
-		str+="<p class='ks-presummary>"+o.summary+"</p>";
-	if (o.user)	str+="<br><b>User: </b>"+o.user;										// Add user
-	if (o.date)	str+="<br><b>Date: </b>"+o.date;										// Add date
-	if (o.html)	str+="<p><a target='_blank' href='"+o.html+"'><b>View webpage</b></a></p>"	// Add link to page
+		str+="<iframe frameborder='0'style='width:100%;padding:12px;padding-top:0;height:210px' src='"+o.ajax+"'/>";
+	str+="<div>";
+	if ((o.type == "picture") || (o.type == "image")) str+="<div  class='ks-greenbs' id='zoomImg'>Zoomable image</div><br>"
+	if (o.summary)	str+="<p>"+o.summary+"</p>";										// Add summary
+	if (o.date)		str+="<br>"+o.date;													// Add date
+	if (o.user)		str+=" by "+o.user;													// Add user
+	if (o.html)		str+="<p><a target='_blank' href='"+o.html+"'><b>View webpage</b></a></p>"	// Add link to page
 	$("body").append(str+"</div></div>");												// Add content
 
-	$("#previewDiv").draggable( { handle:"p",
-			stop:function(ev,ui) {														// Make preview pane draggable
-				if (_this.previewMode == "Preview") {									// If moving preview window
-					_this.previewX=ui.offset.left;										// Save preview pane X on drag
-					_this.previewY=ui.offset.top;										// Save Y
-					}
-		}});
-	$("#lbxBoxExit").on("click",function() {											// CLICK ON DONE BUT
-			_this.Sound("click");														// Click
-			$("#previewDiv").remove();													// Remove preview 
-			_this.previewMode="";														// No mode
-			$("#dialogOK").css("display","none");										// Hide add button
-			});
-	
 	$("#zoomImg").on("click",function() {												// ZOOM IMAGE
 		var rh=$("#myImg").prop("naturalHeight");										// Real height
 		var rw=$("#myImg").prop("naturalWidth");										// Real width
@@ -321,7 +298,7 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 			}
 		$("#previewDiv").width(w);														// Set width
 
-		var str="<p class='ks-prevId'><img src='img/shantilogo32.png' style='vertical-align:-6px;width:24px'>&nbsp;&nbsp;"; // Logo
+		var str="<p class='ks-prevId' style='text-align:left'><img src='img/shantilogo32.png' style='vertical-align:-6px;width:24px'>&nbsp;&nbsp;"; // Logo
 		str+="Pan and Zoom on Mandala item "+o.id;										// Show id
 		str+="<img src='img/closedot.gif' id='lbxBoxExit' class='ks-dialogDoneBut'><br></p>"; // Done button
 		$("#previewDiv").html(str);
