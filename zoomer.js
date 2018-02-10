@@ -4,14 +4,7 @@
 
 function Zoomer(url, startZoom, overviewSize) 						//	DRAW ZOOMER
 {
-
-/* 
- 	@param {string} url 		URL of image.
-	@param {number} startZoom 	Starting zoom amount.
-	@param {number} startZoom 	Overview size as a divisor.
-	
-*/	
- 	this.div="#previewDiv";													// Current div selector
+	this.div="#previewDiv";													// Current div selector
  	var _this=this;															// Context for callbacks
 	var str="<div id='zoomerOuterDiv' style='border:1px solid #666;overflow:hidden;margin-right:3px;margin-bottom:3px;'>";	// Make outer div
  	str+="<div id='zoomerDiv' </div></div>";								// Make Zoomer div
@@ -23,7 +16,7 @@ function Zoomer(url, startZoom, overviewSize) 						//	DRAW ZOOMER
 	str+="height='100%' width='100%'>";										// Size
 	$("#zoomerDiv").append(str);											// Add image to zoomer
 	
-	$("#zoomerImg").load(function(e) {										// WHEN IMAGE IS LOADED
+	$("#zoomerImg").on("load", function(e) {								// WHEN IMAGE IS LOADED
 		_this.zoomerWidth=$(this).width();									// Get true width
 		_this.zoomerHeight=$(this).height();								// Get true height
 		_this.zoomerAsp=_this.zoomerHeight/_this.zoomerWidth;				// Get aspect ratio
@@ -33,7 +26,7 @@ function Zoomer(url, startZoom, overviewSize) 						//	DRAW ZOOMER
 		_this.PositionZoomer();												// Position it
 		});
 
-	$("#zoomerDiv").draggable({ drag:function(event,ui) {					// Make it draggable
+	$("#zoomerDiv").draggable({ drag:function(event,ui) {					// DRAGGABLE
 		var w=$("#zoomerDiv").width();										// Get image width
 		var h=$("#zoomerDiv").height();										// Get image height
 		var s=this.zoomerScale;												// Current scale

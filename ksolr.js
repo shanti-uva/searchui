@@ -56,6 +56,10 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 	$("#dialogCancel").on("click", function() {										// ON CANCEL BUT
 					$("#previewDiv").remove();										// Remove preview
 					$("#kmTreeDiv").remove();										// Remove tree
+					if (_this.previewMode == 'Zoom') {								// If in zoomer
+						_this.Preview(_this.curItem);								// Back to preview
+						return;														// Quit
+						}
 					_this.previewMode="";											// No mode
 					for (i=0;i<_this.data.length;++i)								// For each result
 						$("#mdres-"+i).css({ "color":"#000", "font-weight":"normal" });	// Make default
@@ -282,34 +286,17 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 	$("body").append(str+"</div></div>");												// Add content
 
 	$("#zoomImg").on("click",function() {												// ZOOM IMAGE
+		_this.previewMode="Zoom";														// Zoom mode
 		var rh=$("#myImg").prop("naturalHeight");										// Real height
 		var rw=$("#myImg").prop("naturalWidth");										// Real width
 		var asp=rh/rw;																	// Aspect
-		var w=Math.max(Math.min(rw,maxWid),maxWid);										// Adjust width
-		_this.previewMode="Zoom";														// Zoom mode
-
-		if (w*asp > maxHgt) {															// If too tall
-			if (w*.75*asp < maxHgt)			w*=.75;										// Adjust
-			else if (w*.5*asp < maxHgt)		w*=.5;										// In
-			else if (w*.33*asp < maxHgt)	w*=.33;										// Steps						
-			else 							w*=.25;
-			}
-		$("#previewDiv").width(w);														// Set width
-
-		var str="<p class='ks-prevId' style='text-align:left'><img src='img/shantilogo32.png' style='vertical-align:-6px;width:24px'>&nbsp;&nbsp;"; // Logo
-		str+="Pan and Zoom on Mandala item "+o.id;										// Show id
-		str+="<img src='img/closedot.gif' id='lbxBoxExit' class='ks-dialogDoneBut'><br></p>"; // Done button
-		$("#previewDiv").html(str);
-
-		$("#lbxBoxExit").on("click",function() {										// CLICK ON DONE BUT
-				_this.Sound("click");													// Click
-				$("#dialogOK").css("display","none");									// Hide add button
-				$("#previewDiv").remove();												// Remove it
-				_this.previewMode="";													// No mode
-				});
-		
+		var h=$("#dialogDiv").height()-24;												// Max height
+		$("#previewDiv").height(h);														// Set height
+		$("#previewDiv").width(h/asp);													// Set width
+		$("#previewDiv").html("");
 		var x=(window.innerWidth-$("#previewDiv").width())/2;							// Center x
-		$("#previewDiv").css({left:x+"px",top:"25px"});									// Center y
+		var y=$("#dialogDiv").offset().top+1;												// Top
+		$("#previewDiv").css({left:x+"px",top:y+"px"});									// Position
 		new Zoomer(o.ajax,2,4);                                                     	// Alloc zoomer
 		});
 }
