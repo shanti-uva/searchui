@@ -1,4 +1,26 @@
-"# KMap Search Tool 
+#KSolr 
+##Mandala Asset Search Tool 
+
+This tool is implelemented in Javascript as a module to search for resources using
+the Solr index. 
+
+###Dependencies 
+
+It needs jQuery and jQueryi to be loaded. If you want to support touch based devices, 
+load the jquery.ui.touch-punch.min.js jQuery plugin.
+
+###Implementations
+
+It can be run as a standalone modulesee index.html for implementation) or as a 
+plug-in for v4.x of the CKEditor rich text editor (see demo.htm, and the ksolr folder in
+ckeditor/plugins for implementation).
+
+As a plugin, it calls a url of the standlone imlementattion online somewhere
+(as set in ckeditor/plugins/ksolr/dialogs/ksolr.js line 10) and communicates 
+back to the plugin using HTML5 messaging.
+
+The main code returns a solr JSON object of the resource to add. The kSolrHandler()
+handler takes that JSON and adds  HTML code to ther rich text to represent it
 
 License
 =====
