@@ -266,7 +266,7 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 	var maxHgt=window.innerHeight-100;													// Max height
 	var maxWid=window.innerWidth-200;													// Max width
 	var y=$("#mdAssets").offset().top;													// Top
-	var x=$("#mdAssets").offset().left+$("#mdAssets").width()-w+18;						// Left
+	var x=$("#mdAssets").offset().left+$("#mdAssets").width()-w+34;						// Left
 	var str="<div class='unselectable ks-prevDiv' id='previewDiv' style='";				// Div head
 	str+="height:"+h+"px;width:"+w+"px;";												// Size
 	str+="left:"+x+"px;top:"+y+"px'>";													// Position

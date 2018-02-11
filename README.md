@@ -1,7 +1,5 @@
-# KSolr 
-## Mandala Asset Search Tool 
-
-This tool is implelemented in Javascript as a module to search for resources using
+# KSolr Mandala Asset Search Tool 
+This tool is implelemented in Javascript as a module to search for resources using 
 the Solr index. 
 
 ### Dependencies 
