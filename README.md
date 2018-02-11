@@ -1,15 +1,15 @@
-#KSolr 
-##Mandala Asset Search Tool 
+# KSolr 
+## Mandala Asset Search Tool 
 
 This tool is implelemented in Javascript as a module to search for resources using
 the Solr index. 
 
-###Dependencies 
+### Dependencies 
 
 It needs jQuery and jQueryi to be loaded. If you want to support touch based devices, 
 load the jquery.ui.touch-punch.min.js jQuery plugin.
 
-###Implementations
+### Implementations
 
 It can be run as a standalone modulesee index.html for implementation) or as a 
 plug-in for v4.x of the CKEditor rich text editor (see demo.htm, and the ksolr folder in
