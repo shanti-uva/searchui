@@ -15,7 +15,7 @@ function ksSolr()																// CONSTRUCTOR
 	this.filterPlace="";															// No place filter
 	this.user="";																	// No user
 	this.type="Images";																// Start with Images
-	this.view="List";																// Start with List
+	this.view="Grid";																// Start with grid
 	this.previewMode="";															// Mode of preview ('Zoom', 'Preview', '')
 	this.curItem=-1;																// Currently selected item
 }
