@@ -19,7 +19,6 @@ function ksSolr()																// CONSTRUCTOR
 	this.view="Grid";																// Start with grid
 	this.previewMode="";															// Mode of preview ('Zoom', 'Preview', '')
 	this.curItem=-1;																// Currently selected item
-	this.termsUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmterms_prod";	// URL for terms **THAN**
 }
 
 ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR IMPORTER DIALOG
@@ -334,11 +333,6 @@ ksSolr.prototype.MakeTree=function(x, y, which, callback)  								// MAKE TREE
 {
 	var _this=this;
 	var div="#kmTreeDiv"+which;															// Tree div
-	if (which == "S")																	// Subject	
-		termsQuery("type","path",1,1, function(data) { _this.subjectData=data });		// Get initial subject terms tree
-	if (which == "P")																	// Places
-		termsQuery("type","path",1,1, function(data) { _this.placeData=data });			// Get initial place terms tree
-
 	if ($(div).css("display") == "block") {												// If showing
 		$(div).css("display","none");													// Hide it
 		return;																			// Quit
@@ -350,23 +344,23 @@ ksSolr.prototype.MakeTree=function(x, y, which, callback)  								// MAKE TREE
 		var str="<div id='kmTreeDiv"+which+"' class='ks-tree'";				
 		str+="style='left:"+x+"px;top:"+y+"px'><ul>";
 		if (which == "P") {
-			str+="<li class='parent'><a id='places-13738'>Africa</a>";
-			str+="<li class='parent'><a id='places-13742'>Antarctica</a>";
-			str+="<li class='parent'><a id='places-13740'>Asia</a>";
-			str+="<li class='parent'><a id='places-13739'>Europe</a>";
-			str+="<li class='parent'><a id='places-13736'>North America</a>";
-			str+="<li class='parent'><a id='places-13741'>Oceania</a>";
-			str+="<li class='parent'><a id='places-13737'>South America</a>";
+			str+="<li class='parent'><a id='places-13738' data-path='13735/13738'>Africa</a>";
+			str+="<li class='parent'><a id='places-13742' data-path='13735/13742'>Antarctica</a>";
+			str+="<li class='parent'><a id='places-13740' data-path='13735/13740'>Asia</a>";
+			str+="<li class='parent'><a id='places-13739' data-path='13735/13739'>Europe</a>";
+			str+="<li class='parent'><a id='places-13736' data-path='13735/13736'>North America</a>";
+			str+="<li class='parent'><a id='places-13741' data-path='13735/13741'>Oceania</a>";
+			str+="<li class='parent'><a id='places-13737' data-path='13735/13737'>South America</a>";
 			}
 		else{
-			str+="<li class='parent'><a id='subjects-8868'>Cultural Landscapes</a>";
-			str+="<li class='parent'><a id='subjects-6793'>General</a>";
-			str+="<li class='parent'><a id='subjects-20'>Geographic Features</a>";
-			str+="<li class='parent'><a id='subjects-6404'>Higher Education Digital Tools</a>";
-			str+="<li class='parent'><a id='subjects-6664'>Mesoamerican Studies</a>";
-			str+="<li class='parent'><a id='subjects-7174'>Politics</a>";
-			str+="<li class='parent'><a id='subjects-6844'>Teaching Resources</a>";
-			str+="<li class='parent'><a id='subjects-6403'>Tibet and Himalayas</a>";
+			str+="<li class='parent'><a id='subjects-8868' data-path='8868'>Cultural Landscapes</a>";
+			str+="<li class='parent'><a id='subjects-6793' data-path='6793'>General</a>";
+			str+="<li class='parent'><a id='subjects-20'   data-path='20'  >Geographic Features</a>";
+			str+="<li class='parent'><a id='subjects-6404' data-path='6404'>Higher Education Digital Tools</a>";
+			str+="<li class='parent'><a id='subjects-6664' data-path='6664'>Mesoamerican Studies</a>";
+			str+="<li class='parent'><a id='subjects-7174' data-path='7174'>Politics</a>";
+			str+="<li class='parent'><a id='subjects-6844' data-path='6844'>Teaching Resources</a>";
+			str+="<li class='parent'><a id='subjects-6403' data-path='6403'>Tibet and Himalayas</a>";
 			}
 		$("body").append(str+"</ul></div>");											// Add to tree div
 
@@ -380,66 +374,61 @@ ksSolr.prototype.MakeTree=function(x, y, which, callback)  								// MAKE TREE
 			});      
 		}
 	
-	function handleClick(p, e, which)												// HANDLE CLICK
+	function handleClick(row, e, which)												// HANDLE CLICK
 	{
+		
 		if (e.offsetX < 12) {                                         				  	// In icon
-			if (p.parent().children().length == 1) 										// If no children
-				LazyLoad(p, which);														// Lazy load from SOLR
+			if (row.parent().children().length == 1) 									// If no children
+				LazyLoad(row);															// Lazy load from SOLR
 			else{																		// Open or close
-				p.parent().toggleClass('active');                         				// Toggle active class on or off
-				p.parent().children('ul').slideToggle('fast');            				// Slide into place
+				row.parent().toggleClass('active');                         			// Toggle active class on or off
+				row.parent().children('ul').slideToggle('fast');            			// Slide into place
 				}
 			}
 		else{																			// In text
 			$('.ks-tree li a').each( function() {                          				// For each line
 				$(this).css({"color":"#000","font-weight":"normal"});      				// Normal
 				}); 
-			p.css({"color":"#009900","font-weight":"bold"});          					// Bold and green   
+			row.css({"color":"#009900","font-weight":"bold"});          				// Bold and green   
 			callback($("#"+e.target.id).text()+":"+e.target.id); 						// Act on result
 			}		
 	}
 
-	function LazyLoad(p, which) 
+	function LazyLoad(row) 															// ADD NEW NODES TO TREE
 	{
-		if (p.parent().children().length == 1) {									// If no children, lazy load 
-			var data=null;
-			var lvla=1+data.node.data.level;
-			var path=data.node.data.path;
-			if (which == "S")														// Subject
-				termsQuery("type",path,lvla,lvla, function(d) {						// Get next terms tree
-					data=ksSolrObj.subjectData=d;									// Get data
-					});										
-			else if (which == "P")													// Place
-				termsQuery("type",path,lvla,lvla, function(d) {						// Get next terms tree
-					data=ksSolrObj.subjectData=d;									// Get data
-					});										
-	
-			str="<ul style='display:none'>";										// Wrapper
-			str+="<li class='parent'><a id='555'>New node</a></li>";
-			str+="<li><a id='556'>New node</a></li>";
-			str+="<li><a id='557'>New node</a></li></ul>";
-			p.after(str);															// Add to tree
+		if (row.parent().children().length == 1) {										// If no children, lazy load 
+			var base="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmterms_prod";	// Base url
+			var path=""+row.data().path;												// Get path	as string										
+				var lvla=path.split("/").length+1;										// Get level
+			var type=row.prop("id").split('-')[0];										// Get type
+			var url=buildQuery(base,type,path,lvla,lvla);								// Build query
+			$.ajax( { url: url, dataType: 'jsonp' } ).done(function(res) {				// Run query
+				var o,i;
+				var str="<ul style='display:none'>";									// Wrapper
+				for (i=0;i<res.response.docs.length;++i) {								// For each child
+					o=res.response.docs[i];												// Point at child
+trace(o)
+					str+="<li class='parent'><a id='"+o.id;								// Add id
+					str+="' data-path='"+o.ancestor_id_path+"'>";						// Add path
+					str+=o.header+"</a></li>";											// Add label
+					}
+				if (res.response.docs.length) {
+					row.after(str+"</ul>");												// Add to tree
+					row.parent().toggleClass('active');                         		// Toggle active class on or off
+					row.parent().children('ul').slideToggle('fast');            		// Slide into place
+					$('.ks-tree li > a').off();											// Clear handlers
+					$('.ks-tree li > a').on("click",function(e) { handleClick($(this),e); }); 	// Restore handler
+					}
+				});
 			}
-		p.parent().toggleClass('active');                         					// Toggle active class on or off
-		p.parent().children('ul').slideToggle('fast');            					// Slide into place
-		$('.ks-tree li > a').off();													// Clear handlers
-		$('.ks-tree li > a').on("click",function(e) { handleClick($(this),e);  }); 	// Restore handler
-	}
-}
-
-function termsQuery(type, path, lvla, lvlb, callback) 
-{
-	var url=buildQuery(ksSolrObj.termsUrl, type, path, lvla, lvlb);
-	$.ajax( { url: url, dataType: 'jsonp', jsonp: 'json.wrf' } ).done(function(data) {
-			if (callback) callback(data);
-			console.log(data);
-			});
+		row.parent().toggleClass('active');                         					// Toggle active class on or off
+		row.parent().children('ul').slideToggle('fast');            					// Slide into place
+		}
 }
 
 // THIS FUNCTION IS STRAIGHT FROM YUJI 3/15/18 --  sites/all/libraries/shanti_kmaps_tree/js/jquery.kmapstree.js
 
 var SOLR_ROW_LIMIT=2000;
-
 
 function buildQuery(termIndexRoot, type, path, lvla, lvlb) 
 {
@@ -482,7 +471,6 @@ function buildQuery(termIndexRoot, type, path, lvla, lvlb)
 
         "&rows=" + SOLR_ROW_LIMIT;
 
-        console.log(result)
 		return result;
 }
 
