@@ -34,7 +34,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 	str+="<p style='text-align:right'>Type: "+this.MakeSelect("mdType",false,collections,this.type);
 	str+="&nbsp;&nbsp;filter by: <input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;height:17px;vertical-align:0px'>";
 	str+="&nbsp;&nbsp; Places: <input class='ks-is' id='mdFilterPlace' type='text' value='"+this.filterPlace+"' style='width:60px;height:17px;vertical-align:0px'>";  // **THAN**
-	str+="&nbsp;&nbsp; Subjects: <input class='ks-is' id='mdSubjectPlace' type='text' value='"+this.filterSubject+"' style='width:60px;height:17px;vertical-align:0px'></p>"; // **THAN**
+	str+="&nbsp;&nbsp; Subjects: <input class='ks-is' id='mdFilterSubject' type='text' value='"+this.filterSubject+"' style='width:60px;height:17px;vertical-align:0px'></p>"; // **THAN**
 	str+="<div id='mdAssets' class='ks-dialogResults'></div>";						// Scrollable container
 	str+="<br>View as: "+this.MakeSelect("mdView",false,["Grid","List"],this.view);
 	str+="&nbsp;&nbsp;Show only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
@@ -95,31 +95,21 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 		_this.placeFilter=$(this).val();											// Save for later											
 		 LoadCollection();															// Load it
 		});
-	$("#mdFilterPlace").on("click", function() {									// ON CLICK PLACE FILTER
+	$("#mdFilterPlace").on("click", function() {									// ON CLICK PLACE FILTER **THAN**
 			var x=$("#mdFilterPlace").offset().left;
 			var y=$("#mdFilterPlace").offset().top+26;
-			_this.MakeTree(x, y, "P", function (r) { 
-				if (r && r.match(/places-/)) {										// Right type **THAN**
-					$("#mdFilterPlace").val(r.split(":")[0])						// Save for later											
-					LoadCollection();												// Load it
-					}									
-				});																	// Make tree
+			_this.MakeTree(x, y, "P", LoadCollection);								// Show place tree				
 			});
-	$("#mdSubjectPlace").on("change", function() {									// ON CHANGE PLACE FILTER **THAN**
+	$("#mdFilterSubject").on("change", function() {									// ON CHANGE PLACE FILTER **THAN**
 		_this.subjectFilter=$(this).val();											// Save for later											
 		LoadCollection();															// Load it
 		});
-	$("#mdSubjectPlace").on("click", function() {									// ON CLICK PLACE FILTER **THAN**
-			var x=$("#mdSubjectPlace").offset().left;
-			var y=$("#mdSubjectPlace").offset().top+26;
-			_this.MakeTree(x, y, "S", function (r) { 
-				if (r && r.match(/subjects-/)) {									// Right type
-					$("#mdSubjectPlace").val(r.split(":")[0])						// Save for later											
-					LoadCollection();												// Load it
-					}
-				});																	// Make tree
+	$("#mdFilterSubject").on("click", function() {									// ON CLICK PLACE FILTER **THAN**
+			var x=$("#mdFilterSubject").offset().left;
+			var y=$("#mdFilterSubject").offset().top+26;
+			_this.MakeTree(x, y, "S", LoadCollection);								// Show subject tree 
 			});
-					
+			
 
 	function LoadCollection() {													// LOAD COLLECTION FROM SOLR
 		var str;
@@ -340,6 +330,8 @@ ksSolr.prototype.MakeTree=function(x, y, which, callback)  								// MAKE TREE
 	else																				// Not showing	
 		$(div).css("display","block");													// Show it
 
+
+
 	if (!$(div).length) {																// If doesn't exist
 		var str="<div id='kmTreeDiv"+which+"' class='ks-tree'";				
 		str+="style='left:"+x+"px;top:"+y+"px'><ul>";
@@ -370,13 +362,15 @@ ksSolr.prototype.MakeTree=function(x, y, which, callback)  								// MAKE TREE
 			});
 
 		$('.ks-tree li > a').on("click", function(e) {									// ON CLICK OF NODE TEXT
-			handleClick($(this),e,which);  												// Handle
+			handleClick($(this),e);  													// Handle
 			});      
 		}
-	
-	function handleClick(row, e, which)												// HANDLE CLICK
-	{
 		
+	x=$("#kmTreeDiv"+which).offset().left;												// Current left side
+	$("#kmTreeDiv"+which).css("left",Math.min(x,$("body").width()-200)+"px");			// Cap at end of body
+
+	function handleClick(row, e)													// HANDLE CLICK
+	{
 		if (e.offsetX < 12) {                                         				  	// In icon
 			if (row.parent().children().length == 1) 									// If no children
 				LazyLoad(row);															// Lazy load from SOLR
@@ -390,7 +384,17 @@ ksSolr.prototype.MakeTree=function(x, y, which, callback)  								// MAKE TREE
 				$(this).css({"color":"#000","font-weight":"normal"});      				// Normal
 				}); 
 			row.css({"color":"#009900","font-weight":"bold"});          				// Bold and green   
-			callback($("#"+e.target.id).text()+":"+e.target.id); 						// Act on result
+			var v=e.target.id.split("-");												// Id as array
+			if (v[0] == "places") {														// Places
+				$("#mdFilterPlace").val($("#"+e.target.id).text())						// Set text
+				ksSolrObj.placeFilter=e.target.id;										// Set search term
+				callback(e.target.id);													// Load it via callback
+				}
+			else{																		// Subjects
+				$("#mdFilterSubject").val($("#"+e.target.id).text())					// Set text
+				ksSolrObj.subjectFilter=e.target.id;									// Set search term
+				callback(e.target.id);													// Load it via callback
+				}
 			}		
 	}
 
@@ -403,12 +407,15 @@ ksSolr.prototype.MakeTree=function(x, y, which, callback)  								// MAKE TREE
 			var type=row.prop("id").split('-')[0];										// Get type
 			var url=buildQuery(base,type,path,lvla,lvla);								// Build query
 			$.ajax( { url: url, dataType: 'jsonp' } ).done(function(res) {				// Run query
-				var o,i;
+				var o,i,re;
 				var str="<ul style='display:none'>";									// Wrapper
+				var f=res.facet_counts.facet_fields.ancestor_id_path.join();			// List of facets
 				for (i=0;i<res.response.docs.length;++i) {								// For each child
 					o=res.response.docs[i];												// Point at child
-trace(o)
-					str+="<li class='parent'><a id='"+o.id;								// Add id
+					re=new RegExp("\/"+o.id.split("-")[1]);								// Id
+					str+="<li";															// Start row
+					if (f && f.match(re))	str+=" class='parent'"						// If has children, add parent class
+					str+="><a id='"+o.id;												// Add id
 					str+="' data-path='"+o.ancestor_id_path+"'>";						// Add path
 					str+=o.header+"</a></li>";											// Add label
 					}
@@ -421,8 +428,6 @@ trace(o)
 					}
 				});
 			}
-		row.parent().toggleClass('active');                         					// Toggle active class on or off
-		row.parent().children('ul').slideToggle('fast');            					// Slide into place
 		}
 }
 
