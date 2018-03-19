@@ -330,8 +330,6 @@ ksSolr.prototype.MakeTree=function(x, y, which, callback)  								// MAKE TREE
 	else																				// Not showing	
 		$(div).css("display","block");													// Show it
 
-
-
 	if (!$(div).length) {																// If doesn't exist
 		var str="<div id='kmTreeDiv"+which+"' class='ks-tree'";				
 		str+="style='left:"+x+"px;top:"+y+"px'><ul>";
@@ -410,6 +408,7 @@ ksSolr.prototype.MakeTree=function(x, y, which, callback)  								// MAKE TREE
 				var o,i,re;
 				var str="<ul style='display:none'>";									// Wrapper
 				var f=res.facet_counts.facet_fields.ancestor_id_path.join();			// List of facets
+				res.response.docs.sort(function(a,b) { return (a.header > b.header) ? 1 : -1 }); // Sort
 				for (i=0;i<res.response.docs.length;++i) {								// For each child
 					o=res.response.docs[i];												// Point at child
 					re=new RegExp("\/"+o.id.split("-")[1]);								// Id
