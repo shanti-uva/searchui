@@ -120,6 +120,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 		if (_this.filter) {															// If a filter spec'd
 			str="%22*"+_this.filter.toLowerCase()+"*%22";							// Search term
 			search+=" AND (title%3A"+str;											// Look at title
+			search+=" OR caption%3A"+str;											// Or caption
 			search+=" OR summary%3A"+str+")";										// Or summary
 			}
 		if (_this.filterCollect) {													// If a collection filter spec'd
