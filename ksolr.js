@@ -23,6 +23,7 @@ function ksSolr()																// CONSTRUCTOR
 	this.pageSize=100;																// Size of page
 	this.docsFound=0;																// Total number of docs found
 	this.startDoc=0;																// Docs start
+	this.defWidth=1024;																// Default width
 }
 
 ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR IMPORTER DIALOG
@@ -52,6 +53,10 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 	$("#dialogOK").on("click", function() {											// ON OK BUT
 					$("#previewDiv").remove();										// Remove preview
 					$("[id^=kmTreeDiv]").remove();									// Remove tree 
+					var o=_this.rawData.response.docs[_this.curItem];				// Point at cur item
+					o.imgSrc=_this.SizeIIFImage(o.url_thumb,1024,0);				// Set img src	
+					if (o.caption)		o.imgCaption=o.caption;						// Use caption
+					else if (o.title)	o.imgCaption=o.title;						// Use title
 					var str=JSON.stringify(_this.rawData.response.docs[_this.curItem]);
 					window.parent.postMessage("kSolrMsg="+str,"*");					// Send message to parent wind		
 					if (callback)	callback(_this.rawData.response.docs[_this.curItem]); // If callback defined, run it and return raw Solr data
@@ -234,6 +239,16 @@ ksSolr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 // SHOW RESULTS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+ksSolr.prototype.SizeIIFImage=function(url, wid, rot)							// CREATE SIZED IIF IMAGE
+{
+	if (!url) 					return "";											// No url
+	if (!wid && !rot)			return url;											// Same old
+	var v=url.split("!");															// Chop
+	wid=(wid == "") ? v[1].match(/(\d+),/)[1]  : wid;								// Use wid if spec'd, otherise use what was there
+	rot=(rot == "") ? v[1].match(/\/(\d*)/)[1] : rot;								// Rot
+	return v[0]+"!"+wid+",/"+rot+"/default.jpg";									// Return sized image
+}
+
 ksSolr.prototype.DrawAsList=function()											// SHOW RESULTS AS LIST
 {
 	var i;
@@ -340,9 +355,9 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 		$("#previewDiv").width(h/asp);													// Set width
 		$("#previewDiv").html("");
 		var x=(window.innerWidth-$("#previewDiv").width())/2;							// Center x
-		var y=$("#dialogDiv").offset().top+1;												// Top
+		var y=$("#dialogDiv").offset().top+1;											// Top
 		$("#previewDiv").css({left:x+"px",top:y+"px"});									// Position
-		new Zoomer(o.ajax,2,4);                                                     	// Alloc zoomer
+		new Zoomer(_this.SizeIIFImage(o.ajax,2048,""),2,4);								// Alloc zoomer with big-ish pic
 		});
 }
 
@@ -352,7 +367,6 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 
 ksSolr.prototype.MakeTree=function(x, y, which, callback)  								// MAKE TREE
 {
-	var _this=this;
 	var div="#kmTreeDiv"+which;															// Tree div
 	if ($(div).css("display") == "block") {												// If showing
 		$(div).css("display","none");													// Hide it

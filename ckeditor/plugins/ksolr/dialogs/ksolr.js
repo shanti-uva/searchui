@@ -33,20 +33,19 @@ CKEDITOR.dialog.add( 'ksolrdialog', function( editor ) {
 		if (e.data && e.data.match(/kSolrMsg/)) {									// Message from kmap
 			var src="";
 			var o=$.parseJSON(e.data.substr(9));									// Objectify
-			if (o.asset_type == "picture") {										// Picture asset
+			if (o.asset_type == "images") {											// Picture asset
 				if (o.url_large) 		src=o.url_large;							// Large
 				else if (o.url_normal) 	src=o.url_normal;							// Normal
 				else if (o.url_thumb) 	src=o.url_thumb;							// Thumb
-				if (src)															// If something
-					skEditor.insertHtml("<img src='"+src+"' width='300'>");			// Add image to text
-				}
+				if (src)				skEditor.insertHtml("<img src='"+src+"' width='300'>");	// Add image to text
+				if (o.imgCaption)		skEditor.insertHtml("<br>"+o.imgCaption);	// Add caption to text
+			}
 			else if (o.asset_type == "sources") {									// Sources asset
 				if (o.summary) 		src=o.summary;									// Summary
 				else if (o.caption) src=o.caption;									// Caption
 				else if (o.title) 	src=o.title;									// Title
 				if (src)															// If something
 					skEditor.insertHtml("<p>"+src+"</p>");							// Add string to text
-				trace(src)
 				}
 			else{																	// Anthing else
 				if (o.url_thumb) 													// Use thumb 
