@@ -13,7 +13,7 @@ function ksSolr()																// CONSTRUCTOR
 	this.filter="";																	// No filter
 	this.filterCollect="";															// No collection filter
 	this.filterPlace="";															// No place filter
-	this.filterSubject="";															// No subject filter  **THAN**
+	this.filterSubject="";															// No subject filter
 	this.user="";																	// No user
 	this.type="Images";																// Start with Images
 	this.view="Grid";																// Start with grid
@@ -21,6 +21,7 @@ function ksSolr()																// CONSTRUCTOR
 	this.curItem=-1;																// Currently selected item
 	this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production yrl
 	this.pageSize=100;																// Size of page
+	this.docsFound=0;																// Total number of docs found
 	this.startDoc=0;																// Docs start
 }
 
@@ -34,21 +35,23 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 	$("body").append("<div class='unselectable ks-dialog' id='dialogDiv'</div>");	// Add to body													
 	var str="<p><img src='img/shantilogo32.png' style='vertical-align:-10px'>&nbsp;&nbsp;"; // Logo
 	str+="<span class='ks-dialogLabel'>Get Item from Mandala</span>";				// Dialog label
-	str+="<p style='text-align:right'>Type: "+this.MakeSelect("mdType",false,collections,this.type);
-	str+="&nbsp;&nbsp;filter by: <input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;height:17px;vertical-align:0px'>";
-	str+="&nbsp;&nbsp; Places: <input class='ks-is' id='mdFilterPlace' type='text' value='"+this.filterPlace+"' style='width:60px;height:17px;vertical-align:0px'>";  // **THAN**
-	str+="&nbsp;&nbsp; Subjects: <input class='ks-is' id='mdFilterSubject' type='text' value='"+this.filterSubject+"' style='width:60px;height:17px;vertical-align:0px'></p>"; // **THAN**
+	str+='<p class="result-summary">Showing <span class="rangediv"><b><span class="start">0</span> - <span class="end">0</span></b> of </span>';
+	str+="<span id='numItemsFound'>No</span> items</p>";        				// Number of items;
+	str+="<p style='text-align:right'>Type&nbsp;&nbsp;"+this.MakeSelect("mdType",false,collections,this.type);
+	str+="&nbsp;&nbsp;filter by&nbsp;&nbsp;<input class='ks-is' id='mdFilter' type='text' value='"+this.filter+"' style='width:100px;height:17px;vertical-align:0px'>";
+	str+="&nbsp;&nbsp; Places&nbsp;&nbsp;<input class='ks-is' id='mdFilterPlace' type='text' value='"+this.filterPlace+"' style='width:60px;height:17px;vertical-align:0px'>";  
+	str+="&nbsp;&nbsp; Subjects&nbsp;&nbsp;<input class='ks-is' id='mdFilterSubject' type='text' value='"+this.filterSubject+"' style='width:60px;height:17px;vertical-align:0px'></p>"; 
 	str+="<div id='mdAssets' class='ks-dialogResults'></div>";						// Scrollable container
-	str+="<br>View as: "+this.MakeSelect("mdView",false,["Grid","List"],this.view);
-	str+="&nbsp;&nbsp;Show only from user: <input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
-	str+="&nbsp;&nbsp;in collection: <input class='ks-is' id='mdFilterCollect' type='text' value='"+this.filterCollect+"' style='width:100px;height:17px;vertical-align:0px'>";
-	str+="&nbsp;&nbsp;&nbsp;<i><span id='numItemsFound'>No</span> items found</i>";		// Number of items
+	str+='<br><div class="dialogctrl"><div id="prev" class="ks-bs">Previous</div><div id="next" class="ks-bs">Next</div></div>';
+	str+="View as&nbsp;&nbsp;"+this.MakeSelect("mdView",false,["Grid","List"],this.view);
+	str+="&nbsp;&nbsp;Show only from user&nbsp;&nbsp;<input class='ks-is' id='mdUser' type='text' value='"+this.user+"' style='width:50px;height:17px;vertical-align:0px'>";
+	str+="&nbsp;&nbsp;in collection&nbsp;&nbsp;<input class='ks-is' id='mdFilterCollect' type='text' value='"+this.filterCollect+"' style='width:100px;height:17px;vertical-align:0px'>";
 	str+="<div style='float:right;display:inline-block'><div id='dialogOK' style='display:none' class='ks-greenbs'>Add item</div>&nbsp;&nbsp;";
 	str+="<div id='dialogCancel' class='ks-bs'>Cancel</div></div>";
 	$("#dialogDiv").append(str+"</div>");	
 	$("#dialogOK").on("click", function() {											// ON OK BUT
 					$("#previewDiv").remove();										// Remove preview
-					$("[id^=kmTreeDiv]").remove();									// Remove tree  **THAN**
+					$("[id^=kmTreeDiv]").remove();									// Remove tree 
 					var str=JSON.stringify(_this.rawData.response.docs[_this.curItem]);
 					window.parent.postMessage("kSolrMsg="+str,"*");					// Send message to parent wind		
 					if (callback)	callback(_this.rawData.response.docs[_this.curItem]); // If callback defined, run it and return raw Solr data
@@ -60,7 +63,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 
 	$("#dialogCancel").on("click", function() {										// ON CANCEL BUT
 					$("#previewDiv").remove();										// Remove preview
-					$("[id^=kmTreeDiv]").remove();									// Remove tree  **THAN**
+					$("[id^=kmTreeDiv]").remove();									// Remove tree 
 					if (_this.previewMode == 'Zoom') {								// If in zoomer
 						_this.Preview(_this.curItem);								// Back to preview
 						return;														// Quit
@@ -78,17 +81,18 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
             $('.result-summary .start').text(_this.startDoc+1);
             $('.result-summary .end').text(_this.startDoc+_this.pageSize);
             LoadCollection(); 
-        }
+    	    }
     	});
  
 	$(".dialogctrl #next").on("click", function() { 
-        _this.startDoc+=this.pageSize;
+		if (_this.startDoc+_this.pageSize > _this.docsFound) return;
+		_this.startDoc+=_this.pageSize;
         $('.result-summary .start').text(_this.startDoc+1);
         $('.result-summary .end').text(_this.startDoc+_this.pageSize);
-        LoadCollection(); 
+		LoadCollection(); 
     	});
 
-	LoadCollection();															// Load 1st collection
+	LoadCollection();																// Load 1st collection
  	
  	$("#mdType").on("change", function() {											// ON CHANGE COLLECTION
 		_this.startDoc=0;         													// Start fresh  
@@ -120,19 +124,19 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 		_this.placeFilter=$(this).val();											// Save for later											
 		 LoadCollection();															// Load it
 		});
-	$("#mdFilterPlace").on("click", function() {									// ON CLICK PLACE FILTER **THAN**
+	$("#mdFilterPlace").on("click", function() {									// ON CLICK PLACE FILTER
 		_this.startDoc=0;         													// Start fresh  
 		var x=$("#mdFilterPlace").offset().left;
 		var y=$("#mdFilterPlace").offset().top+26;
 		_this.MakeTree(x, y, "P", LoadCollection);									// Show place tree				
 		});
-	$("#mdFilterSubject").on("change", function() {									// ON CHANGE PLACE FILTER **THAN**
+	$("#mdFilterSubject").on("change", function() {									// ON CHANGE PLACE FILTER
 		_this.startDoc=0;         													// Start fresh  
 		_this.subjectFilter=$(this).val();											// Save for later											
 		LoadCollection();															// Load it
 		});
-	$("#mdFilterSubject").on("click", function() {									// ON CLICK PLACE FILTER **THAN**
-		_this.startDoc=0;         														// Start fresh  
+	$("#mdFilterSubject").on("click", function() {									// ON CLICK PLACE FILTER
+		_this.startDoc=0;         													// Start fresh  
 		var x=$("#mdFilterSubject").offset().left;
 		var y=$("#mdFilterSubject").offset().top+26;
 		_this.MakeTree(x, y, "S", LoadCollection);								// Show subject tree 
@@ -146,32 +150,30 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 		if (_this.filter) {															// If a filter spec'd
 			str="%22*"+_this.filter.toLowerCase()+"*%22";							// Search term
 			search+=" AND (title%3A"+str;											// Look at title
-			search+=" OR caption%3A"+str;											// Or caption **THAN**
-			search+=" OR summary%3A"+str+")";										// Or summary **THAN**
+			search+=" OR caption%3A"+str;											// Or caption 
+			search+=" OR summary%3A"+str+")";										// Or summary
 			}
 		if (_this.filterCollect) {													// If a collection filter spec'd
 			str="%22*"+_this.filterCollect.toLowerCase()+"*%22";					// Search term
 			search+=" AND collection_title%3A"+str;									// And collection title
 			}
-		if (_this.placeFilter)														// If a place filter spec'd **THAN**
+		if (_this.placeFilter)														// If a place filter spec'd 
 			search+=" AND kmapid%3A%28%22"+_this.placeFilter.toLowerCase()+"%22%29";// Place search term 
 		if (_this.subjectFilter) 													// If subject filter spec'd 
-			search+=" AND kmapid%3A%28%22"+_this.subjectFilter.toLowerCase()+"%22%29";	// Subject search term  **THAN**
+			search+=" AND kmapid%3A%28%22"+_this.subjectFilter.toLowerCase()+"%22%29";	// Subject search term
 		if (_this.user) 															// If a user spec'd
 			search+=" AND node_user%3A*"+_this.user+"*";							// Look at user
-		var url=_this.solrUrl+"/?"+"q="+search+"&fl=*&wt=json&json.wrf=?&rows="+_this.maxDocs+"&limit="+_this.maxDocs;
+		var url=_this.solrUrl+"/?"+"q="+search+"&fl=*&wt=json&json.wrf=?&start="+_this.startDoc+"&rows="+_this.pageSize;
 
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done(function(data) {
 			   		_this.FormatSolrItems(data);
 			   		});
 		}
-
 }																					// End closure
 
 ksSolr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 {
 	var i,r,o;
-	var _this=this;																	// Save context
 	this.LoadingIcon(false);														// Hide loading icon
 	this.rawData=data;																// Save raw data
 	if (data) {																		// If not just sorting
@@ -206,8 +208,8 @@ ksSolr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 				$('.result-summary .rangediv').hide();
 			else{
 				$('.result-summary .rangediv').show();
-				$('.result-summary .start').text(this.startDoc + 1);
-				$('.result-summary .end').text(this.startDoc + data.response.docs.length);
+				$('.result-summary .start').text(this.startDoc+1);
+				$('.result-summary .end').text(this.startDoc+data.response.docs.length);
 				}
 		}
 	else if (this.data) {															// Just sorting and some data
@@ -220,7 +222,8 @@ ksSolr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 				else 			   				return 0;
 				});					
 		}
-	$("#numItemsFound").text(this.data.length);										// Show number of results
+	this.docsFound=data.response.numFound;											// Get number total of results
+	$("#numItemsFound").text(this.docsFound);										// Show total
 	if (this.view == "List")														// If showing List
 		this.DrawAsList();															// Draw row view
 	else																			// Grid view
@@ -271,7 +274,7 @@ ksSolr.prototype.DrawAsGrid=function()											// SHOW RESULTS AS GRID
 		str+="<div class='ks-gridPic'>";											// Pic div start
 		if (o.thumb)																// If a thumbnail defined
 			str+="<img src='"+o.thumb+"' width='100%'>";							// Add it
-		str+="</div><span style='color:#27ae60'>"+(i+1)+". </span>";				// Add pic num
+		str+="</div><span style='color:#27ae60'>"+(i+1+_this.startDoc)+". </span>";	// Add pic num
 		str+=this.ShortenString(o.title,70);										// Add title
 		str+="</div>";																// Close div	
 		}
@@ -344,7 +347,7 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TREE  **THAN** 
+// TREE 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ksSolr.prototype.MakeTree=function(x, y, which, callback)  								// MAKE TREE
