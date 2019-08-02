@@ -20,13 +20,15 @@ function ksSolr()																// CONSTRUCTOR
 	this.previewMode="";															// Mode of preview ('Zoom', 'Preview', '')
 	this.curItem=-1;																// Currently selected item
 	this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production yrl
+	this.pageSize=100;																// Size of page
+	this.startDoc=0;																// Docs start
 }
 
 ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR IMPORTER DIALOG
 {
 	var i;
 	var _this=this;																	// Save context
-	this.maxDocs=maxDocs;															// Maximum docs to load
+	this.maxDocs=_this.pageSize;													// Maximum docs to load
 	var collections=["Audio-Video","Images","Sources","Texts","Visuals"];			// Supported collections
 	$("#dialogDiv").remove();														// Remove any old ones
 	$("body").append("<div class='unselectable ks-dialog' id='dialogDiv'</div>");	// Add to body													
@@ -69,49 +71,73 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 					$("#dialogOK").css("display","none");							// Hide add button
 				});
 
+
+	$(".dialogctrl #prev").on("click", function() { 
+        if (_this.startDoc >= _this.pageSize) {
+            _this.startDoc-=_this.pageSize;
+            $('.result-summary .start').text(_this.startDoc+1);
+            $('.result-summary .end').text(_this.startDoc+_this.pageSize);
+            LoadCollection(); 
+        }
+    	});
+ 
+	$(".dialogctrl #next").on("click", function() { 
+        _this.startDoc+=this.pageSize;
+        $('.result-summary .start').text(_this.startDoc+1);
+        $('.result-summary .end').text(_this.startDoc+_this.pageSize);
+        LoadCollection(); 
+    	});
+
 	LoadCollection();															// Load 1st collection
  	
  	$("#mdType").on("change", function() {											// ON CHANGE COLLECTION
-			_this.type=$(this).val();												// Save for later											
-		 	LoadCollection();														// Load it
-			});
-	
+		_this.startDoc=0;         													// Start fresh  
+		_this.type=$(this).val();													// Save for later											
+		LoadCollection();															// Load it
+		});
 	$("#mdFilter").on("change", function() {										// ON CHANGE FILTER
-			_this.filter=$(this).val();												// Save for later											
-		 	LoadCollection();														// Load it
-			});
+		_this.startDoc=0;         													// Start fresh  
+		_this.filter=$(this).val();													// Save for later											
+		 LoadCollection();															// Load it
+		});
 	$("#mdFilterCollect").on("change", function() {									// ON CHANGE FILTER COLLECT
-			_this.filterCollect=$(this).val();										// Save for later											
-			 LoadCollection();														// Load it
-			});
-		$("#mdUser").on("change", function() {										// ON CHANGE USER
-			_this.user=$(this).val();												// Save for later											
-		 	LoadCollection();														// Load it
-			});
+		_this.startDoc=0;         													// Start fresh  
+		_this.filterCollect=$(this).val();											// Save for later											
+		 LoadCollection();															// Load it
+		});
+	$("#mdUser").on("change", function() {											// ON CHANGE USER
+		_this.startDoc=0;         													// Start fresh  
+		_this.user=$(this).val();													// Save for later											
+		 LoadCollection();															// Load it
+		});
    	$("#mdView").on("change", function() {											// ON CHANGE VIEW
-			_this.view=$(this).val();												// Save for later											
-		 	LoadCollection();														// Load it
-			});
+		_this.startDoc=0;         													// Start fresh  
+		_this.view=$(this).val();													// Save for later											
+	 	LoadCollection();															// Load it
+		});
 	$("#mdFilterPlace").on("change", function() {									// ON CHANGE PLACE FILTER
+		_this.startDoc=0;         													// Start fresh  
 		_this.placeFilter=$(this).val();											// Save for later											
 		 LoadCollection();															// Load it
 		});
 	$("#mdFilterPlace").on("click", function() {									// ON CLICK PLACE FILTER **THAN**
-			var x=$("#mdFilterPlace").offset().left;
-			var y=$("#mdFilterPlace").offset().top+26;
-			_this.MakeTree(x, y, "P", LoadCollection);								// Show place tree				
-			});
+		_this.startDoc=0;         													// Start fresh  
+		var x=$("#mdFilterPlace").offset().left;
+		var y=$("#mdFilterPlace").offset().top+26;
+		_this.MakeTree(x, y, "P", LoadCollection);									// Show place tree				
+		});
 	$("#mdFilterSubject").on("change", function() {									// ON CHANGE PLACE FILTER **THAN**
+		_this.startDoc=0;         													// Start fresh  
 		_this.subjectFilter=$(this).val();											// Save for later											
 		LoadCollection();															// Load it
 		});
 	$("#mdFilterSubject").on("click", function() {									// ON CLICK PLACE FILTER **THAN**
-			var x=$("#mdFilterSubject").offset().left;
-			var y=$("#mdFilterSubject").offset().top+26;
-			_this.MakeTree(x, y, "S", LoadCollection);								// Show subject tree 
-			});
+		_this.startDoc=0;         														// Start fresh  
+		var x=$("#mdFilterSubject").offset().left;
+		var y=$("#mdFilterSubject").offset().top+26;
+		_this.MakeTree(x, y, "S", LoadCollection);								// Show subject tree 
+		});
 			
-
 	function LoadCollection() {													// LOAD COLLECTION FROM SOLR
 		var str;
 		_this.LoadingIcon(true,64);													// Show loading icon
@@ -176,6 +202,13 @@ ksSolr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 			o.type=r.asset_type;													// Add type
 			this.data.push(o);														// Add result to array
 			}
+		if (data.response.numFound == 0) 
+				$('.result-summary .rangediv').hide();
+			else{
+				$('.result-summary .rangediv').show();
+				$('.result-summary .start').text(this.startDoc + 1);
+				$('.result-summary .end').text(this.startDoc + data.response.docs.length);
+				}
 		}
 	else if (this.data) {															// Just sorting and some data
 		var order=1;																// Assume ascending
