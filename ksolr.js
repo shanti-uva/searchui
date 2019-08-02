@@ -19,6 +19,7 @@ function ksSolr()																// CONSTRUCTOR
 	this.view="Grid";																// Start with grid
 	this.previewMode="";															// Mode of preview ('Zoom', 'Preview', '')
 	this.curItem=-1;																// Currently selected item
+	this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production yrl
 }
 
 ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR IMPORTER DIALOG
@@ -115,7 +116,6 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 		var str;
 		_this.LoadingIcon(true,64);													// Show loading icon
 		var type=_this.type;														// Get type to show
-		if (type == "Images") type="Picture";										// Images are picture
 		var search="asset_type%3A%22"+type.toLowerCase()+"%22";						// Add asset type						
 		if (_this.filter) {															// If a filter spec'd
 			str="%22*"+_this.filter.toLowerCase()+"*%22";							// Search term
@@ -133,8 +133,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 			search+=" AND kmapid%3A%28%22"+_this.subjectFilter.toLowerCase()+"%22%29";	// Subject search term  **THAN**
 		if (_this.user) 															// If a user spec'd
 			search+=" AND node_user%3A*"+_this.user+"*";							// Look at user
-		var url="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select?"+"q="+search + 
-   				 "&fl=*&wt=json&json.wrf=?&rows="+_this.maxDocs+"&limit="+_this.maxDocs;
+		var url=_this.solrUrl+"/?"+"q="+search+"&fl=*&wt=json&json.wrf=?&rows="+_this.maxDocs+"&limit="+_this.maxDocs;
 
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done(function(data) {
 			   		_this.FormatSolrItems(data);
@@ -161,19 +160,14 @@ ksSolr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 				o.title=r.caption;													// Use it
 			o.id=r.id;																// Save id
 			o.thumb=r.url_thumb;													// Save thumb
-			if (o.thumb)	o.thumb=o.thumb.replace(/dev\-/,"");					// Remove 'dev-' prefix, if there
 			o.ajax=r.url_ajax;														// Save ajax
-			if (o.ajax)		o.ajax=o.ajax.replace(/dev\-/,"");						// Remove dev
 			o.json=r.url_json;														// Save json
-			if (o.json)		o.json=o.json.replace(/dev\-/,"");						// Remove dev
 			o.html=r.url_html;														// Save html
-			if (o.html)		o.html=o.html.replace(/dev\-/,"");						// Remove dev
 			o.embed=r.url_embed;													// Add embed 
-			if (o.embed) 	o.embed=o.embed.replace(/dev\-/,"");					// Remove dev
-			if ((r.asset_type == "picture") || (r.asset_type == "image")) {			// An image
-				if (r.url_huge)			o.ajax=r.url_huge.replace(/dev\-/,"");		// If huge, set url and remove 'dev-' prefix
-				else if (r.url_large)	o.ajax=r.url_large.replace(/dev\-/,"");		// Else use large
-				else if (r.url_normal)	o.ajax=r.url_normal.replace(/dev\-/,"");	// Else use normal
+			if (r.asset_type == "images") {											// An image
+				if (r.url_huge)			o.ajax=r.url_huge;							// If huge, set url 
+				else if (r.url_large)	o.ajax=r.url_large;							// Else use large
+				else if (r.url_normal)	o.ajax=r.url_normal;						// Else use normal
 				else 					o.ajax=o.thumb;								// Else use thumb
 				}
 			o.kmap=r.kmapid;														// Save kmap array
@@ -293,7 +287,7 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 	else
 		str+="<iframe frameborder='0'style='width:100%;padding:12px;padding-top:0;height:210px' src='"+o.ajax+"'/>";
 	str+="<div>";
-	if ((o.type == "picture") || (o.type == "image")) str+="<div  class='ks-greenbs' id='zoomImg'>Zoomable image</div><br>"
+	if (o.type == "images") str+="<div  class='ks-greenbs' id='zoomImg'>Zoomable image</div><br>"
 	if (o.summary)	str+="<p>"+o.summary+"</p>";										// Add summary
 	if (o.date)		str+="<br>"+o.date;													// Add date
 	if (o.user)		str+=" by "+o.user;													// Add user
