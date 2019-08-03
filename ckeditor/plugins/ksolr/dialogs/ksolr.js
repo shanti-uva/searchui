@@ -31,15 +31,11 @@ CKEDITOR.dialog.add( 'ksolrdialog', function( editor ) {
 	function kSolrHandler(e)													// ON KSOLR EVENT
 	{
 		if (e.data && e.data.match(/kSolrMsg/)) {									// Message from kmap
-			var src="";
 			var o=$.parseJSON(e.data.substr(9));									// Objectify
 			if (o.asset_type == "images") {											// Picture asset
-				if (o.url_large) 		src=o.url_large;							// Large
-				else if (o.url_normal) 	src=o.url_normal;							// Normal
-				else if (o.url_thumb) 	src=o.url_thumb;							// Thumb
-				if (src)				skEditor.insertHtml("<img src='"+src+"' width='300'>");	// Add image to text
-				if (o.imgCaption)		skEditor.insertHtml("<br>"+o.imgCaption);	// Add caption to text
-			}
+				if (o.imgSrc)		skEditor.insertHtml("<img src='"+o.imgSrc+"' width='300'>");	// Add image to text
+				if (o.imgCaption)	skEditor.insertHtml("<br>"+o.imgCaption);		// Add caption to text
+				}
 			else if (o.asset_type == "sources") {									// Sources asset
 				if (o.summary) 		src=o.summary;									// Summary
 				else if (o.caption) src=o.caption;									// Caption

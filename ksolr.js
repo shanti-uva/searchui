@@ -24,6 +24,7 @@ function ksSolr()																// CONSTRUCTOR
 	this.docsFound=0;																// Total number of docs found
 	this.startDoc=0;																// Docs start
 	this.defWidth=1024;																// Default width
+	this.defRot=0;																	// Default width
 }
 
 ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR IMPORTER DIALOG
@@ -54,7 +55,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 					$("#previewDiv").remove();										// Remove preview
 					$("[id^=kmTreeDiv]").remove();									// Remove tree 
 					var o=_this.rawData.response.docs[_this.curItem];				// Point at cur item
-					o.imgSrc=_this.SizeIIFImage(o.url_thumb,1024,0);				// Set img src	
+					o.imgSrc=_this.SizeIIFImage(o.url_thumb,_this.defWidth,_this.defRot);	// Set img sizing	
 					if (o.caption)		o.imgCaption=o.caption;						// Use caption
 					else if (o.title)	o.imgCaption=o.title;						// Use title
 					var str=JSON.stringify(_this.rawData.response.docs[_this.curItem]);
@@ -133,6 +134,8 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 		_this.startDoc=0;         													// Start fresh  
 		var x=$("#mdFilterPlace").offset().left;
 		var y=$("#mdFilterPlace").offset().top+26;
+		_this.previewMode="";														// No mode
+		$("#previewDiv").remove();													// Remove any old ones
 		_this.MakeTree(x, y, "P", LoadCollection);									// Show place tree				
 		});
 	$("#mdFilterSubject").on("change", function() {									// ON CHANGE PLACE FILTER
@@ -144,7 +147,9 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 		_this.startDoc=0;         													// Start fresh  
 		var x=$("#mdFilterSubject").offset().left;
 		var y=$("#mdFilterSubject").offset().top+26;
-		_this.MakeTree(x, y, "S", LoadCollection);								// Show subject tree 
+		_this.previewMode="";														// No mode
+		$("#previewDiv").remove();													// Remove any old ones
+		_this.MakeTree(x, y, "S", LoadCollection);									// Show subject tree 
 		});
 			
 	function LoadCollection() {													// LOAD COLLECTION FROM SOLR
@@ -168,7 +173,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 			search+=" AND kmapid%3A%28%22"+_this.subjectFilter.toLowerCase()+"%22%29";	// Subject search term
 		if (_this.user) 															// If a user spec'd
 			search+=" AND node_user%3A*"+_this.user+"*";							// Look at user
-		var url=_this.solrUrl+"/?"+"q="+search+"&fl=*&wt=json&json.wrf=?&start="+_this.startDoc+"&rows="+_this.pageSize;
+		var url=_this.solrUrl+"/?"+"q="+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+_this.startDoc+"&rows="+_this.pageSize;
 
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done(function(data) {
 			   		_this.FormatSolrItems(data);
@@ -202,6 +207,7 @@ ksSolr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 				else if (r.url_large)	o.ajax=r.url_large;							// Else use large
 				else if (r.url_normal)	o.ajax=r.url_normal;						// Else use normal
 				else 					o.ajax=o.thumb;								// Else use thumb
+				if (r.img_width_s)		o.img_width_s=r.img_width_s;				// Save size
 				}
 			o.kmap=r.kmapid;														// Save kmap array
 			o.user=r.node_user;														// Add user
@@ -228,6 +234,10 @@ ksSolr.prototype.FormatSolrItems=function(data, sortBy)							// SHOW SOLR ITEMS
 				});					
 		}
 	this.docsFound=data.response.numFound;											// Get number total of results
+	$(".dialogctrl #prev").css("opacity",this.startDoc ? 1 : .5);					// Dim if no previous
+	$(".dialogctrl #next").css("opacity",this.startDoc+this.pageSize > this.docsFound  ? .5 : 1);	// Dim if no next
+
+	
 	$("#numItemsFound").text(this.docsFound);										// Show total
 	if (this.view == "List")														// If showing List
 		this.DrawAsList();															// Draw row view
@@ -313,8 +323,9 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 	var o=this.data[num];																// Point at item
 	this.curItem=num;																	// Current item
 	this.previewMode="Preview";															// Preview mode
-	$("#previewDiv").remove();															// Remove any old ones
-	$("#zoomerDiv").remove();															// Remove any old ones
+	$("[id^=kmTreeDiv]").css("display","none");											// Hide tree(s)
+	$("#previewDiv").remove();															// Remove preview
+	$("#zoomerDiv").remove();															// Zoomer
 	$("#dialogOK").css("display","inline-block");										// Show add button
 
 	for (i=0;i<this.data.length;++i)													// For each result
@@ -339,11 +350,19 @@ ksSolr.prototype.Preview=function(num)												// PREVIEW RESULT
 		str+="<iframe frameborder='0'style='width:100%;padding:12px;padding-top:0;height:210px' src='"+o.ajax+"'/>";
 	str+="<div>";
 	if (o.type == "images") str+="<div  class='ks-greenbs' id='zoomImg'>Zoomable image</div><br>"
-	if (o.summary)	str+="<p>"+o.summary+"</p>";										// Add summary
-	if (o.date)		str+="<br>"+o.date;													// Add date
-	if (o.user)		str+=" by "+o.user;													// Add user
-	if (o.html)		str+="<p><a target='_blank' href='"+o.html+"'><b>View webpage</b></a></p>"	// Add link to page
+	if (o.summary)		str+="<p>"+o.summary+"</p>";									// Add summary
+	if (o.date)			str+="<br>"+o.date;												// Add date
+	if (o.user)			str+=" by "+o.user;												// Add user
+	if (o.html)			str+="<p><a target='_blank' href='"+o.html+"'><b>View webpage</b></a></p>"	// Add link to page
+	if (o.img_width_s)	str+="<p>Image is "+o.img_width_s+" wide </p>";					// Add max width
+	str+=" New width&nbsp;<input class='ks-is' id='pvImgWid' type='text' value='"+this.defWidth+"' style='width:30px;height:17px;vertical-align:0px'>";	// Width
+	this.defRot=0;																		// Always reset rotation to 0
+	str+="&nbsp;&nbsp;Rotate&nbsp;"+this.MakeSelect("pvImgRot", false,[0,90,180,270]); 	// Rotation
+		
 	$("body").append(str+"</div></div>");												// Add content
+
+	$("#pvImgWid").on("change",function() {	_this.defWidth=this.value });				// CHANGE WIDTH
+	$("#pvImgRot").on("change",function() {	_this.defRot=this.value });					// CHANGE ROTATION
 
 	$("#zoomImg").on("click",function() {												// ZOOM IMAGE
 		_this.previewMode="Zoom";														// Zoom mode

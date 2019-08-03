@@ -15,6 +15,7 @@ function Zoomer(url, startZoom, overviewSize) 						//	DRAW ZOOMER
 	str="<img id='zoomerImg' src='"+url+"' ";								// Add image
 	str+="height='100%' width='100%'>";										// Size
 	$("#zoomerDiv").append(str);											// Add image to zoomer
+	this.LoadingIcon(true,64);												// Show loading icon
 	
 	$("#zoomerImg").on("load", function(e) {								// WHEN IMAGE IS LOADED
 		_this.zoomerWidth=$(this).width();									// Get true width
@@ -24,6 +25,7 @@ function Zoomer(url, startZoom, overviewSize) 						//	DRAW ZOOMER
 		$("#zoomerOuterDiv").height($("#zoomerOuterDiv").width()*_this.zoomerAsp);
 		_this.DrawZoomerOverview(url);										// Reflect pos in overview
 		_this.PositionZoomer();												// Position it
+		_this.LoadingIcon(false);											// Show loading icon
 		});
 
 	$("#zoomerDiv").draggable({ drag:function(event,ui) {					// DRAGGABLE
@@ -130,4 +132,16 @@ Zoomer.prototype.DrawZoomerOverview=function(url) 						// DRAW ZOOMER OVERVIEW
 		y=-y/h/this.zoomerOverviewSize*h/this.zoomerScale;					// Scale to fit
 		$("#zoomerOverBox").width(w/this.zoomerScale).height(h/this.zoomerScale);	// Set size
 		$("#zoomerOverBox").css({"left":x+"px","top":y+"px"});				// Position control box		
+}
+
+Zoomer.prototype.LoadingIcon=function(mode, size, container)			// SHOW/HIDE LOADING ICON		
+{
+	container=container ? "#"+containern: "body";							// If no container spec'd, use body
+	if (!mode) {															// If hiding
+		$("#sf-loadingIcon").remove();										// Remove it
+		return;																// Quit
+		}
+	var str="<img src='img/loading.gif' width='"+size+"' ";					// Img
+	str+="id='sf-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
+	$(container).append(str);												// Add icon to container
 }
