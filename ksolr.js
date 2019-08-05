@@ -164,7 +164,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 			search+=" OR summary%3A"+str+")";										// Or summary
 			}
 		if (_this.filterCollect) {													// If a collection filter spec'd
-			str="%22*"+_this.filterCollect.toLowerCase()+"*%22";					// Search term
+			str="*"+_this.filterCollect.toLowerCase()+"*";							// Search term
 			search+=" AND collection_title%3A"+str;									// And collection title
 			}
 		if (_this.placeFilter)														// If a place filter spec'd 
@@ -174,6 +174,7 @@ ksSolr.prototype.ImportSolrDialog=function(maxDocs, callback, mode)				// SOLR I
 		if (_this.user) 															// If a user spec'd
 			search+=" AND node_user%3A*"+_this.user+"*";							// Look at user
 		var url=_this.solrUrl+"/?"+"q="+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+_this.startDoc+"&rows="+_this.pageSize;
+trace(url)
 
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done(function(data) {
 			   		_this.FormatSolrItems(data);
