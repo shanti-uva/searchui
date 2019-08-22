@@ -10,27 +10,21 @@
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 	<script src="lib/jquery.ui.touch-punch.min.js"></script>
-	<script src="ksolr.js"></script>
-	<script src="zoomer.js"></script>
+	<script src="searchui.js"></script>
+	<link rel="stylesheet"  type="text/css" href="css/searchui.css">
 	<link REL="SHORTCUT ICON" HREF="img/favicon.ico">
-	<title>Mandala Search</title>
+	<title>Mandala Search UI</title>
 </head>
 
 <body>
+	<img src="img/mandalaback.jpg">
 <script>
 
 $(document).ready(function() {								           	// ON PAGE LOADED
+	var search=new SearchUI(42,(obj)=> { console.log(obj) });			// Alloc new search object
+	});
 
-	var solr=new ksSolr();													// Alloc ksSolr object
-	solr.ImportSolrDialog(300,done);										// Run dialog
-
-	function done(obj) {
-		trace(obj);															// Show object
-//		$("#dialogDiv").remove();  											// Remove dialog
-		}
-});
-
-function trace(msg, p1, p2, p3, p4)										// CONSOLE 
+	function trace(msg, p1, p2, p3, p4)										// CONSOLE 
 	{
 		if (p4 != undefined)
 			console.log(msg,p1,p2,p3,p4);
@@ -43,6 +37,14 @@ function trace(msg, p1, p2, p3, p4)										// CONSOLE
 		else
 			console.log(msg);
 	}
+
+/*	OLD CKEDIT TESTBED
+	var solr=new ksSolr();													// Alloc ksSolr object
+	solr.ImportSolrDialog(300,done);										// Run dialog
+	<!script src="ksolr.js"></!script>
+	<!script src="zoomer.js"><!script>
+*/
+	
 
 </script>
 </body>
