@@ -1,18 +1,41 @@
-body { 				font-family: Verdana,Geneva,sans-serif; font-size: 11px; box-sizing: border-box; padding: 0px; margin: 0px; 
+body { 				font-family: Verdana,Geneva,sans-serif,shanticon; font-size: 14px; box-sizing: border-box; padding: 0px; margin: 0px; 
 					}
-.sui-main {			position: absolute; left:0; top:0; pointer-events: none;
+.sui-main {			position: absolute; left:0; top:0; pointer-events: none; 
 					}
-.sui-header {		position: absolute; left:0; top:0; height:52px; width:100%; user-select: none;
+.sui-header {		position: absolute; left:0; top:0; height:52px; width:100%; user-select: none; pointer-events: all;
+					color:#fff; 
 					}
-.sui-headLeft {		width:calc(100% - 300px); user-select:none; height:100%; float:left; display:none;
+.sui-headLeft {		width:calc(100% - 400px); user-select:none; height:100%; float:left; display:none; padding:12px; font-size: 20px;
 					}				
-.sui-headRight { 	width:300px; user-select:none; height:100%; float:right;  
+.sui-headRight { 	width:350px; user-select:none; height:100%; float:right; padding:0;
 					}				
 .sui-left { 		position: absolute; left:0; top:52px; width:100%; height:calc(100% - 52px); background-color: #fff; display:none;
 					}				
-.sui-results { 		position: absolute; left:0; top:0; width:100%; height:calc(100% - 30px);  background-color: eee;
+.sui-results { 		position: absolute; left:0; top:0; width:100%; height:calc(100% - 30px);  background-color: eee; 
 					}				
-.sui-footer { 		position: absolute; left:0; top:calc(100% - 30px); width:100%; height:30px; background-color: #ccc;
+.sui-footer { 		position: absolute; left:0; top:calc(100% - 30px); width:100%; height:30px; background-color: #aaa;
 					}				
-.sui-right { 		position: absolute; left:100%; top:0; height:100%; width: 300px; background-color: #f8f8f8; display:none;
+.sui-right { 		position: absolute; left:100%; top:0; height:100%; width: 350px; background-color: #f8f8f8; display:none;
 					}				
+.sui-search1 {		background-color:#fff; font-size:16px; color: #ccc;
+					border-radius: 16px 0 0 16px; border-left: 1px solid #999; border-top: 1px solid #999; border-bottom: 1px solid #999;
+					height:24px; width:200px; margin:9px 0 0 12px; padding: 8px 8px 0 8px; display: inline-block;
+					}
+.sui-search2 {		background-color:#fff; font-size:14px; color:#999; border:0; height:18px; width:185px; padding-top:6px; outline:none; 
+					vertical-align:2px; margin-left:-185px; 
+					}
+.sui-search3 {		background-color:#fff; font-size:16px; color: #ccc;	border-top: 1px solid #999; border-bottom: 1px solid #999;
+					height:24px; width:18px; padding: 8px 8px 0 8px; display: inline-block;cursor:pointer
+					}
+.sui-search4 {		background-color: #ddd; font-size:16px; color: #999; border-radius: 0 16px 16px 0; border: 1px solid #999;
+					height:24px; width:24px; padding:8px 0 0 10px; display: inline-block; cursor:pointer
+					} 	.sui-search4:hover{ opacity:.66; }
+.sui-search5 {		margin-left:12px; cursor:pointer; vertical-align: -2px; 
+					}	.sui-search5:hover{ opacity:.66; }
+.sui-resclose {		cursor:pointer;
+					}	.sui-resclose:hover{ opacity:.66; }
+			
+@font-face {		font-family: 'shanticon'; src: url('shanticon.ttf?ueun15') format('truetype'); font-weight: normal; font-style: normal;
+					}
+
+::-webkit-input-placeholder { color: #aaa };	::-placeholder { color: #aaa };
