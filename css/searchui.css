@@ -38,4 +38,4 @@ body { 				font-family: Verdana,Geneva,sans-serif,shanticon; font-size: 14px; bo
 @font-face {		font-family: 'shanticon'; src: url('shanticon.ttf?ueun15') format('truetype'); font-weight: normal; font-style: normal;
 					}
 
-::-webkit-input-placeholder { color: #aaa };	::-placeholder { color: #aaa };
+::-webkit-input-placeholder { color: #bbb };	::-placeholder { color: #bbb };

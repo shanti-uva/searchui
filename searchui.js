@@ -18,6 +18,7 @@ class SearchUI  {
 		this.numItems=1104;
 		this.AddFrame();																			// Add div framework
 		this.Draw();																				// Draw
+		$("body").on("resize",this.Draw);															// Redraw on resize of body
 	}
 
 	AddFrame()																					// ADD DIV FRAMEWORK
