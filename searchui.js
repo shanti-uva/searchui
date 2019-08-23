@@ -23,7 +23,6 @@ class SearchUI  {
 	AddFrame()																					// ADD DIV FRAMEWORK
 	{
 		var str="<div id='sui-main' class='sui-main'>";												// Main container
-		var _this=this;																				// Save context
 		str+="<div id='sui-header' class='sui-header'>";											// Header 
 		str+="<div id='sui-headLeft'  class='sui-headLeft'></div>";									// Left header
 		str+="<div id='sui-headRight' class='sui-headRight'>";										// Right header - open
@@ -40,19 +39,24 @@ class SearchUI  {
 
 		$("#sui-clear").on("mouseover",function() { $(this).html("&#xe60d"); });					// Highlight						
 		$("#sui-clear").on("mouseout", function() { $(this).html("&#xe610"); });					// Normal						
-		$("#sui-clear").on("click", function() { 													// ON ERASE
-			$("#sui-search").val("");	_this.curQuery.text=""; 									// Clear input and query												
-			_this.Draw(); 																			// Redraw
+		$("#sui-clear").on("click",()=> { 															// ON ERASE
+			$("#sui-search").val("");	this.curQuery.text=""; 										// Clear input and query												
+			this.Draw(); 																			// Redraw
 			});					
-		$("#sui-search").on("change", function() { 													// ON SEARCH CHANGE
-			_this.curQuery.text=$(this).val(); 														// Get query
-			if (_this.curMode == "input") _this.curMode="simple";									// Toggle simple mode
-			_this.Draw(); 																			// Redraw
+		$("#sui-search").on("change", ()=> { 														// ON SEARCH CHANGE
+			this.curQuery.text=$("#sui-search").val(); 												// Get query
+			if (this.curMode == "input") this.curMode="simple";										// Toggle simple mode
+			this.Draw(); 																			// Redraw
 			});	
-		$("#sui-searchgo").on("click", function() { 												// ON SEARCH GO
-			_this.curQuery.text=$("#sui-search").val(); 											// Get query
-			if (_this.curMode == "input") _this.curMode="simple";									// Toggle simple mode
-			_this.Draw(); 																			// Redraw
+		$("#sui-searchgo").on("click", ()=> { 														// ON SEARCH GO
+			this.curQuery.text=$("#sui-search").val(); 												// Get query
+			if (this.curMode == "input") this.curMode="simple";										// Toggle simple mode
+			this.Draw(); 																			// Redraw
+			});	
+		$("#sui-mode").on("click",()=> { 															// ON CHANGE MODE
+			if (this.curMode == "advanced") this.curMode="simple";									// Go to simple mode
+			else							this.curMode="advanced";								// Go to advanced mode
+			this.Draw(); 																			// Redraw
 			});	
 		}
 
@@ -68,18 +72,19 @@ class SearchUI  {
 	DrawResults()																				// DRAW RESULTS SECTION
 	{
 		if (this.curMode == "input") {																// Just the search box
-			$("#sui-header").css({ "background-color":"transparent" });	
+			$("#sui-header").css({ "background-color":"transparent" });								// Show Drupal header through
 			$("#sui-left").css({ display:"none" });													// Hide results
 			$("#sui-right").css({ display:"none" });												// Hide search ui
 			$("#sui-headLeft").css({ display:"none" });												// Hide left header
 			return;																					// Quit
 			}
 		else if (this.curMode == "simple") {														// Simple search
-			$("#sui-left").css({ width:"100%", display:"block" });									// Size and show results area
+			$("#sui-left").css({ width:"100%" });													// Size and show results area
 			$("#sui-right").css({ display:"none"});													// Hide search ui
+			$("#sui-left").slideDown();																// Slide down
 			}
-		else if (this.curMode == "advanced")	{													// Advanced search
-			$("#sui-left").css({ width:this.wid-$("#sui-right").width()+"px", display:"block" });	// Size  and show results area
+		else if (this.curMode == "advanced") {														// Advanced search
+			$("#sui-left").css({ width:this.wid-$("#sui-right").width()+"px",display:"inline-block"});	// Size and show results area
 			$("#sui-right").css({ display:"inline-block" });										// Show search ui
 			}
 		$("#sui-header").css({"background-color":"#aaa"} );											// Fill header	
