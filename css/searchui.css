@@ -1,8 +1,10 @@
 body { 				font-family: Verdana,Geneva,sans-serif,shanticon; font-size: 14px; box-sizing: border-box; padding: 0px; margin: 0px; 
 					}
-.sui-main {			position: absolute; left:0; top:0; pointer-events: none; 
+.sui-top {			position: absolute; left:0; top:0; height:42px; width:100%; user-select: none;
 					}
-.sui-header {		position: absolute; left:0; top:0; height:52px; width:100%; user-select: none; pointer-events: all;
+.sui-main {			position: absolute; left:0; top:0; 
+					}
+.sui-header {		position: absolute; left:0; top:0; height:52px; width:100%; user-select: none; 
 					color:#fff; 
 					}
 .sui-headLeft {		width:calc(100% - 400px); user-select:none; height:100%; float:left; display:none; padding:12px; font-size: 20px;
@@ -13,7 +15,8 @@ body { 				font-family: Verdana,Geneva,sans-serif,shanticon; font-size: 14px; bo
 					}				
 .sui-results { 		position: absolute; left:0; top:0; width:100%; height:calc(100% - 30px);  background-color: eee; 
 					}				
-.sui-footer { 		position: absolute; left:0; top:calc(100% - 30px); width:100%; height:30px; background-color: #aaa;
+.sui-footer { 		position: absolute; left:0; top:calc(100% - 30px); width:100%; height:24px; background-color: #aaa;	
+					color:#fff; text-align:center; padding-top:6px
 					}				
 .sui-right { 		position: absolute; left:100%; top:0; height:100%; width: 350px; background-color: #f8f8f8; display:none;
 					}				
@@ -34,6 +37,9 @@ body { 				font-family: Verdana,Geneva,sans-serif,shanticon; font-size: 14px; bo
 					}	.sui-search5:hover{ opacity:.66; }
 .sui-resclose {		cursor:pointer;
 					}	.sui-resclose:hover{ opacity:.66; }
+.sui-resDisplay {	cursor:pointer; display: inline-block; margin:0 12px; 
+					}
+
 			
 @font-face {		font-family: 'shanticon'; src: url('shanticon.ttf?ueun15') format('truetype'); font-weight: normal; font-style: normal;
 					}
