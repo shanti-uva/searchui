@@ -31,6 +31,7 @@ class SearchUI  {
 			<div id='sui-headRight' class='sui-headRight'>
 			<div class='sui-search1'>&#xe623</div>
 				<input type='text' id='sui-search' class='sui-search2' placeholder='Enter Search'>
+				<div id='sui-clear' class='sui-search3'>&#xe610</div>
 				<div id='sui-searchgo' class='sui-search4'>&#xe68a</div>
 				<img id='sui-mode' class='sui-search5' src='img/advicon.png'>
 				</div>
