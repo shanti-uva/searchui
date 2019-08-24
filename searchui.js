@@ -5,9 +5,9 @@ class SearchUI  {
 	constructor(top, callback)   																// CONSTRUCTOR
 	{
 		this.top=top;																				// Start of div
-		this.wid=1368;		this.hgt=747-top;
+		this.wid=$("body").width();		this.hgt=$("body").height()-this.top;						// Set sizes
 		this.callback=callback;																		// Callback
-		this.curMode="simple";																		// Current mode - can be input, simple, or advanced
+		this.curMode="input";																		// Current mode - can be input, simple, or advanced
 		this.curQuery={ text:""};																	// Current query
 		this.displayMode="card";																	// Dispay mode - can be grid, pic, or text
 		this.curType="All";																			// Current item types
@@ -18,8 +18,12 @@ class SearchUI  {
 		this.numItems=1104;
 		this.AddFrame();																			// Add div framework
 		this.Draw();																				// Draw
-		$("body").on("resize",this.Draw);															// Redraw on resize of body
-	}
+	
+		window.onresize=()=> {																		// ON RESIZE
+			this.wid=$("body").width();		this.hgt=$("body").height()-this.top;					// Set size
+			this.Draw();																			// Redraw																		
+			};
+		}
 
 	AddFrame()																					// ADD DIV FRAMEWORK
 	{
@@ -44,10 +48,9 @@ class SearchUI  {
 		$("body").append(str.replace(/\t|\n|\r/g,""));												// Remove format and add framework to body
 
 		$("#sui-top").css({ height: this.top });													// Size top area
-		$("#sui-main").css({ top: this.top, height:this.hgt+"px", width:this.wid+"px" });			// Position main area
 		$("#sui-clear").on("mouseover",function() { $(this).html("&#xe60d"); });					// Highlight						
 		$("#sui-clear").on("mouseout", function() { $(this).html("&#xe610"); });					// Normal						
-		$("#sui-top").on("click", ()=> { trace(122);this.Draw("input"); });							// ON TOP CLICK
+		$("#sui-top").on("click", ()=> { this.Draw("input"); });									// ON TOP CLICK
 		$("#sui-clear").on("click",()=> { 															// ON ERASE
 			$("#sui-search").val("");	this.curQuery.text=""; 										// Clear input and query												
 			this.Draw(); 																			// Redraw
@@ -67,11 +70,11 @@ class SearchUI  {
 			else							this.curMode="advanced";								// Go to advanced mode
 			this.Draw(); 																			// Redraw
 			});	
-											
 	}
 
 	Draw(mode)																					// DRAW SEARCH
 	{
+		$("#sui-main").css({ top: this.top, height:this.hgt+"px", width:this.wid+"px" });			// Position main area
 		if (mode) this.curMode=mode;																// If mode spec'd, use it
 		this.DrawSearchInput();																		// Draw search input
 		this.DrawResults();																			// Draw results page if active
