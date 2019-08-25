@@ -9,7 +9,7 @@ body { 				font-family: Verdana,Geneva,sans-serif,shanticon; font-size: 14px; bo
 					}
 .sui-headLeft {		width:calc(100% - 400px); user-select:none; height:100%; float:left; display:none; padding:12px; font-size: 20px;
 					}				
-.sui-headRight { 	width:350px; user-select:none; height:100%; float:right; padding:0;
+.sui-headRight { 	position:absolute; width:350px; user-select:none; height:100%; padding:0; left: calc(100% - 338px);
 					}				
 .sui-left { 		position: absolute; left:0; top:52px; width:100%; height:calc(100% - 52px); background-color: #fff; display:none;
 					}				
@@ -18,22 +18,22 @@ body { 				font-family: Verdana,Geneva,sans-serif,shanticon; font-size: 14px; bo
 .sui-footer { 		position: absolute; left:0; top:calc(100% - 30px); width:100%; height:24px; background-color: #aaa;	
 					color:#fff; text-align:center; padding-top:6px; user-select: none;
 					}				
-.sui-right { 		position: absolute; left:100%; top:0; height:100%; width: 350px; background-color: #f8f8f8; display:none;
+.sui-right { 		position: absolute; left:100%; top:0; height:calc(100% - 2px); width: 346px; background-color: #eee; display:none;
+					border-left:2px solid #aaa; border-right:2px solid #aaa; border-bottom:2px solid #aaa;
 					}				
-.sui-search1 {		background-color:#fff; font-size:16px; color: #ccc;
+.sui-search1 {		position: absolute; background-color:#fff; font-size:16px; color: #ccc;
 					border-radius: 16px 0 0 16px; border-left: 1px solid #999; border-top: 1px solid #999; border-bottom: 1px solid #999;
-					height:24px; width:200px; margin:9px 0 0 12px; padding: 8px 8px 0 8px; display: inline-block;
+					height:24px; width:226px; top:9px; padding: 8px 8px 0 8px;
 					}
-.sui-search2 {		background-color:#fff; font-size:14px; color:#999; border:0; height:18px; width:185px; padding-top:6px; outline:none; 
-					vertical-align:2px; margin-left:-185px; 
+.sui-search2 {		position:absolute; background-color:#fff; font-size:14px; color:#999; top:6px; left:34px; height:20px; width:175px; 
+					outline:none; border-radius:0; border:0; appearance: none; -webkit-appearance: none; box-shadow: none !important;
 					}
-.sui-search3 {		background-color:#fff; font-size:16px; color: #ccc;	border-top: 1px solid #999; border-bottom: 1px solid #999;
-					height:24px; width:18px; padding: 8px 8px 0 8px; display: inline-block;cursor:pointer
+.sui-search3 {		float:right; font-size:16px; color: #ccc; cursor:pointer; 
 					}
-.sui-search4 {		background-color: #ddd; font-size:16px; color: #999; border-radius: 0 16px 16px 0; border: 1px solid #999;
-					height:24px; width:24px; padding:8px 0 0 10px; display: inline-block; cursor:pointer
+.sui-search4 {		position:absolute; background-color: #ddd; font-size:16px; color: #999; border-radius: 0 16px 16px 0; border: 1px solid #999;
+					height:24px; width:24px; padding:8px 0 0 10px; cursor:pointer; top:9px; left:242px;
 					} 	.sui-search4:hover{ opacity:.66; }
-.sui-search5 {		margin-left:12px; cursor:pointer; vertical-align: -2px; 
+.sui-search5 {		position:absolute; cursor:pointer; top:11px; left:298px;
 					}	.sui-search5:hover{ opacity:.66; }
 .sui-resclose {		cursor:pointer;
 					}	.sui-resclose:hover{ opacity:.66; }

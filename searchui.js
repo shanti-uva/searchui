@@ -33,9 +33,10 @@ class SearchUI  {
 			<div id='sui-header' class='sui-header'>
 			<div id='sui-headLeft' class='sui-headLeft'></div>
 			<div id='sui-headRight' class='sui-headRight'>
-			<div class='sui-search1'>&#xe623</div>
-				<input type='text' id='sui-search' class='sui-search2' placeholder='Enter Search'>
-				<div id='sui-clear' class='sui-search3'>&#xe610</div>
+				<div class='sui-search1'>&#xe623
+					<input type='text' id='sui-search' class='sui-search2' placeholder='Enter Search'>
+					<div id='sui-clear' class='sui-search3'>&#xe610</div>
+				</div>
 				<div id='sui-searchgo' class='sui-search4'>&#xe68a</div>
 				<img id='sui-mode' class='sui-search5' src='img/advicon.png'>
 				</div>
@@ -101,7 +102,7 @@ class SearchUI  {
 			$("#sui-left").slideDown();																// Slide down
 			}
 		else if (this.curMode == "advanced") {														// Advanced search
-			$("#sui-left").css({ width:this.wid-$("#sui-right").width()+"px",display:"inline-block"});	// Size and show results area
+			$("#sui-left").css({ width:this.wid-$("#sui-right").width()-4+"px",display:"inline-block"});	// Size and show results area
 			$("#sui-right").css({ display:"inline-block" });										// Show search ui
 			}
 		$("#sui-header").css({"background-color":"#aaa"} );											// Fill header	
