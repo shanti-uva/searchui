@@ -7,16 +7,25 @@ class SearchUI  {
 		this.top=top;																				// Start of div
 		this.wid=$("body").width();		this.hgt=$("body").height()-this.top;						// Set sizes
 		this.callback=callback;																		// Callback
-		this.curMode="input";																		// Current mode - can be input, simple, or advanced
+		this.curMode="simple";																		// Current mode - can be input, simple, or advanced
 		this.curQuery={ text:""};																	// Current query
 		this.displayMode="card";																	// Dispay mode - can be grid, pic, or text
 		this.curType="All";																			// Current item types
-		this.types=["All","Images","Video","Audio","Visuals","Places","Sources","Subjects","Terms"]; // Types
 		this.curPage=0;																				// Current page being shown
 		this.pageSize=100;																			// Results per page	
 		this.pageStart=0;
-		this.numItems=1104;
+		this.numItems=0;
 		this.AddFrame();																			// Add div framework
+	
+		this.assets={};
+		this.assets.All=	{ c:"#5b66cb", g:"&#xe60b", n:1421 };									// All assets
+		this.assets.Places=	{ c:"#6faaf1", g:"&#xe62b", n:1200};									// Places
+		this.assets.AV=		{ c:"#58aab4", g:"&#xe648", n:6 };										// AV
+		this.assets.Images=	{ c:"#b49c59", g:"&#xe62a", n:32 };										// Images
+		this.assets.Sources={ c:"#7773ab", g:"&#xe631", n:86 };										// Sources
+		this.assets.Texts=	{ c:"#8b5aa1", g:"&#xe636", n:93 };										// Texts
+		this.assets.Visuals={ c:"#6e9456", g:"&#xe63b", n:39 };										// Visuals
+	
 		this.Draw();																				// Draw
 	
 		window.onresize=()=> {																		// ON RESIZE
@@ -28,18 +37,18 @@ class SearchUI  {
 	AddFrame()																					// ADD DIV FRAMEWORK
 	{
 		var str=`
-		<div id='sui-top' class='sui-top'></div>
+		<div id='sui-top' class='sui-top'>
+			<div class='sui-search1'>&#xe623
+				<input type='text' id='sui-search' class='sui-search2' placeholder='Enter Search'>
+				<div id='sui-clear' class='sui-search3'>&#xe610</div>
+			</div>
+			<div id='sui-searchgo' class='sui-search4'>&#xe642</div>
+			<img id='sui-mode' class='sui-search5' src='img/advicon.png' title='Advanced search'>
+		</div>
 		<div id='sui-main' class='sui-main'>
 			<div id='sui-header' class='sui-header'>
-			<div id='sui-headLeft' class='sui-headLeft'></div>
-			<div id='sui-headRight' class='sui-headRight'>
-				<div class='sui-search1'>&#xe623
-					<input type='text' id='sui-search' class='sui-search2' placeholder='Enter Search'>
-					<div id='sui-clear' class='sui-search3'>&#xe610</div>
-				</div>
-				<div id='sui-searchgo' class='sui-search4'>&#xe68a</div>
-				<img id='sui-mode' class='sui-search5' src='img/advicon.png'>
-				</div>
+				<div id='sui-headLeft' class='sui-headLeft'></div>
+				<div id='sui-headRight' class='sui-headRight'></div>
 			</div><
 			div id='sui-left' class='sui-left'>
 				<div id='sui-results' class='sui-results'></div>
@@ -51,7 +60,6 @@ class SearchUI  {
 		$("#sui-top").css({ height: this.top });													// Size top area
 		$("#sui-clear").on("mouseover",function() { $(this).html("&#xe60d"); });					// Highlight						
 		$("#sui-clear").on("mouseout", function() { $(this).html("&#xe610"); });					// Normal						
-		$("#sui-top").on("click", ()=> { this.Draw("input"); });									// ON TOP CLICK
 		$("#sui-clear").on("click",()=> { 															// ON ERASE
 			$("#sui-search").val("");	this.curQuery.text=""; 										// Clear input and query												
 			this.Draw(); 																			// Redraw
@@ -76,21 +84,22 @@ class SearchUI  {
 	Draw(mode)																					// DRAW SEARCH
 	{
 		$("#sui-main").css({ top: this.top, height:this.hgt+"px", width:this.wid+"px" });			// Position main area
+		$("#sui-typeList").remove();																// Remove type list
 		if (mode) this.curMode=mode;																// If mode spec'd, use it
-		this.DrawSearchInput();																		// Draw search input
 		this.DrawResults();																			// Draw results page if active
 		this.DrawSearchUI();																		// Draw search UI if active
 	}
 
-	query(query)																				// QUERY AND UPDATE RESULTS
+	Query(query)																				// QUERY AND UPDATE RESULTS
 	{
 		this.DrawResults();																			// Draw results page if active
 	}
 	
 	DrawResults()																				// DRAW RESULTS SECTION
 	{
+		this.numItems=this.assets[this.curType].n;													// Set number of items
 		if (this.curMode == "input") {																// Just the search box
-			$("#sui-header").css({ "background-color":"transparent" });								// Show Drupal header through
+			$("#sui-header").css({ display:"none"});												// Show header
 			$("#sui-left").css({ display:"none" });													// Hide results
 			$("#sui-right").css({ display:"none" });												// Hide search ui
 			$("#sui-headLeft").css({ display:"none" });												// Hide left header
@@ -105,32 +114,58 @@ class SearchUI  {
 			$("#sui-left").css({ width:this.wid-$("#sui-right").width()-4+"px",display:"inline-block"});	// Size and show results area
 			$("#sui-right").css({ display:"inline-block" });										// Show search ui
 			}
-		$("#sui-header").css({"background-color":"#aaa"} );											// Fill header	
-		$("#sui-headLeft").css({ display:"inline-block" });											// Show left header
+		$("#sui-mode").prop({"title": this.curMode == "advanced" ? "Regular search" : "Advanced search" } );	// Set tooltip
+		$("#sui-mode").prop({"src": this.curMode == "advanced" ? "img/simicon.png" : "img/advicon.png" } );	// Set mode icon	
+		$("#sui-header").css({display:"inline-block"} );											// Show header
 		this.DrawHeader();																			// Draw header
 		this.DrawItems();																			// Draw items
 		this.DrawFooter();																			// Draw footer
-	}
-
-	DrawSearchInput()
-	{
 	}
 
 	DrawHeader()																				// DRAW RESULTS HEADER
 	{
 		var s=this.curPage*this.pageSize+1;															// Starting item number
 		var e=Math.min(s+this.pageSize,this.numItems);												// Ending number
+		var n=this.assets[this.curType].n;															// Get number of items in current asset
+		if (n >= 1000)	n=Math.floor(n/1000)+"K";													// Shorten if need be
 		var str=`
-			&nbsp;<span id='sui-resclose' class='sui-resclose'>&#xe60f
-			</span>&nbsp;&nbsp;Search results  
-			<span style='font-size:12px'> (${s}-${e}) of ${this.numItems}</span>
+			<span id='sui-resClose' class='sui-resClose'>&#xe60f</span>
+			Search results: <span style='font-size:12px'> (${s}-${e}) of ${this.numItems}
 			`;
-		$("#sui-headLeft").html(str.replace(/\t|\n|\r/g,""));									// Remove format and add to div
-		$("#sui-resclose").on("click", ()=> { this.Draw("input"); });							// ON QUIT
-		}
+		$("#sui-headLeft").html(str.replace(/\t|\n|\r/g,""));										// Remove format and add to div
+		str=`
+			<div id='sui-type' class='sui-type' title='Choose asset type'>
+			<div id='sui-typeIcon' class='sui-typeIcon' style='background-color:${this.assets[this.curType].c}'>
+			&#xe60b</div>${this.curType} (${n}) 
+			<div id='sui-typeSet' class='sui-typeSet'>&#xe609</div>
+			</div>
+			`;
+		$("#sui-headRight").html(str.replace(/\t|\n|\r/g,""));										// Remove format and add to div
+		$("#sui-resClose").on("click", ()=> { this.Draw("input"); });								// ON QUIT
+		$("#sui-typeSet").on("click", ()=> {
+			$("#sui-typeList").remove();															// Remove type list
+			str="<div id='sui-typeList' class='sui-typeList'>";
+			for (var k in this.assets) {
+				n=this.assets[k].n;																	// Get number of items
+				if (n > 1000)	n=Math.floor(n/1000)+"K";											// Shorten
+				str+="<div id='sui-tl-"+k+"'><span style='font-size:18px; line-height: 24px; vertical-align:-3px; color:"+this.assets[k].c+"'>"+this.assets[k].g+" </span> "+k+" ("+n+")</div>";
+				}
+			$("#sui-main").append(str);																// Add to main div
+			
+			$("[id^=sui-tl-]").on("click", (e)=> {													// ON CLICK ON ASSET TYPE
+				this.curType=e.currentTarget.id.substring(7);										// Get asset name		
+				$("#sui-typeList").remove();														// Remove type list
+				this.Query(); 																		// Get new results
+				});							
+			});
+	}
 
 	DrawItems()																					// DRAW RESULT ITEMS
 	{
+		var str=`
+		<br><br><br><div style='text-align:center;color:#666'>Search results will appear here</div>
+		`;
+		$("#sui-results").html(str.replace(/\t|\n|\r/g,""));										// Remove format and add to div
 	}
 
 	DrawFooter()																				// DRAW RESULTS FOOTER
@@ -138,9 +173,9 @@ class SearchUI  {
 		var lastPage=Math.floor(this.numItems/this.pageSize);										// Calc last page
 		var str=`
 		<div style='float:left;font-size:18px;'>
-			<div id='sui-resModeLine' class='sui-resDisplay' title='List view'>&#xe679</div>
-			<div id='sui-resModeGrid' class='sui-resDisplay' title='Grid view'>&#xe65f</div>
-			<div id='sui-resModeCard' class='sui-resDisplay' title='Card view'>&#xe61b</div>
+			<div id='sui-resModeLine' class='sui-resDisplay' title='List view'>&#xe61f</div>
+			<div id='sui-resModeGrid' class='sui-resDisplay' title='Grid view'>&#xe61b</div>
+			<div id='sui-resModeCard' class='sui-resDisplay' title='Card view'>&#xe673</div>
 		</div>	
 		<div style='display:inline-block;font-size:11px'>
 			<div id='sui-page1' class='sui-resDisplay' title='Go to first page'>&#xe63c</div>
@@ -155,11 +190,11 @@ class SearchUI  {
 	
 		$("#sui-typePage").val(this.curPage+1);														// Set page number
 	
-			$("[id^=sui-resMode]").css("color","#fff");													// Reset modes
+		$("[id^=sui-resMode]").css("color","#ddd");													// Reset modes
 		$("[id^=sui-page]").css("color","#fff");													// Reset pagers
-		if (this.viewMode == "line") 		$("#sui-resModeLine").css("color","#578cf1");			// Hilite line if active
-		else if (this.viewMode == "grid") 	$("#sui-resModeGrid").css("color","#578cf1");			// Grid
-		else 								$("#sui-resModeCard").css("color","#578cf1");			// Card
+		if (this.viewMode == "line") 		$("#sui-resModeLine").css("color","#fff");				// Hilite line if active
+		else if (this.viewMode == "grid") 	$("#sui-resModeGrid").css("color","#fff");				// Grid
+		else 								$("#sui-resModeCard").css("color","#fff");				// Card
 		if (this.curPage == 0) 		  { $("#sui-page1").css("color","#ddd"); $("#sui-pageP").css("color","#ddd"); }	// No back
 		if (this.curPage == lastPage) { $("#sui-pageN").css("color","#ddd"); $("#sui-pageL").css("color","#ddd"); }	// No forward
 
@@ -180,6 +215,10 @@ class SearchUI  {
 
 	DrawSearchUI()																				// DRAW SEARCH UI SECTION
 	{
+		var str=`
+		<br><br><br><div style='text-align:center;color:#666'>Search UI will appear here</div>
+		`;
+		$("#sui-right").html(str.replace(/\t|\n|\r/g,""));										// Remove format and add to div
 	}
 
 
