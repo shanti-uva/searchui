@@ -2,10 +2,9 @@
 
 class SearchUI  {																					
 
-	constructor(top, callback)   																// CONSTRUCTOR
+	constructor(callback)   																	// CONSTRUCTOR
 	{
-		this.top=top;																				// Start of div
-		this.wid=$("body").width();		this.hgt=$("body").height()-this.top;						// Set sizes
+		this.wid=$("body").width();		this.hgt=$("body").height();								// Set sizes
 		this.callback=callback;																		// Callback
 		this.curMode="simple";																		// Current mode - can be input, simple, or advanced
 		this.curQuery={ text:""};																	// Current query
@@ -30,7 +29,7 @@ class SearchUI  {
 		this.Draw();																				// Draw
 	
 		window.onresize=()=> {																		// ON RESIZE
-			this.wid=$("body").width();		this.hgt=$("body").height()-this.top;					// Set size
+			this.wid=$("body").width();		this.hgt=$("body").height();							// Set size
 			this.Draw();																			// Redraw																		
 			};
 		}
@@ -38,15 +37,15 @@ class SearchUI  {
 	AddFrame()																					// ADD DIV FRAMEWORK
 	{
 		var str=`
-		<div id='sui-top' class='sui-top'>
-			<div class='sui-search1'>&#xe623
+		<div id='sui-main' class='sui-main'>
+			<div id='sui-top' class='sui-top'>
+				<div class='sui-search1'>&#xe623
 				<input type='text' id='sui-search' class='sui-search2' placeholder='Enter Search'>
 				<div id='sui-clear' class='sui-search3'>&#xe610</div>
+				</div>
+				<div id='sui-searchgo' class='sui-search4'>&#xe642</div>
+				<img id='sui-mode' class='sui-search5' src='img/advicon.png' title='Advanced search'>
 			</div>
-			<div id='sui-searchgo' class='sui-search4'>&#xe642</div>
-			<img id='sui-mode' class='sui-search5' src='img/advicon.png' title='Advanced search'>
-		</div>
-		<div id='sui-main' class='sui-main'>
 			<div id='sui-header' class='sui-header'>
 				<div id='sui-headLeft' class='sui-headLeft'></div>
 				<div id='sui-headRight' class='sui-headRight'></div>
@@ -58,7 +57,6 @@ class SearchUI  {
 			</div>`;
 		$("body").append(str.replace(/\t|\n|\r/g,""));												// Remove format and add framework to body
 
-		$("#sui-top").css({ height: this.top });													// Size top area
 		$("#sui-clear").on("mouseover",function() { $(this).html("&#xe60d"); });					// Highlight						
 		$("#sui-clear").on("mouseout", function() { $(this).html("&#xe610"); });					// Normal						
 		$("#sui-clear").on("click",()=> { 															// ON ERASE
@@ -84,7 +82,7 @@ class SearchUI  {
 
 	Draw(mode)																					// DRAW SEARCH
 	{
-		$("#sui-main").css({ top: this.top, height:this.hgt+"px", width:this.wid+"px" });			// Position main area
+		$("#sui-main").css({ height:this.hgt+"px", width:this.wid+"px" });							// Position main area
 		$("#sui-typeList").remove();																// Remove type list
 		if (mode) this.curMode=mode;																// If mode spec'd, use it
 		this.DrawResults();																			// Draw results page if active
@@ -115,6 +113,7 @@ class SearchUI  {
 			$("#sui-left").css({ width:this.wid-$("#sui-right").width()-4+"px",display:"inline-block"});	// Size and show results area
 			$("#sui-right").css({ display:"inline-block" });										// Show search ui
 			}
+		$("#sui-headLeft").css({ display:"inline-block" });											// Show left header
 		$("#sui-mode").prop({"title": this.curMode == "advanced" ? "Regular search" : "Advanced search" } );	// Set tooltip
 		$("#sui-mode").prop({"src": this.curMode == "advanced" ? "img/simicon.png" : "img/advicon.png" } );	// Set mode icon	
 		$("#sui-header").css({display:"inline-block"} );											// Show header
