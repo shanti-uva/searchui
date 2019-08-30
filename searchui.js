@@ -5,11 +5,13 @@ class SearchUI  {
 	constructor(callback)   																	// CONSTRUCTOR
 	{
 		this.wid=$("body").width();		this.hgt=$("body").height();								// Set sizes
+		this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production url
 		this.callback=callback;																		// Callback
-		this.curMode="simple";																		// Current mode - can be input, simple, or advanced
+		this.curResults="";																			// Returns results
+		this.curMode="input";																		// Current mode - can be input, simple, or advanced
 		this.curQuery={ text:""};																	// Current query
 		this.viewMode="Card";																		// Dispay mode - can be Line, Grid, or Card
-		this.viewSort="Alpha";																		// Sort mode - can be Alpha, Date, or Other
+		this.viewSort="Alpha";																		// Sort mode - can be Alpha, Date, or Auther
 		this.curType="All";																			// Current item types
 		this.curPage=0;																				// Current page being shown
 		this.pageSize=100;																			// Results per page	
@@ -18,14 +20,17 @@ class SearchUI  {
 		this.AddFrame();																			// Add div framework
 	
 		this.assets={};
-		this.assets.All=	{ c:"#5b66cb", g:"&#xe60b", n:1421 };									// All assets
-		this.assets.Places=	{ c:"#6faaf1", g:"&#xe62b", n:1200};									// Places
-		this.assets.AV=		{ c:"#58aab4", g:"&#xe648", n:6 };										// AV
-		this.assets.Images=	{ c:"#b49c59", g:"&#xe62a", n:32 };										// Images
-		this.assets.Sources={ c:"#7773ab", g:"&#xe631", n:86 };										// Sources
-		this.assets.Texts=	{ c:"#8b5aa1", g:"&#xe636", n:93 };										// Texts
-		this.assets.Visuals={ c:"#6e9456", g:"&#xe63b", n:39 };										// Visuals
+		this.assets.All=	 { c:"#5b66cb", g:"&#xe60b", n:1421 };									// All assets
+		this.assets.Places=	 { c:"#6faaf1", g:"&#xe62b", n:1200};									// Places
+		this.assets["Audio-Video"]=	{ c:"#58aab4", g:"&#xe648", n:6 };								// AV
+		this.assets.Images=	 { c:"#b49c59", g:"&#xe62a", n:32 };									// Images
+		this.assets.Sources= { c:"#7773ab", g:"&#xe631", n:86 };									// Sources
+		this.assets.Texts=	 { c:"#8b5aa1", g:"&#xe636", n:93 };									// Texts
+		this.assets.Visuals= { c:"#6e9456", g:"&#xe63b", n:39 };									// Visuals
+		this.assets.Subjects={ c:"#cc4c39", g:"&#xe634", n:39 };									// Subjects
+		this.assets.Terms=   { c:"#a2733f", g:"&#xe635", n:39 };									// Terms
 	
+		this.Query();																				// Get data
 		this.Draw();																				// Draw
 	
 		window.onresize=()=> {																		// ON RESIZE
@@ -61,17 +66,19 @@ class SearchUI  {
 		$("#sui-clear").on("mouseout", function() { $(this).html("&#xe610"); });					// Normal						
 		$("#sui-clear").on("click",()=> { 															// ON ERASE
 			$("#sui-search").val("");	this.curQuery.text=""; 										// Clear input and query												
-			this.Draw(); 																			// Redraw
+			this.Query(); 																			// Load and redraw
 			});					
 		$("#sui-search").on("change", ()=> { 														// ON SEARCH CHANGE
 			this.curQuery.text=$("#sui-search").val(); 												// Get query
 			if (this.curMode == "input") this.curMode="simple";										// Toggle simple mode
-			this.Draw(); 																			// Redraw
+			this.curPage=0;																			// Start at beginning
+			this.Query(); 																			// Load and redraw
 			});	
 		$("#sui-searchgo").on("click", ()=> { 														// ON SEARCH GO
 			this.curQuery.text=$("#sui-search").val(); 												// Get query
 			if (this.curMode == "input") this.curMode="simple";										// Toggle simple mode
-			this.Draw(); 																			// Redraw
+			this.curPage=0;																			// Start at beginning
+			this.Query(); 																			// Load and redraw
 			});	
 		$("#sui-mode").on("click",()=> { 															// ON CHANGE MODE
 			if (this.curMode == "advanced") this.curMode="simple";									// Go to simple mode
@@ -89,9 +96,39 @@ class SearchUI  {
 		this.DrawSearchUI();																		// Draw search UI if active
 	}
 
-	Query(query)																				// QUERY AND UPDATE RESULTS
+	Query()																						// QUERY AND UPDATE RESULTS
 	{
-		this.DrawResults();																			// Draw results page if active
+		var str,search="*";
+		this.LoadingIcon(true,64);																	// Show loading icon
+		if (this.curType != "All")																	// If not all
+			search="asset_type%3A%22"+this.curType.toLowerCase()+"%22";								// Add asset type						
+		if (this.curQuery.text) {																	// If a filter spec'd
+			str="%22*"+this.curQuery.text.toLowerCase()+"*%22";										// Search term
+			search+=" AND (title%3A"+str;															// Look at title
+			search+=" OR caption%3A"+str;															// Or caption 
+			search+=" OR summary%3A"+str+")";														// Or summary
+			}
+/*		if (_this.filterCollect) {																	// If a collection filter spec'd
+			str="*"+_this.filterCollect.toLowerCase()+"*";											// Search term
+			search+=" AND collection_title%3A"+str;													// And collection title
+			}
+		if (_this.placeFilter)																		// If a place filter spec'd 
+			search+=" AND kmapid%3A%28%22"+_this.placeFilter.toLowerCase()+"%22%29";				// Place search term 
+		if (_this.subjectFilter) 																	// If subject filter spec'd 
+			search+=" AND kmapid%3A%28%22"+_this.subjectFilter.toLowerCase()+"%22%29";				// Subject search term
+		if (_this.user) 																			// If a user spec'd
+			search+=" AND node_user%3A*"+_this.user+"*";											// Look at user
+*/		
+		var s=this.curPage*this.pageSize;															// Starting item number
+		var url=this.solrUrl+"/?"+"q="+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+s+"&rows="+this.pageSize;
+		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done((data)=> {
+			this.assets[this.curType].n=data.response.numFound;										// Set amounts
+			trace(this.curPage,data);			
+						this.curResults=data.response.docs;
+						this.LoadingIcon(false);														// Hide loading icon
+						this.DrawResults();																// Draw results page if active
+					});
+
 	}
 	
 	DrawResults()																				// DRAW RESULTS SECTION
@@ -182,7 +219,7 @@ class SearchUI  {
 		<div style='float:right;font-size:16px;'>
 			<div id='sui-viewSortAlpha' class='sui-resDisplay' title='Sort alphabetically'>&#xe652</div>
 			<div id='sui-viewSortDate'  class='sui-resDisplay' title='Sort by date'>&#xe60c</div>
-			<div id='sui-viewSortOther' class='sui-resDisplay' title='Sort by other'>&#xe655</div>
+			<div id='sui-viewSortAuthor' class='sui-resDisplay' title='Sort by author'>&#xe600</div>
 			</div>`;
 		$("#sui-footer").html(str.replace(/\t|\n|\r/g,""));											// Remove format and add to div
 		
@@ -204,15 +241,15 @@ class SearchUI  {
 		$("[id^=sui-page]").css("color","#fff");													// Reset pagers
 		if (this.curPage == 0) 		  	  { $("#sui-page1").css("color","#ddd"); $("#sui-pageP").css("color","#ddd"); }	// No back
 		if (this.curPage == lastPage)     { $("#sui-pageN").css("color","#ddd"); $("#sui-pageL").css("color","#ddd"); }	// No forward
-		$("#sui-page1").on("click",()=> { this.curPage=0; this.DrawResults(); });									// ON FIRST CLICK
-		$("#sui-pageP").on("click", ()=> { this.curPage=Math.max(this.curPage-1,0);  this.DrawResults(); });		// ON PREVIOUS CLICK
-		$("#sui-pageN").on("click", ()=> { this.curPage=Math.min(this.curPage+1,lastPage); this.DrawResults(); });	// ON NEXT CLICK
-		$("#sui-pageL").on("click", ()=> { this.curPage=lastPage; this.DrawResults(); });							// ON LAST CLICK
-		$("#sui-typePage").on("change", ()=> {																		// ON TYPE PAGE
+		$("#sui-page1").on("click",()=> { this.curPage=0; this.Query(); });									// ON FIRST CLICK
+		$("#sui-pageP").on("click", ()=> { this.curPage=Math.max(this.curPage-1,0);  this.Query(); });		// ON PREVIOUS CLICK
+		$("#sui-pageN").on("click", ()=> { this.curPage=Math.min(this.curPage+1,lastPage); this.Query(); });// ON NEXT CLICK
+		$("#sui-pageL").on("click", ()=> { this.curPage=lastPage; this.Query(); });							// ON LAST CLICK
+		$("#sui-typePage").on("change", ()=> {																// ON TYPE PAGE
 			var p=$("#sui-typePage").val();															// Get value
 			if (!isNaN(p))   this.curPage=Math.max(Math.min(p-1,lastPage),0);						// If a number, cap 0-last	
-			this.DrawResults(); 																	// Refresh
-			});							
+			this.Query(); 																			// Get new results
+		});							
 	}
 
 	DrawItems()																					// DRAW RESULT ITEMS
@@ -231,8 +268,18 @@ class SearchUI  {
 		$("#sui-right").html(str.replace(/\t|\n|\r/g,""));										// Remove format and add to div
 	}
 
-
-
+	LoadingIcon(mode, size, container)													// SHOW/HIDE LOADING ICON		
+	{
+		container=container ? "#"+container: "body";												// If no container spec'd, use body
+		if (!mode) {																				// If hiding
+			$("#sui-loadingIcon").remove();															// Remove it
+			return;																					// Quit
+			}
+		var str="<img src='img/loading.gif' width='"+size+"' ";										// Img
+		str+="id='sui-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
+		$(container).append(str);																	// Add icon to container
+	}
+	
 
 
 } // SearchUI class closure

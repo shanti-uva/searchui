@@ -13,28 +13,28 @@ body { 				font-family: Verdana,Geneva,sans-serif,shanticon; font-size: 14px; bo
 .sui-search3 {		float:right; font-size:16px; color: #ccc; cursor:pointer;
 					}
 .sui-search4 {		position:absolute; background-color: #ddd; font-size:18px; color: #999; border-radius: 0 16px 16px 0; border: 1px solid #999;
-					height:23px; width:24px; padding:5px 0 0 4px; cursor:pointer; left:calc(100% - 247px);
-					} 	.sui-search4:hover{ opacity:.66; }
-.sui-search5 {		cursor:pointer; margin-left:43px;
-					}	.sui-search5:hover{ opacity:.66; }
-
+					height:23px; width:24px; padding:5px 0 0 4px; cursor:pointer; left:calc(100% - 247px); } .sui-search4:hover { opacity:.66; 
+					}
+.sui-search5 {		cursor:pointer; margin-left:43px;  } .sui-search5:hover{ opacity:.66; 
+					}
 .sui-header {		height:52px; width:100%; user-select: none; background-color: #aaa; color:#fff; 
+					}
+.sui-resClose {		cursor:pointer; margin: 0 15px 0 15px;	} .sui-resclose:hover{ opacity:.66;
 					}
 .sui-headLeft {		width:calc(100% - 400px); user-select:none; height:100%; float:left; padding:12px; font-size: 20px;
 					}				
 .sui-headRight { 	float:right; user-select:none; height:100%; padding:0; margin: 10px 10px 0 0;
 					}	
-.sui-type {			background-color:#fff; font-size:12px; color:#666; border-radius:8px; display:inline-block; width:200px; 
+.sui-type {			background-color:#fff; font-size:12px; color:#666; border-radius:8px; display:inline-block; width:220px; 
 					}	
-.sui-typeIcon {		display:inline-block; border-radius:8px 0 0 8px; width:25px; height:20px; padding:6px; 
+.sui-typeIcon {		display:inline-block; border-radius:8px 0 0 8px; width:25px; height:20px; padding:6px; vertical-align: -2px;
 					text-align:center; font-size:18px; color:#fff; background-color:#5b66cb; margin-right:8px;
-					vertical-align: -2px;	
 					}
-.sui-typeSet {		float:right; border-radius:0 8px 8px 0; width:20px; height:26px; padding-top:6px;
-					text-align:center; font-size:18px; color:#666;	background-color:#ddd; cursor:pointer; 
-					} 	.sui-typeSet:hover{ opacity:.66; }
-.sui-typeList {		position: absolute; left:calc(100% - 174px); top:42px; background-color:#fff; font-size:12px; 
-					color:#666; border-radius:0 0 8px 8px; display:inline-block; width:119px; cursor: pointer; 
+.sui-typeSet {		float:right; border-radius:0 8px 8px 0; width:20px; height:26px; padding-top:6px; cursor:pointer;
+					text-align:center; font-size:18px; color:#666;	background-color:#ddd; }  .sui-typeSet:hover{ opacity:.66; 
+					}
+.sui-typeList {		position: absolute; left:calc(100% - 194px); top:84px; background-color:#fff; font-size:12px; 
+					color:#666; border-radius:0 0 8px 8px; display:inline-block; width:139px; cursor: pointer; 
 					border: 1px solid #999; padding:12px; border: 1px solid #999; padding:12px; 
 					}	
 .sui-left { 		position: absolute; left:0; top:94px; width:100%; height:calc(100% - 52px); background-color: #fff; display:none;
@@ -47,13 +47,9 @@ body { 				font-family: Verdana,Geneva,sans-serif,shanticon; font-size: 14px; bo
 .sui-right { 		position: absolute; left:100%; top:0; height:calc(100% - 2px); width: 346px; background-color: #eee; display:none;
 					border-left:2px solid #aaa; border-right:2px solid #aaa; border-bottom:2px solid #aaa;
 					}				
-.sui-resClose {		cursor:pointer; margin: 0 15px 0 15px;
-					}	.sui-resclose:hover{ opacity:.66; }
-	
 .sui-resDisplay {	cursor:pointer; display: inline-block; margin:0 12px; 
 					}
 
-			
 @font-face {		font-family: 'shanticon'; src: url('shanticon.ttf?ueun15') format('truetype'); font-weight: normal; font-style: normal;
 					}
 
