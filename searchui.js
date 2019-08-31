@@ -98,10 +98,10 @@ class SearchUI  {
 
 	Query()																						// QUERY AND UPDATE RESULTS
 	{
-		var str,search="*";
+		var str,search="",asset="*";
 		this.LoadingIcon(true,64);																	// Show loading icon
 		if (this.curType != "All")																	// If not all
-			search="asset_type%3A%22"+this.curType.toLowerCase()+"%22";								// Add asset type						
+			asset="asset_type%3A%22"+this.curType.toLowerCase()+"%22";								// Set asset type						
 		if (this.curQuery.text) {																	// If a filter spec'd
 			str="%22*"+this.curQuery.text.toLowerCase()+"*%22";										// Search term
 			search+=" AND (title%3A"+str;															// Look at title
@@ -120,17 +120,36 @@ class SearchUI  {
 			search+=" AND node_user%3A*"+_this.user+"*";											// Look at user
 */		
 		var s=this.curPage*this.pageSize;															// Starting item number
-		var url=this.solrUrl+"/?"+"q="+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+s+"&rows="+this.pageSize;
+		var url=this.solrUrl+"/?"+"q="+asset+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+s+"&rows="+this.pageSize;
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done((data)=> {
-			this.assets[this.curType].n=data.response.numFound;										// Set amounts
-			trace(this.curPage,data);			
-						this.curResults=data.response.docs;
-						this.LoadingIcon(false);														// Hide loading icon
-						this.DrawResults();																// Draw results page if active
-					});
-
+			trace(data);			
+			this.curResults=data.response.docs;														// Save current results
+			this.LoadingIcon(false);																// Hide loading icon
+			this.DrawResults();																		// Draw results page if active
+			});
+		
+		this.GetCounts(search);																		// Get asset counts	
 	}
-	
+
+	GetCounts(search) 																			// GET ASSET COUNTS
+	{
+		var i,val;
+		var url=this.solrUrl+"?"+"q=*"+search+"&wt=json&rows=0&json.facet={assetType:{limit:300,type:%22terms%22,field:%22asset_type%22}}";
+		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done((data)=> {				// Get asset counts
+			for (i in this.assets) this.assets[i].n=0;												// Zero them out
+			if (!data || !data.facets || !data.facets.assetType || !data.facets.assetType.buckets)	// If no buckets
+				return;																				// Quit
+			var buckets=data.facets.assetType.buckets;												// Point at buckets
+			for (i=0;i<buckets.length;++i) {														// For each bucket
+				val=buckets[i].val;																	// Get name
+				val=val.charAt(0).toUpperCase()+val.slice(1);										// UC
+				if (val == "Audio-video") val="Audio-Video";										// Handle AV
+				this.assets[val].n=buckets[i].count;												// Set count
+				}
+			this.assets.All.n=data.response.numFound;												// All count																	
+			});
+	}
+
 	DrawResults()																				// DRAW RESULTS SECTION
 	{
 		this.numItems=this.assets[this.curType].n;													// Set number of items
@@ -154,6 +173,7 @@ class SearchUI  {
 		$("#sui-mode").prop({"title": this.curMode == "advanced" ? "Regular search" : "Advanced search" } );	// Set tooltip
 		$("#sui-mode").prop({"src": this.curMode == "advanced" ? "img/simicon.png" : "img/advicon.png" } );	// Set mode icon	
 		$("#sui-header").css({display:"inline-block"} );											// Show header
+		$("#sui-typeList").remove();																// Remove type list
 		this.DrawHeader();																			// Draw header
 		this.DrawItems();																			// Draw items
 		this.DrawFooter();																			// Draw footer
