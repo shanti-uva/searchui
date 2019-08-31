@@ -8,9 +8,9 @@ class SearchUI  {
 		this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production url
 		this.callback=callback;																		// Callback
 		this.curResults="";																			// Returns results
-		this.curMode="input";																		// Current mode - can be input, simple, or advanced
+		this.curMode="simple";																		// Current mode - can be input, simple, or advanced
 		this.curQuery={ text:""};																	// Current query
-		this.viewMode="Card";																		// Dispay mode - can be Line, Grid, or Card
+		this.viewMode="List";																		// Dispay mode - can be List, Grid, or Card
 		this.viewSort="Alpha";																		// Sort mode - can be Alpha, Date, or Auther
 		this.curType="All";																			// Current item types
 		this.curPage=0;																				// Current page being shown
@@ -122,7 +122,6 @@ class SearchUI  {
 		var s=this.curPage*this.pageSize;															// Starting item number
 		var url=this.solrUrl+"/?"+"q="+asset+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+s+"&rows="+this.pageSize;
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done((data)=> {
-			trace(data);			
 			this.curResults=data.response.docs;														// Save current results
 			this.LoadingIcon(false);																// Hide loading icon
 			this.DrawResults();																		// Draw results page if active
@@ -223,7 +222,7 @@ class SearchUI  {
 		var lastPage=Math.floor(this.numItems/this.pageSize);										// Calc last page
 		var str=`
 		<div style='float:left;font-size:18px;'>
-			<div id='sui-viewModeLine' class='sui-resDisplay' title='List view'>&#xe61f</div>
+			<div id='sui-viewModeList' class='sui-resDisplay' title='List view'>&#xe61f</div>
 			<div id='sui-viewModeGrid' class='sui-resDisplay' title='Grid view'>&#xe61b</div>
 			<div id='sui-viewModeCard' class='sui-resDisplay' title='Card view'>&#xe673</div>
 		</div>	
@@ -274,10 +273,108 @@ class SearchUI  {
 
 	DrawItems()																					// DRAW RESULT ITEMS
 	{
-		var str=`
-		<br><br><br><div style='text-align:center;color:#666'>Search results will appear here</div>
-		`;
+		var i,o,str="";
+	trace(this.curResults)
+		for (i=0;i<this.curResults.length;++i) {													// For each result
+			o=this.curResults[i];																	// Point at item
+			o.asset_type=o.asset_type.charAt(0).toUpperCase()+o.asset_type.slice(1);				// UC 1st char
+			if (o.asset_subtype) o.asset_subtype=o.asset_subtype.charAt(0).toUpperCase()+o.asset_subtype.slice(1);	
+			if (o.asset_type == "Audio-video") o.asset_type="Audio-Video";							// Handle AV
+			if (this.viewMode == "Card")		str+=this.DrawCard(o,i);							// Draw if shoing as cards
+			else if (this.viewMode == "Grid")	str+=this.DrawGrid(o,i);							// Grid
+			else								str+=this.DrawList(o,i);							// List
+			}	
+		if (!this.curResults.length)																// No reults
+			str="<br><br><br><div style='text-align:center;color:#666'>Sorry, there were no items found<br>Try broadening your search</div>";
 		$("#sui-results").html(str.replace(/\t|\n|\r/g,""));										// Remove format and add to div
+	
+		$(".sui-itemPlus").on("click",(e)=> { 														// ON PLUS BUTTON CLICK
+			var j,s1;
+			var num=e.currentTarget.id.substring(13);												// Get index of result	
+			if ($("#sui-itemMore-"+num).html()) {													// If open
+				$("#sui-itemMore-"+num).slideUp(400,()=>{ $("#sui-itemMore-"+num).html(""); } );	// Close it and clear
+				}
+			else{
+				str="";
+				o=this.curResults[num];																// Point at item
+				if (o.url_thumb)	str+="<img src='"+o.url_thumb+"' class='sui-itemPic'>";			// Add pic
+				str+="<div class='sui-itemInfo'>";													// Info holder
+				str+=this.assets[o.asset_type].g+"&nbsp;&nbsp;"+o.asset_type.toUpperCase();			// Add type
+				if (o.asset_subtype) str+=" / "+o.asset_subtype;									// Add subtype
+				if (o.creator) str+="<br>&#xe600&nbsp;&nbsp;"+o.creator.join(", ");					// Add creator
+				if (o.summary) {
+					s1=o.summary || o.caption;														// Use either summary or caption
+					if (s1.length > 137)	s1=s1.substr(0,137)+"...";								// Limit size
+					str+="<br>&#xe636&nbsp;&nbsp;"+s1;												// Add summary
+					}
+				str+="</div>";																		// Close info div
+				if (o.summary) str+="<br><div style='font-family:serif'>"+o.summary+"</div>";		// Add summary
+				if (o.kmapid_strict && o.kmapid_strict.length) {									// Add related places/subjects
+					var places=[],subjects=[];
+					str+="<div>";																	// Related places and subjects
+					for (j=0;j<o.kmapid_strict.length;++j) {										// For each item
+						if (o.kmapid_strict[j].match(/subjects/i))		subjects.push(j);			// Add to subjects
+						else if (o.kmapid_strict[j].match(/places/i))	places.push(j);				// Add to places
+						}
+					if (places.length) {															// If any places
+						str+="<div style='float:left'><span style='color:"+this.assets.Places.c+"'>";
+						str+="<br><b>"+this.assets.Places.g+"</b></span>&nbsp;RELATED PLACES";		// Add header
+						for (j=0;j<places.length;++j) {												// For each place
+							str+="<br>";
+							if (o.kmapid_strict_ss)													// If has names															
+								str+="<span class='sui-itemRelated'>"+o.kmapid_strict_ss[places[j]]+"</span>";	// Add place name
+							str+="&nbsp;<span style='font-size:10px;margin-right:40px'>("+o.kmapid_strict[places[j]]+")</span>";	// Add place id
+							}
+						str+="</div>";																// End places div
+						}
+					
+					if (subjects.length) {															// If any subjects
+						str+="<div><span style='color:"+this.assets.Subjects.c+"'>";
+						str+="<br><b>"+this.assets.Subjects.g+"</b></span>&nbsp;RELATED SUBJECTS";	// Add header
+						for (j=0;j<subjects.length;++j) {											// For each subject
+							str+="<br>";
+							if (o.kmapid_strict_ss)													// If has names															
+								str+="<span class='sui-itemRelated'>"+o.kmapid_strict_ss[subjects[j]]+"</span>";	// Add place name
+							str+="&nbsp;<span style='font-size:10px'>("+o.kmapid_strict[subjects[j]]+")</span>";	// Add place id
+							}
+						str+="</div>";																// End subjects div
+						}
+					str+="<br></div>";																// End related div (both plaves & subjects)
+					}
+				$("#sui-itemMore-"+num).html(str);													// Add to div
+				$("#sui-itemMore-"+num).slideDown();												// Slide it down
+				}
+			});
+		}
+
+	DrawList(o, num)
+	{
+		var title="";
+		if (o.display_label) title=o.display_label;
+		else if (o.title) title=o.title;
+		var str=`
+		<div class='sui-item'>
+		<div class='sui-itemPlus' id='sui-itemPlus-${num}'>&#xe669</div>
+		<div class='sui-itemIcon' id='sui-itemIcon-${num}'style='background-color:${this.assets[o.asset_type].c}'>
+		${this.assets[o.asset_type].g}</div>
+		<div class='sui-itemTitle'>${title}</div>
+		<div class='sui-itemId'>${o.uid}`;
+		if (o.collection_title)																		// If a collection
+			str+="<div style='text-align:right'>&#xe633&nbsp;"+o.collection_title+"</div>";			// Add title
+		str+="</div><div class='sui-itemMore' id='sui-itemMore-"+num+"'></div>";					// More area
+		return str+"</div>";																		// Return items markup
+	}
+
+	DrawCard(o, num)
+	{
+		var str=""
+		return str;																					// Return items markup
+	}
+
+	DrawGrid(o, num)
+	{
+		var str=""
+		return str;																					// Return items markup
 	}
 
 	DrawSearchUI()																				// DRAW SEARCH UI SECTION
@@ -288,16 +385,15 @@ class SearchUI  {
 		$("#sui-right").html(str.replace(/\t|\n|\r/g,""));										// Remove format and add to div
 	}
 
-	LoadingIcon(mode, size, container)													// SHOW/HIDE LOADING ICON		
+	LoadingIcon(mode, size)													// SHOW/HIDE LOADING ICON		
 	{
-		container=container ? "#"+container: "body";												// If no container spec'd, use body
 		if (!mode) {																				// If hiding
 			$("#sui-loadingIcon").remove();															// Remove it
 			return;																					// Quit
 			}
 		var str="<img src='img/loading.gif' width='"+size+"' ";										// Img
 		str+="id='sui-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
-		$(container).append(str);																	// Add icon to container
+		$("#sui-results").append(str);																// Add icon to results
 	}
 	
 
