@@ -53,9 +53,11 @@ body { 				font-family: Verdana,Geneva,sans-serif,shanticon; font-size: 14px; bo
 					}
 .sui-itemInfo { 	display:inline-block; margin-left:20px; vertical-align:top; line-height:20px; font-size: 12px;
 					}
-.sui-itemRelated { 	display:inline-block; font-family:serif;margin-left:20px;line-height:26px;
+.sui-itemRelated { 	display:inline-block; font-family:serif; margin-left:20px; line-height:26pSx;
 					}
-.sui-itemTitle { 	display:inline-block; margin-left:8px;
+.sui-itemTitle { 	display:inline-block; margin-left:8px; cursor:pointer; } .sui-itemTitle:hover { color:#d14040
+					}
+.sui-itemSubtitle { display:inline-block; margin-left:8px; 
 					}
 .sui-itemId {  		float:right; font-size: 11px; font-style: italic; 
 					}															
@@ -69,6 +71,11 @@ body { 				font-family: Verdana,Geneva,sans-serif,shanticon; font-size: 14px; bo
 					}				
 .sui-resDisplay {	cursor:pointer; display: inline-block; margin:0 12px; 
 					}
+.sui-popup {		position: absolute;  width: auto; padding: 12px; left: calc(50% - 250px); top: calc(50% - 50px);
+					border-radius: 8px; background-color: #eee; border: 1px solid #999; box-shadow: 2px 2px 8px 2px #aaa; 
+					font-size: 14px; text-align:center; display: none;
+					}
+
 
 @font-face {		font-family: 'shanticon'; src: url('shanticon.ttf?ueun15') format('truetype'); font-weight: normal; font-style: normal;
 					}

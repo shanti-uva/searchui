@@ -274,7 +274,7 @@ class SearchUI  {
 	DrawItems()																					// DRAW RESULT ITEMS
 	{
 		var i,o,str="";
-	trace(this.curResults)
+//	trace(this.curResults)
 		for (i=0;i<this.curResults.length;++i) {													// For each result
 			o=this.curResults[i];																	// Point at item
 			o.asset_type=o.asset_type.charAt(0).toUpperCase()+o.asset_type.slice(1);				// UC 1st char
@@ -287,7 +287,17 @@ class SearchUI  {
 		if (!this.curResults.length)																// No reults
 			str="<br><br><br><div style='text-align:center;color:#666'>Sorry, there were no items found<br>Try broadening your search</div>";
 		$("#sui-results").html(str.replace(/\t|\n|\r/g,""));										// Remove format and add to div
-	
+
+		$(".sui-itemIcon").on("click",(e)=> { 														// ON ICON BUTTON CLICK
+			var num=e.currentTarget.id.substring(13);												// Get index of result	
+			this.SendMessage("Navigate to this page:<br>"+this.curResults[num].url_html);			// Send message
+			});
+
+		$(".sui-itemTitle").on("click",(e)=> { 														// ON TITLE CLICK
+			var num=e.currentTarget.id.substring(14);												// Get index of result	
+			this.SendMessage("Navigate to this page:<br>"+this.curResults[num].url_html);			// Send message
+			});
+		
 		$(".sui-itemPlus").on("click",(e)=> { 														// ON PLUS BUTTON CLICK
 			var j,s1;
 			var num=e.currentTarget.id.substring(13);												// Get index of result	
@@ -297,7 +307,7 @@ class SearchUI  {
 			else{
 				str="";
 				o=this.curResults[num];																// Point at item
-				if (o.url_thumb)	str+="<img src='"+o.url_thumb+"' class='sui-itemPic'>";			// Add pic
+				if (o.url_thumb)	str+="<img src='"+o.url_thumb+"' class='sui-itemPic' id='sui-itemPic-"+num+"'>";	// Add pic
 				str+="<div class='sui-itemInfo'>";													// Info holder
 				str+=this.assets[o.asset_type].g+"&nbsp;&nbsp;"+o.asset_type.toUpperCase();			// Add type
 				if (o.asset_subtype) str+=" / "+o.asset_subtype;									// Add subtype
@@ -317,7 +327,7 @@ class SearchUI  {
 						else if (o.kmapid_strict[j].match(/places/i))	places.push(j);				// Add to places
 						}
 					if (places.length) {															// If any places
-						str+="<div style='float:left'><span style='color:"+this.assets.Places.c+"'>";
+						str+="<div style='float:left;min-wis:400px;'><span style='color:"+this.assets.Places.c+"'>";
 						str+="<br><b>"+this.assets.Places.g+"</b></span>&nbsp;RELATED PLACES";		// Add header
 						for (j=0;j<places.length;++j) {												// For each place
 							str+="<br>";
@@ -343,6 +353,10 @@ class SearchUI  {
 					}
 				$("#sui-itemMore-"+num).html(str);													// Add to div
 				$("#sui-itemMore-"+num).slideDown();												// Slide it down
+				$(".sui-itemPic").on("click",(e)=> { 												// ON MORE PIC CLICK
+					var num=e.currentTarget.id.substring(12);										// Get index of result	
+					this.SendMessage("Navigate to this page:<br>"+this.curResults[num].url_html);	// Send message
+					});
 				}
 			});
 		}
@@ -357,7 +371,7 @@ class SearchUI  {
 		<div class='sui-itemPlus' id='sui-itemPlus-${num}'>&#xe669</div>
 		<div class='sui-itemIcon' id='sui-itemIcon-${num}'style='background-color:${this.assets[o.asset_type].c}'>
 		${this.assets[o.asset_type].g}</div>
-		<div class='sui-itemTitle'>${title}</div>
+		<div class='sui-itemTitle' id='sui-itemTitle-${num}'>${title}</div>
 		<div class='sui-itemId'>${o.uid}`;
 		if (o.collection_title)																		// If a collection
 			str+="<div style='text-align:right'>&#xe633&nbsp;"+o.collection_title+"</div>";			// Add title
@@ -382,10 +396,10 @@ class SearchUI  {
 		var str=`
 		<br><br><br><div style='text-align:center;color:#666'>Search UI will appear here</div>
 		`;
-		$("#sui-right").html(str.replace(/\t|\n|\r/g,""));										// Remove format and add to div
+		$("#sui-right").html(str.replace(/\t|\n|\r/g,""));											// Remove format and add to div
 	}
 
-	LoadingIcon(mode, size)													// SHOW/HIDE LOADING ICON		
+	LoadingIcon(mode, size)																		// SHOW/HIDE LOADING ICON		
 	{
 		if (!mode) {																				// If hiding
 			$("#sui-loadingIcon").remove();															// Remove it
@@ -395,7 +409,16 @@ class SearchUI  {
 		str+="id='sui-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
 		$("#sui-results").append(str);																// Add icon to results
 	}
-	
+
+	SendMessage(msg, time)																		// SEND MESSAGE TO HOST
+	{
+		var str="";
+		$("#sui-popupDiv").remove();																// Kill old one, if any
+		str+="<div id='sui-popupDiv' class='sui-popup'>"; 											// Add div
+		str+=msg+"</div>"; 																			// Add div
+		$("body").append(str);																		// Add popup to div or body
+		$("#sui-popupDiv").fadeIn(500).delay(time ? time*1000 : 3000).fadeOut(500);					// Animate in and out		
+	}
 
 
 } // SearchUI class closure
