@@ -6,7 +6,7 @@ class SearchUI  {
 	{
 		this.wid=$("body").width();		this.hgt=$("body").height();								// Set sizes
 		this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production url
-		this.drupalUI="https://mandala.shanti.virginia.edu/sites/all/themes/shanti_sarvaka/images/default/";
+		this.drupalUI="https://mandala.shanti.virginia.edu/sites/all/themes/shanti_sarvaka/images/default/"; // When images are stored in Drupal
 		this.callback=callback;																		// Callback
 		this.curResults="";																			// Returns results
 		this.curMode="simple";																		// Current mode - can be input, simple, or advanced
@@ -31,10 +31,10 @@ class SearchUI  {
 		this.assets.Subjects={ c:"#cc4c39", g:"&#xe634", n:39 };									// Subjects
 		this.assets.Terms=   { c:"#a2733f", g:"&#xe635", n:39 };									// Terms
 	
-		this.Query();																				// Get data
+		this.Query();																				// Get intial data
 		this.Draw();																				// Draw
 	
-		window.onresize=()=> {																		// ON RESIZE
+		window.onresize=()=> {																		// ON WIMDOW RESIZE
 			this.wid=$("body").width();		this.hgt=$("body").height();							// Set size
 			this.Draw();																			// Redraw																		
 			};
@@ -61,7 +61,7 @@ class SearchUI  {
 				<div id='sui-footer' class='sui-footer'></div>
 				<div id='sui-right' class='sui-right'></div>
 			</div>`;
-		$("body").append(str.replace(/\t|\n|\r/g,""));												// Remove format and add framework to body
+		$("body").append(str.replace(/\t|\n|\r/g,""));												// Remove formatting and add framework to body
 
 		$("#sui-clear").on("mouseover",function() { $(this).html("&#xe60d"); });					// Highlight						
 		$("#sui-clear").on("mouseout", function() { $(this).html("&#xe610"); });					// Normal						
@@ -99,12 +99,39 @@ class SearchUI  {
 
 	Query()																						// QUERY AND UPDATE RESULTS
 	{
-		var str,search="",asset="*";
 		this.LoadingIcon(true,64);																	// Show loading icon
+		var s=this.curPage*this.pageSize;															// Starting item number
+		var search=this.FormQuery();																// Form SOLR search from query object
+		var url=this.solrUrl+"/?"+"q="+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+s+"&rows="+this.pageSize;
+		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done((data)=> {
+			var i,o;
+			this.curResults=data.response.docs;														// Save current results
+			for (i=0;i<this.curResults.length;++i) {												// For each result, massage data
+				o=this.curResults[i];																// Point at item
+				o.asset_type=o.asset_type.charAt(0).toUpperCase()+o.asset_type.slice(1);			// UC 1st char
+				if (o.asset_subtype) o.asset_subtype=o.asset_subtype.charAt(0).toUpperCase()+o.asset_subtype.slice(1);	
+				if (o.ancestors_txt && o.ancestors_txt.length)	o.ancestors_txt.splice(0,1);		// Remove 1st ancestor from trail
+				if (o.asset_type == "Audio-video") 	o.asset_type="Audio-Video";						// Handle AV
+				else if (o.asset_type == "Texts") 	o.url_thumb=this.drupalUI+"generic-texts-icon.png";		// Texts icons
+				else if (o.asset_type == "Sources") o.url_thumb=this.drupalUI+"generic-sources-icon.png"; 	// Sources
+				else if (o.asset_type == "Terms") 	o.url_thumb=this.drupalUI+"generic-terms-icon.png";		// Terms
+				else if (o.asset_type == "Places") 	o.url_thumb=this.drupalUI+"generic-places-icon.png"; 	// Places
+				else if (o.asset_type == "Subjects") o.url_thumb=this.drupalUI+"generic-subjects-icon.png";	// Subjects
+				if (o.display_label) o.title=o.display_label;										// Get title form display
+				}
+			this.LoadingIcon(false);																// Hide loading icon
+			this.DrawResults();																		// Draw results page if active
+			});
+		this.GetAssetCounts(search);																// Get asset counts	
+	}
+
+	FormQuery()																					// FORM SOLR QUERY FROM SEARCH OBJECT
+	{
+		var search="",asset="*";
 		if (this.curType != "All")																	// If not all
 			asset="asset_type%3A%22"+this.curType.toLowerCase()+"%22";								// Set asset type						
 		if (this.curQuery.text) {																	// If a filter spec'd
-			str="%22*"+this.curQuery.text.toLowerCase()+"*%22";										// Search term
+			var str="%22*"+this.curQuery.text.toLowerCase()+"*%22";									// Search term
 			search+=" AND (title%3A"+str;															// Look at title
 			search+=" OR caption%3A"+str;															// Or caption 
 			search+=" OR summary%3A"+str+")";														// Or summary
@@ -119,19 +146,11 @@ class SearchUI  {
 			search+=" AND kmapid%3A%28%22"+_this.subjectFilter.toLowerCase()+"%22%29";				// Subject search term
 		if (_this.user) 																			// If a user spec'd
 			search+=" AND node_user%3A*"+_this.user+"*";											// Look at user
-*/		
-		var s=this.curPage*this.pageSize;															// Starting item number
-		var url=this.solrUrl+"/?"+"q="+asset+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+s+"&rows="+this.pageSize;
-		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done((data)=> {
-			this.curResults=data.response.docs;														// Save current results
-			this.LoadingIcon(false);																// Hide loading icon
-			this.DrawResults();																		// Draw results page if active
-			});
-		
-		this.GetCounts(search);																		// Get asset counts	
-	}
+*/
+	return asset+search;																			// Return formatted query
+}
 
-	GetCounts(search) 																			// GET ASSET COUNTS
+	GetAssetCounts(search) 																		// GET ASSET COUNTS
 	{
 		var i,val;
 		var url=this.solrUrl+"?"+"q=*"+search+"&wt=json&rows=0&json.facet={assetType:{limit:300,type:%22terms%22,field:%22asset_type%22}}";
@@ -152,6 +171,7 @@ class SearchUI  {
 
 	DrawResults()																				// DRAW RESULTS SECTION
 	{
+		$("#sui-results").scrollTop(0);																// Scroll to top
 		this.numItems=this.assets[this.curType].n;													// Set number of items
 		if (this.curMode == "input") {																// Just the search box
 			$("#sui-header").css({ display:"none"});												// Show header
@@ -200,17 +220,17 @@ class SearchUI  {
 			`;
 		$("#sui-headRight").html(str.replace(/\t|\n|\r/g,""));										// Remove format and add to div
 		$("#sui-resClose").on("click", ()=> { this.Draw("input"); });								// ON QUIT
-		$("#sui-typeSet").on("click", ()=> {
+		$("#sui-typeSet").on("click", ()=> {														// ON CHANGE ASSET BUTTON
 			$("#sui-typeList").remove();															// Remove type list
-			str="<div id='sui-typeList' class='sui-typeList'>";
-			for (var k in this.assets) {
+			str="<div id='sui-typeList' class='sui-typeList'>";										// Enclosing div for list
+			for (var k in this.assets) {															// For each asset type														
 				n=this.assets[k].n;																	// Get number of items
 				if (n > 1000)	n=Math.floor(n/1000)+"K";											// Shorten
 				str+="<div id='sui-tl-"+k+"'><span style='font-size:18px; line-height: 24px; vertical-align:-3px; color:"+this.assets[k].c+"'>"+this.assets[k].g+" </span> "+k+" ("+n+")</div>";
 				}
 			$("#sui-main").append(str);																// Add to main div
 			
-			$("[id^=sui-tl-]").on("click", (e)=> {													// ON CLICK ON ASSET TYPE
+			$("[id^=sui-tl-]").on("click", (e)=> {													// ON CLICK ON ASSET 
 				this.curType=e.currentTarget.id.substring(7);										// Get asset name		
 				$("#sui-typeList").remove();														// Remove type list
 				this.Query(); 																		// Get new results
@@ -274,110 +294,123 @@ class SearchUI  {
 
 	DrawItems()																					// DRAW RESULT ITEMS
 	{
-		var i,o,str="";
+		var i,str="";
 		for (i=0;i<this.curResults.length;++i) {													// For each result
-			o=this.curResults[i];																	// Point at item
-	
-			o.asset_type=o.asset_type.charAt(0).toUpperCase()+o.asset_type.slice(1);				// UC 1st char
-			if (o.asset_subtype) o.asset_subtype=o.asset_subtype.charAt(0).toUpperCase()+o.asset_subtype.slice(1);	
-			if (o.ancestors_txt && o.ancestors_txt.length)	o.ancestors_txt.splice(0,1);			// Remove 1st ancestor from trail
-			if (o.asset_type == "Audio-video") 	o.asset_type="Audio-Video";							// Handle AV
-			else if (o.asset_type == "Texts") 	o.url_thumb=this.drupalUI+"generic-texts-icon.png";	// Texts icons
-			else if (o.asset_type == "Sources") o.url_thumb=this.drupalUI+"generic-sources-icon.png"; // Sources
-			else if (o.asset_type == "Terms") 	o.url_thumb=this.drupalUI+"generic-terms-icon.png";	// Terms
-			else if (o.asset_type == "Places") 	o.url_thumb=this.drupalUI+"generic-terms-icon.png";	// Places
-			else if (o.asset_type == "Subjects") o.url_thumb=this.drupalUI+"generic-subjects-icon.png";	// Subjects
-			
-			if (this.viewMode == "Card")		str+=this.DrawCard(o,i);							// Draw if shoing as cards
-			else if (this.viewMode == "Grid")	str+=this.DrawGrid(o,i);							// Grid
-			else								str+=this.DrawList(o,i);							// List
+			if (this.viewMode == "Card")		str+=this.DrawCard(i);								// Draw if shoing as cards
+			else if (this.viewMode == "Grid")	str+=this.DrawGrid(i);								// Grid
+			else								str+=this.DrawList(i);								// List
 			}	
 		if (!this.curResults.length)																// No reults
 			str="<br><br><br><div style='text-align:center;color:#666'>Sorry, there were no items found<br>Try broadening your search</div>";
 		$("#sui-results").html(str.replace(/\t|\n|\r/g,""));										// Remove format and add to div
 
+
 		$(".sui-itemIcon").on("click",(e)=> { 														// ON ICON BUTTON CLICK
 			var num=e.currentTarget.id.substring(13);												// Get index of result	
 			this.SendMessage(this.curResults[num].url_html);										// Send message
 			});
-
+		$(".sui-gridPic").on("click",(e)=> { 														// ON GRID ITEM CLICK
+			var num=e.currentTarget.id.substring(12);												// Get index of result	
+			this.SendMessage(this.curResults[num].url_html);										// Send message
+			});
+		$(".sui-gridInfo").on("mouseover",(e)=> { 													// ON INFO BUTTON HOVER
+			var num=e.currentTarget.id.substring(13);												// Get index of result	
+			var o=this.curResults[num];																// Point at item
+			var str="";
+			if (o.title) str+="<b>"+o.title+"</b><br><br>";											// Add title
+			str+=this.assets[o.asset_type].g+"&nbsp;&nbsp;"+o.asset_type.toUpperCase();				// Add type
+			if (o.asset_subtype) str+=" / "+o.asset_subtype;										// Add subtype
+			str+="<br>";
+			if (o.creator) str+="&#xe600&nbsp;&nbsp;"+o.creator.join(", ")+"<br>";					// Add creator
+			if (o.summary || o.caption) {															// If a summary or caption
+				var s1=o.summary || o.caption;														// Use either summary or caption
+				if (s1.length > 80)	s1=s1.substr(0,80)+"...";										// Limit size
+				str+="&#xe636&nbsp;&nbsp;<i>"+s1+"</i><br>";										// Add summary
+				}
+			if (o.summary) str+="<div style='font-family:serif'>"+o.summary+"</div>";				// Add summary
+			var p=$("#"+e.currentTarget.id).offset();												// Get position
+			this.Popup(str,20,p.left-220,p.top+24);													// Show popup	
+			});
+		$(".sui-gridInfo").on("mouseout",(e)=> { $("#sui-popupDiv").remove(); });					// ON INFO BUTTON OUT
 		$(".sui-itemTitle").on("click",(e)=> { 														// ON TITLE CLICK
 			var num=e.currentTarget.id.substring(14);												// Get index of result	
 			this.SendMessage(this.curResults[num].url_html);										// Send message
 			});
-		
 		$(".sui-itemPlus").on("click",(e)=> { 														// ON MORE BUTTON CLICK
-			var j,s1;
-			var num=e.currentTarget.id.substring(13);												// Get index of result	
-			if ($("#sui-itemMore-"+num).html()) {													// If open
-				$("#sui-itemMore-"+num).slideUp(400,()=>{ $("#sui-itemMore-"+num).html(""); } );	// Close it and clear
-				}
-			else{
-				str="";
-				o=this.curResults[num];																// Point at item
-				if (o.url_thumb)	str+="<img src='"+o.url_thumb+"' class='sui-itemPic' id='sui-itemPic-"+num+"'>";	// Add pic
-				str+="<div class='sui-itemInfo'>";													// Info holder
-				str+=this.assets[o.asset_type].g+"&nbsp;&nbsp;"+o.asset_type.toUpperCase();			// Add type
-				if (o.asset_subtype) str+=" / "+o.asset_subtype;									// Add subtype
-				if (o.creator) str+="<br>&#xe600&nbsp;&nbsp;"+o.creator.join(", ");					// Add creator
-				if (o.summary || o.caption) {														// If a summary or caption
-					s1=o.summary || o.caption;														// Use either summary or caption
-					if (s1.length > 137)	s1=s1.substr(0,137)+"...";								// Limit size
-					str+="<br>&#xe636&nbsp;&nbsp;<i>"+s1+"</i>";									// Add summary
-					}
-				str+="</div>";																		// Close info div
-				if (o.summary) str+="<br><div style='font-family:serif'>"+o.summary+"</div>";		// Add summary
-				if (o.kmapid_strict && o.kmapid_strict.length) {									// Add related places/subjects
-					var places=[],subjects=[];
-					str+="<div style='margin-bottom:12px'>";										// Related places and subjects container
-					for (j=0;j<o.kmapid_strict.length;++j) {										// For each item
-						if (o.kmapid_strict[j].match(/subjects/i))		subjects.push(j);			// Add to subjects
-						else if (o.kmapid_strict[j].match(/places/i))	places.push(j);				// Add to places
-						}
-					str+="<div style='float:left;min-width:200px;'><span style='color:"+this.assets.Places.c+"'>";
-					str+="<br><b>"+this.assets.Places.g+"</b></span>&nbsp;RELATED PLACES";			// Add header
-					if (places.length) {															// If any places
-						for (j=0;j<places.length;++j) {												// For each place
-							str+="<br>";
-							if (o.kmapid_strict_ss)													// If has names															
-								str+="<span class='sui-itemRelated'>"+o.kmapid_strict_ss[places[j]]+"</span>";	// Add place name
-							str+="&nbsp;<span style='font-size:10px;margin-right:40px'>("+o.kmapid_strict[places[j]]+")</span>";	// Add place id
-							}
-						}
-					str+="</div>";																	// End places div
-					
-					str+="<div><span style='display:inline-block;color:"+this.assets.Subjects.c+"'>";
-					str+="<br><b>"+this.assets.Subjects.g+"</b></span>&nbsp;RELATED SUBJECTS";		// Add header
-					if (subjects.length) {															// If any subjects
-						for (j=0;j<subjects.length;++j) {											// For each subject
-							str+="<br>";
-							if (o.kmapid_strict_ss)													// If has names															
-								str+="<span class='sui-itemRelated'>"+o.kmapid_strict_ss[subjects[j]]+"</span>";	// Add place name
-							str+="&nbsp;<span style='font-size:10px'>("+o.kmapid_strict[subjects[j]]+")</span>";	// Add place id
-							}
-						}
-					str+="</div></div>";															// End subjects and relateds div
-					}
-				$("#sui-itemMore-"+num).html(str);													// Add to div
-				$("#sui-itemMore-"+num).slideDown();												// Slide it down
-				$(".sui-itemPic").on("click",(e)=> { 												// ON MORE PIC CLICK
-					var num=e.currentTarget.id.substring(12);										// Get index of result	
-					this.SendMessage(this.curResults[num].url_html);								// Send message
-					});
-				}
+			this.ShowItemMore(e.currentTarget.id.substring(13))
 			});
-		}
-
-	DrawList(o, num)
+	}	
+		
+	ShowItemMore(num)																			// SHOW MORE INFO
 	{
-		var i,title="";
-		if (o.display_label) title=o.display_label;
-		else if (o.title) title=o.title;
+		var j,o,s1,str="";
+		if ($("#sui-itemMore-"+num).html()) {														// If open
+			$("#sui-itemMore-"+num).slideUp(400,()=>{ $("#sui-itemMore-"+num).html(""); } );		// Close it and clear
+			return;																					// Quit	
+			}
+		
+		o=this.curResults[num];																		// Point at item
+		if (o.url_thumb)	str+="<img src='"+o.url_thumb+"' class='sui-itemPic' id='sui-itemPic-"+num+"'>";	// Add pic
+		str+="<div class='sui-itemInfo'>";															// Info holder
+		str+=this.assets[o.asset_type].g+"&nbsp;&nbsp;"+o.asset_type.toUpperCase();					// Add type
+		if (o.asset_subtype) str+=" / "+o.asset_subtype;											// Add subtype
+		if (o.creator) str+="<br>&#xe600&nbsp;&nbsp;"+o.creator.join(", ");							// Add creator
+		if (o.summary || o.caption) {																// If a summary or caption
+			s1=o.summary || o.caption;																// Use either summary or caption
+			if (s1.length > 137)	s1=s1.substr(0,137)+"...";										// Limit size
+			str+="<br>&#xe636&nbsp;&nbsp;<i>"+s1+"</i>";											// Add summary
+			}
+		str+="</div>";																				// Close info div
+		if (o.summary) str+="<br><div style='font-family:serif'>"+o.summary+"</div>";				// Add summary
+		if (o.kmapid_strict && o.kmapid_strict.length) {											// Add related places/subjects
+			var places=[],subjects=[];
+			str+="<div style='margin-bottom:12px'>";												// Related places and subjects container
+			for (j=0;j<o.kmapid_strict.length;++j) {												// For each item
+				if (o.kmapid_strict[j].match(/subjects/i))		subjects.push(j);					// Add to subjects
+				else if (o.kmapid_strict[j].match(/places/i))	places.push(j);						// Add to places
+				}
+			str+="<div style='float:left;min-width:200px;'><span style='color:"+this.assets.Places.c+"'>";
+			str+="<br><b>"+this.assets.Places.g+"</b></span>&nbsp;RELATED PLACES";					// Add header
+			if (places.length) {																	// If any places
+				for (j=0;j<places.length;++j) {														// For each place
+					str+="<br>";
+					if (o.kmapid_strict_ss)															// If has names															
+						str+="<span class='sui-itemRelated'>"+o.kmapid_strict_ss[places[j]]+"</span>";	// Add place name
+					str+="&nbsp;<span style='font-size:10px;margin-right:40px'>("+o.kmapid_strict[places[j]]+")</span>";	// Add place id
+					}
+				}
+			str+="</div>";																			// End places div
+			
+			str+="<div><span style='display:inline-block;color:"+this.assets.Subjects.c+"'>";
+			str+="<br><b>"+this.assets.Subjects.g+"</b></span>&nbsp;RELATED SUBJECTS";				// Add header
+			if (subjects.length) {																	// If any subjects
+				for (j=0;j<subjects.length;++j) {													// For each subject
+					str+="<br>";
+					if (o.kmapid_strict_ss)															// If has names															
+						str+="<span class='sui-itemRelated'>"+o.kmapid_strict_ss[subjects[j]]+"</span>"; // Add place name
+					str+="&nbsp;<span style='font-size:10px'>("+o.kmapid_strict[subjects[j]]+")</span>"; // Add place id
+					}
+				}
+			str+="</div></div>";																	// End subjects and relateds div
+			}
+		$("#sui-itemMore-"+num).html(str);															// Add to div
+		
+		$("#sui-itemMore-"+num).slideDown();														// Slide it down
+		$(".sui-itemPic").on("click",(e)=> { 														// ON MORE PIC CLICK
+			var num=e.currentTarget.id.substring(12);												// Get index of result	
+			this.SendMessage(this.curResults[num].url_html);										// Send message
+			});
+	}
+
+	DrawList(num)																				// DRAW A LIST ITEM
+	{
+		var i;
+		var o=this.curResults[num];																	// Point at list item
 		var str="<div class='sui-item'>";
 		str+="<div class='sui-itemPlus' id='sui-itemPlus-"+num+"'>&#xe669</div>";
 		str+="<div class='sui-itemIcon' id='sui-itemIcon-"+num+"' style='background-color:"+this.assets[o.asset_type].c+"'>";
 		str+=this.assets[o.asset_type].g+"</div>";
-		str+="<div class='sui-itemTitle' id='sui-itemTitle-"+num+"'>"+title+"</div>";
+		str+="<div class='sui-itemTitle' id='sui-itemTitle-"+num+"'>"+o.title+"</div>";
 		if (o.feature_types_ss) {																	// If a feature
 			str+="<span style='color:"+this.assets[o.asset_type].c+"'>&nbsp;&bull;&nbsp;</span>";	// Add dot
 			str+="<div class='sui-itemFeature'>&nbsp;"+o.feature_types_ss.join(", ")+"</div>";		// Add feature(s)
@@ -401,15 +434,21 @@ class SearchUI  {
 		return str+"</div>";																		// Return items markup
 	}
 
-	DrawCard(o, num)
+	DrawGrid(num)																				// DRAW GRID ITEM
 	{
-		var str=""
-		return str;																					// Return items markup
+		var str="<div class='sui-grid'>";
+		var o=this.curResults[num];																// Point at item
+		if (o.url_thumb)	str+="<img src='"+o.url_thumb+"' class='sui-gridPic' id='sui-gridPic-"+num+"'>";	// Add pic
+		str+="<div id='sui-gridInfo-"+num+"' class='sui-gridInfo'>&#xe67f</div></div>";
+		return str;																				// Return grid markup
 	}
 
-	DrawGrid(o, num)
+	DrawCard(num)																				// DRAW CARD ITEM
 	{
-		var str=""
+		var str="<div class='sui-card'>";
+		var o=this.curResults[num];																// Point at item
+		if (o.url_thumb)	str+="<img src='"+o.url_thumb+"' class='sui-cardPic' id='sui-cardPic-"+num+"'>";	// Add pic
+		str+="<div id='sui-cardInfo-"+num+"' class='sui-cardInfo'>&#xe67f</div></div>";
 		return str;																					// Return items markup
 	}
 
@@ -436,9 +475,19 @@ class SearchUI  {
 	{
 		var str="";
 		$("#sui-popupDiv").remove();																// Kill old one, if any
-		str+="<div id='sui-popupDiv' class='sui-popup'>"; 											// Add div
-		str+="Navigate to this page:<br>";
+		str+="<div id='sui-popupDiv' class='sui-gridPopup' style='width:auto'>"; 					// Add div
+		str+="<b>Navigate to this page:</b><br>";
 		str+=msg+"</div>"; 																			// Add div
+		$("body").append(str);																		// Add popup to div or body
+		$("#sui-popupDiv").fadeIn(500).delay(time ? time*1000 : 3000).fadeOut(500);					// Animate in and out		
+	}
+
+	Popup(msg, time, x, y)																		// POPUP 
+	{
+		var str="";
+		$("#sui-popupDiv").remove();																// Kill old one, if any
+		str+="<div id='sui-popupDiv' class='sui-gridPopup' style='left:"+x+"px;top:"+y+"px'>"; 		// Add div
+		str+=msg+"</div>"; 																			// Add content
 		$("body").append(str);																		// Add popup to div or body
 		$("#sui-popupDiv").fadeIn(500).delay(time ? time*1000 : 3000).fadeOut(500);					// Animate in and out		
 	}
