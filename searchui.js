@@ -6,6 +6,7 @@ class SearchUI  {
 	{
 		this.wid=$("body").width();		this.hgt=$("body").height();								// Set sizes
 		this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production url
+		this.drupalUI="https://mandala.shanti.virginia.edu/sites/all/themes/shanti_sarvaka/images/default/";
 		this.callback=callback;																		// Callback
 		this.curResults="";																			// Returns results
 		this.curMode="simple";																		// Current mode - can be input, simple, or advanced
@@ -263,8 +264,8 @@ class SearchUI  {
 		$("#sui-page1").on("click",()=> { this.curPage=0; this.Query(); });									// ON FIRST CLICK
 		$("#sui-pageP").on("click", ()=> { this.curPage=Math.max(this.curPage-1,0);  this.Query(); });		// ON PREVIOUS CLICK
 		$("#sui-pageN").on("click", ()=> { this.curPage=Math.min(this.curPage+1,lastPage); this.Query(); });// ON NEXT CLICK
-		$("#sui-pageL").on("click", ()=> { this.curPage=lastPage; this.Query(); });							// ON LAST CLICK
-		$("#sui-typePage").on("change", ()=> {																// ON TYPE PAGE
+		$("#sui-pageL").on("click", ()=> { this.curPage=lastPage; this.Query(); });					// ON LAST CLICK
+		$("#sui-typePage").on("change", ()=> {														// ON TYPE PAGE
 			var p=$("#sui-typePage").val();															// Get value
 			if (!isNaN(p))   this.curPage=Math.max(Math.min(p-1,lastPage),0);						// If a number, cap 0-last	
 			this.Query(); 																			// Get new results
@@ -274,12 +275,19 @@ class SearchUI  {
 	DrawItems()																					// DRAW RESULT ITEMS
 	{
 		var i,o,str="";
-//	trace(this.curResults)
 		for (i=0;i<this.curResults.length;++i) {													// For each result
 			o=this.curResults[i];																	// Point at item
+	
 			o.asset_type=o.asset_type.charAt(0).toUpperCase()+o.asset_type.slice(1);				// UC 1st char
 			if (o.asset_subtype) o.asset_subtype=o.asset_subtype.charAt(0).toUpperCase()+o.asset_subtype.slice(1);	
-			if (o.asset_type == "Audio-video") o.asset_type="Audio-Video";							// Handle AV
+			if (o.ancestors_txt && o.ancestors_txt.length)	o.ancestors_txt.splice(0,1);			// Remove 1st ancestor from trail
+			if (o.asset_type == "Audio-video") 	o.asset_type="Audio-Video";							// Handle AV
+			else if (o.asset_type == "Texts") 	o.url_thumb=this.drupalUI+"generic-texts-icon.png";	// Texts icons
+			else if (o.asset_type == "Sources") o.url_thumb=this.drupalUI+"generic-sources-icon.png"; // Sources
+			else if (o.asset_type == "Terms") 	o.url_thumb=this.drupalUI+"generic-terms-icon.png";	// Terms
+			else if (o.asset_type == "Places") 	o.url_thumb=this.drupalUI+"generic-terms-icon.png";	// Places
+			else if (o.asset_type == "Subjects") o.url_thumb=this.drupalUI+"generic-subjects-icon.png";	// Subjects
+			
 			if (this.viewMode == "Card")		str+=this.DrawCard(o,i);							// Draw if shoing as cards
 			else if (this.viewMode == "Grid")	str+=this.DrawGrid(o,i);							// Grid
 			else								str+=this.DrawList(o,i);							// List
@@ -290,15 +298,15 @@ class SearchUI  {
 
 		$(".sui-itemIcon").on("click",(e)=> { 														// ON ICON BUTTON CLICK
 			var num=e.currentTarget.id.substring(13);												// Get index of result	
-			this.SendMessage("Navigate to this page:<br>"+this.curResults[num].url_html);			// Send message
+			this.SendMessage(this.curResults[num].url_html);										// Send message
 			});
 
 		$(".sui-itemTitle").on("click",(e)=> { 														// ON TITLE CLICK
 			var num=e.currentTarget.id.substring(14);												// Get index of result	
-			this.SendMessage("Navigate to this page:<br>"+this.curResults[num].url_html);			// Send message
+			this.SendMessage(this.curResults[num].url_html);										// Send message
 			});
 		
-		$(".sui-itemPlus").on("click",(e)=> { 														// ON PLUS BUTTON CLICK
+		$(".sui-itemPlus").on("click",(e)=> { 														// ON MORE BUTTON CLICK
 			var j,s1;
 			var num=e.currentTarget.id.substring(13);												// Get index of result	
 			if ($("#sui-itemMore-"+num).html()) {													// If open
@@ -312,50 +320,49 @@ class SearchUI  {
 				str+=this.assets[o.asset_type].g+"&nbsp;&nbsp;"+o.asset_type.toUpperCase();			// Add type
 				if (o.asset_subtype) str+=" / "+o.asset_subtype;									// Add subtype
 				if (o.creator) str+="<br>&#xe600&nbsp;&nbsp;"+o.creator.join(", ");					// Add creator
-				if (o.summary) {
+				if (o.summary || o.caption) {														// If a summary or caption
 					s1=o.summary || o.caption;														// Use either summary or caption
 					if (s1.length > 137)	s1=s1.substr(0,137)+"...";								// Limit size
-					str+="<br>&#xe636&nbsp;&nbsp;"+s1;												// Add summary
+					str+="<br>&#xe636&nbsp;&nbsp;<i>"+s1+"</i>";									// Add summary
 					}
 				str+="</div>";																		// Close info div
 				if (o.summary) str+="<br><div style='font-family:serif'>"+o.summary+"</div>";		// Add summary
 				if (o.kmapid_strict && o.kmapid_strict.length) {									// Add related places/subjects
 					var places=[],subjects=[];
-					str+="<div>";																	// Related places and subjects
+					str+="<div style='margin-bottom:12px'>";										// Related places and subjects container
 					for (j=0;j<o.kmapid_strict.length;++j) {										// For each item
 						if (o.kmapid_strict[j].match(/subjects/i))		subjects.push(j);			// Add to subjects
 						else if (o.kmapid_strict[j].match(/places/i))	places.push(j);				// Add to places
 						}
+					str+="<div style='float:left;min-width:200px;'><span style='color:"+this.assets.Places.c+"'>";
+					str+="<br><b>"+this.assets.Places.g+"</b></span>&nbsp;RELATED PLACES";			// Add header
 					if (places.length) {															// If any places
-						str+="<div style='float:left;min-wis:400px;'><span style='color:"+this.assets.Places.c+"'>";
-						str+="<br><b>"+this.assets.Places.g+"</b></span>&nbsp;RELATED PLACES";		// Add header
 						for (j=0;j<places.length;++j) {												// For each place
 							str+="<br>";
 							if (o.kmapid_strict_ss)													// If has names															
 								str+="<span class='sui-itemRelated'>"+o.kmapid_strict_ss[places[j]]+"</span>";	// Add place name
 							str+="&nbsp;<span style='font-size:10px;margin-right:40px'>("+o.kmapid_strict[places[j]]+")</span>";	// Add place id
 							}
-						str+="</div>";																// End places div
 						}
+					str+="</div>";																	// End places div
 					
+					str+="<div><span style='display:inline-block;color:"+this.assets.Subjects.c+"'>";
+					str+="<br><b>"+this.assets.Subjects.g+"</b></span>&nbsp;RELATED SUBJECTS";		// Add header
 					if (subjects.length) {															// If any subjects
-						str+="<div><span style='color:"+this.assets.Subjects.c+"'>";
-						str+="<br><b>"+this.assets.Subjects.g+"</b></span>&nbsp;RELATED SUBJECTS";	// Add header
 						for (j=0;j<subjects.length;++j) {											// For each subject
 							str+="<br>";
 							if (o.kmapid_strict_ss)													// If has names															
 								str+="<span class='sui-itemRelated'>"+o.kmapid_strict_ss[subjects[j]]+"</span>";	// Add place name
 							str+="&nbsp;<span style='font-size:10px'>("+o.kmapid_strict[subjects[j]]+")</span>";	// Add place id
 							}
-						str+="</div>";																// End subjects div
 						}
-					str+="<br></div>";																// End related div (both plaves & subjects)
+					str+="</div></div>";															// End subjects and relateds div
 					}
 				$("#sui-itemMore-"+num).html(str);													// Add to div
 				$("#sui-itemMore-"+num).slideDown();												// Slide it down
 				$(".sui-itemPic").on("click",(e)=> { 												// ON MORE PIC CLICK
 					var num=e.currentTarget.id.substring(12);										// Get index of result	
-					this.SendMessage("Navigate to this page:<br>"+this.curResults[num].url_html);	// Send message
+					this.SendMessage(this.curResults[num].url_html);								// Send message
 					});
 				}
 			});
@@ -363,19 +370,34 @@ class SearchUI  {
 
 	DrawList(o, num)
 	{
-		var title="";
+		var i,title="";
 		if (o.display_label) title=o.display_label;
 		else if (o.title) title=o.title;
-		var str=`
-		<div class='sui-item'>
-		<div class='sui-itemPlus' id='sui-itemPlus-${num}'>&#xe669</div>
-		<div class='sui-itemIcon' id='sui-itemIcon-${num}'style='background-color:${this.assets[o.asset_type].c}'>
-		${this.assets[o.asset_type].g}</div>
-		<div class='sui-itemTitle' id='sui-itemTitle-${num}'>${title}</div>
-		<div class='sui-itemId'>${o.uid}`;
+		var str="<div class='sui-item'>";
+		str+="<div class='sui-itemPlus' id='sui-itemPlus-"+num+"'>&#xe669</div>";
+		str+="<div class='sui-itemIcon' id='sui-itemIcon-"+num+"' style='background-color:"+this.assets[o.asset_type].c+"'>";
+		str+=this.assets[o.asset_type].g+"</div>";
+		str+="<div class='sui-itemTitle' id='sui-itemTitle-"+num+"'>"+title+"</div>";
+		if (o.feature_types_ss) {																	// If a feature
+			str+="<span style='color:"+this.assets[o.asset_type].c+"'>&nbsp;&bull;&nbsp;</span>";	// Add dot
+			str+="<div class='sui-itemFeature'>&nbsp;"+o.feature_types_ss.join(", ")+"</div>";		// Add feature(s)
+			}
+		str+="<div class='sui-itemId'>"+o.uid;
 		if (o.collection_title)																		// If a collection
-			str+="<div style='text-align:right'>&#xe633&nbsp;"+o.collection_title+"</div>";			// Add title
-		str+="</div><div class='sui-itemMore' id='sui-itemMore-"+num+"'></div>";					// More area
+			str+="<div style='text-align:right;margin-top:2px;'>&#xe633&nbsp;"+o.collection_title+"</div>";		// Add title
+		str+="</div>";																				// Close title div
+		if (o.ancestors_txt && o.ancestors_txt.length > 1) {										// If has an ancestors trail
+			str+="<div class='sui-itemTrail'>";														// Holds trail
+			for (i=0;i<o.ancestors_txt.length;++i) {												// For each trail member
+				str+="<span class='sui-itemAncestor' onclick='sui.SendMessage(\"";					// Add ancestor
+				str+="https://mandala.shanti.virginia.edu/terms/";									// URL stem
+				str+=o.ancestor_ids_is[i+1]+"/overview/nojs#search\")'>";							// URL end
+				str+=o.ancestors_txt[i]+"</span>";													// Finish ancestor link
+				if (i < o.ancestors_txt.length-1)	str+=" > ";										// Add separator
+				}
+			str+="</div>";																			// Close trail div
+			}
+		str+="<div class='sui-itemMore' id='sui-itemMore-"+num+"'></div>";							// More area
 		return str+"</div>";																		// Return items markup
 	}
 
@@ -415,6 +437,7 @@ class SearchUI  {
 		var str="";
 		$("#sui-popupDiv").remove();																// Kill old one, if any
 		str+="<div id='sui-popupDiv' class='sui-popup'>"; 											// Add div
+		str+="Navigate to this page:<br>";
 		str+=msg+"</div>"; 																			// Add div
 		$("body").append(str);																		// Add popup to div or body
 		$("#sui-popupDiv").fadeIn(500).delay(time ? time*1000 : 3000).fadeOut(500);					// Animate in and out		
