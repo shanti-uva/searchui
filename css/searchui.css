@@ -101,4 +101,9 @@ body { 				font-family: Verdana,Geneva,sans-serif,shanticon; font-size: 14px; bo
 @font-face {		font-family: 'shanticon'; src: url('shanticon.ttf?ueun15') format('truetype'); font-weight: normal; font-style: normal;
 					}
 
-::-webkit-input-placeholder { color: #bbb };	::-placeholder { color: #bbb };
+::-webkit-scrollbar { width: 12px }
+::-webkit-scrollbar-track { background:#eee }
+::-webkit-scrollbar-thumb { border-radius:2px ;background:#aaa }
+::-webkit-scrollbar-thumb:hover { background: #888 }
+::-webkit-input-placeholder { color: #bbb }	
+::placeholder { color: #bbb }

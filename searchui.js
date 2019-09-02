@@ -1,5 +1,14 @@
 /* MANDALA SEARCH UI
 
+	When allocated, attaches a <div> framework containing a search button in the top white bar of the Mandala app.
+	When clicked, it will expand to cover the entire screen. 
+	An sui=open message is sent to host.
+	When a SOLR query is needed, a JSON formatted version of the search object is sent to host uoing a sui=query message.
+	The host responds with a SOLR query.
+	When an item has been selected, a sui=page message is sent to host and the host navigates there.
+	The UI retreats to only the search button.
+	A sui=close message is sent to host.
+
 	Requires: 	jQuery and jQueryUI									// Almost any version should work
 	CSS:		searchui.css										// All styles are prefixed with 'sui-'
 	JS:			ECMA-6												// Uses lambda (arrow) functions
@@ -13,14 +22,18 @@
 	Usage: 		var sui=new SearchUI();								// Allocs SearchUI class (fully encapsulated)							
 	Globals:	sui													// Needs to be declared globally!
 
-	When allocated, attaches a <div> framework containing a search button in the top white bar of the Mandala app.
-	When clicked, it will expand to cover the entire screen. 
-	An sui=open message is sent to host.
-	When a SOLR query is needed, a JSON formatted version of the search object is sent to host uoing a sui=query message.
-	The host responds with a SOLR query.
-	When an item has been selected, a sui=page message is sent to host and the host navigates there.
-	The UI retreats to only the search button.
-	A sui=close message is sent to host.
+
+	searchObject= {													
+		text[],														// String(s) to search on
+		places[],													// Places
+		subjects[],													// Subjects
+		terms[],													// Terms
+		asssets[],													// Assets
+		dateStart, dateEnd,											// Beginning and ending dates
+		user[],														// Users
+		collections[],												// Collections
+		...	
+		}
 
 */
 
@@ -81,7 +94,7 @@ class SearchUI  {
 				<div id='sui-headRight' class='sui-headRight'></div>
 			</div><
 			div id='sui-left' class='sui-left'>
-				<div id='sui-results' class='sui-results'></div>
+				<div id='sui-results' class='sui-results scrollbar'></div>
 				<div id='sui-footer' class='sui-footer'></div>
 				<div id='sui-right' class='sui-right'></div>
 			</div>`;
@@ -353,7 +366,7 @@ class SearchUI  {
 				}
 			if (o.summary) str+="<p style='font-family:serif;'>"+o.summary+"</p>";					// Add summary
 			var p=$("#"+e.currentTarget.id).offset();												// Get position
-			this.Popup(str,20,p.left-220,p.top+24);													// Show popup	
+			this.Popup(str,20,Math.max(8,p.left-220),p.top+24);										// Show popup	
 			});
 		$(".sui-gridInfo").on("mouseout",(e)=> { $("#sui-popupDiv").remove(); });					// ON INFO BUTTON OUT
 		$("[id^=sui-itemTitle-]").on("click",(e)=> { 												// ON TITLE CLICK
