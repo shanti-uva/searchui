@@ -1,9 +1,26 @@
 /* MANDALA SEARCH UI
 
-	Usage: 		var sui=new SearchUI();	-- sui needs to be declared globally!
-	Requires: 	jQuery and jQueryUI
-	CSS:		searchui.css
+	Requires: 	jQuery and jQueryUI									// Almost any version should work
+	CSS:		searchui.css										// All styles are prefixed with 'sui-'
+	JS:			ECMA-6												// Uses lambda (arrow) functions
 	Images:		img/loading.gif, img/advicon.png, img/simicon.png
+	Messages: 	sui=page|url ->										// Hides search and send url to direct Drupal to
+				sui=query|[searchObject] -> 						// Asks Drupul to turn search object (JSON) into SOLR query string
+				sui=open ->											// Tells Drupal search page is open
+				sui=close ->										// Tells Drupal search page is closed
+				-> sui=close										// Tells search page to close
+				-> sui=open|assetType|viewMode|advanced|query		// Tells search page to open with a query
+	Usage: 		var sui=new SearchUI();								// Allocs SearchUI class (fully encapsulated)							
+	Globals:	sui													// Needs to be declared globally!
+
+	When allocated, attaches a <div> framework containing a search button in the top white bar of the Mandala app.
+	When clicked, it will expand to cover the entire screen. 
+	An sui=open message is sent to host.
+	When a SOLR query is needed, a JSON formatted version of the search object is sent to host uoing a sui=query message.
+	The host responds with a SOLR query.
+	When an item has been selected, a sui=page message is sent to host and the host navigates there.
+	The UI retreats to only the search button.
+	A sui=close message is sent to host.
 
 */
 
@@ -16,9 +33,9 @@ class SearchUI  {
 		this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production url
 		this.drupalUI="https://mandala.shanti.virginia.edu/sites/all/themes/shanti_sarvaka/images/default/"; // When images are stored in Drupal
 		this.curResults="";																			// Returns results
-		this.curMode="simple";																		// Current mode - can be input, simple, or advanced
+		this.curMode="input";																		// Current mode - can be input, simple, or advanced
 		this.curQuery={ text:""};																	// Current query
-		this.viewMode="Card";																		// Dispay mode - can be List, Grid, or Card
+		this.viewMode="List";																		// Dispay mode - can be List, Grid, or Card
 		this.viewSort="Alpha";																		// Sort mode - can be Alpha, Date, or Auther
 		this.curType="All";																			// Current item types
 		this.curPage=0;																				// Current page being shown
@@ -52,11 +69,11 @@ class SearchUI  {
 		var str=`
 		<div id='sui-main' class='sui-main'>
 			<div id='sui-top' class='sui-top'>
-				<div class='sui-search1'>&#xe623
+				<div class='sui-search1'>
 				<input type='text' id='sui-search' class='sui-search2' placeholder='Enter Search'>
 				<div id='sui-clear' class='sui-search3'>&#xe610</div>
 				</div>
-				<div id='sui-searchgo' class='sui-search4'>&#xe642</div>
+				<div id='sui-searchgo' class='sui-search4'>&#xe623</div>
 				<img id='sui-mode' class='sui-search5' src='img/advicon.png' title='Advanced search'>
 			</div>
 			<div id='sui-header' class='sui-header'>
