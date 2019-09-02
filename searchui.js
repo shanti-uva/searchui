@@ -1,13 +1,20 @@
-// MANDALA SEARCH UI
+/* MANDALA SEARCH UI
+
+	Usage: 		var sui=new SearchUI();	-- sui needs to be declared!
+	Requires: 	jQuery and jQueryUI
+	CSS:		searchui.css
+	Images:		img/loading.gif, img/advicon.png, img/simicon.png
+
+*/
 
 class SearchUI  {																					
 
-	constructor(callback)   																	// CONSTRUCTOR
+	constructor()   																			// CONSTRUCTOR
 	{
+		sui=this;																					// Save ref to class as global
 		this.wid=$("body").width();		this.hgt=$("body").height();								// Set sizes
 		this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production url
 		this.drupalUI="https://mandala.shanti.virginia.edu/sites/all/themes/shanti_sarvaka/images/default/"; // When images are stored in Drupal
-		this.callback=callback;																		// Callback
 		this.curResults="";																			// Returns results
 		this.curMode="simple";																		// Current mode - can be input, simple, or advanced
 		this.curQuery={ text:""};																	// Current query
@@ -296,14 +303,13 @@ class SearchUI  {
 	{
 		var i,str="";
 		for (i=0;i<this.curResults.length;++i) {													// For each result
-			if (this.viewMode == "Card")		str+=this.DrawCard(i);								// Draw if shoing as cards
-			else if (this.viewMode == "Grid")	str+=this.DrawGrid(i);								// Grid
-			else								str+=this.DrawList(i);								// List
+			if (this.viewMode == "Card")		str+=this.DrawCardItem(i);							// Draw if shoing as cards
+			else if (this.viewMode == "Grid")	str+=this.DrawGridItem(i);							// Grid
+			else								str+=this.DrawListItem(i);							// List
 			}	
-		if (!this.curResults.length)																// No reults
+		if (!this.curResults.length)																// No results
 			str="<br><br><br><div style='text-align:center;color:#666'>Sorry, there were no items found<br>Try broadening your search</div>";
 		$("#sui-results").html(str.replace(/\t|\n|\r/g,""));										// Remove format and add to div
-
 
 		$(".sui-itemIcon").on("click",(e)=> { 														// ON ICON BUTTON CLICK
 			var num=e.currentTarget.id.substring(13);												// Get index of result	
@@ -321,13 +327,13 @@ class SearchUI  {
 			str+=this.assets[o.asset_type].g+"&nbsp;&nbsp;"+o.asset_type.toUpperCase();				// Add type
 			if (o.asset_subtype) str+=" / "+o.asset_subtype;										// Add subtype
 			str+="<br>";
-			if (o.creator) str+="&#xe600&nbsp;&nbsp;"+o.creator.join(", ")+"<br>";					// Add creator
+			if (o.creator) str+="<p>&#xe600&nbsp;&nbsp;"+o.creator.join(", ")+"</p>";				// Add creator
 			if (o.summary || o.caption) {															// If a summary or caption
 				var s1=o.summary || o.caption;														// Use either summary or caption
 				if (s1.length > 80)	s1=s1.substr(0,80)+"...";										// Limit size
-				str+="&#xe636&nbsp;&nbsp;<i>"+s1+"</i><br>";										// Add summary
+				str+="<p><div style='display:inline-block;background-color:#ccc;width:4px;height:18px;margin:2px 10px 0 5px;vertical-align:-4px'></div>&nbsp;<i>"+s1+"</i></p>";										// Add summary
 				}
-			if (o.summary) str+="<div style='font-family:serif'>"+o.summary+"</div>";				// Add summary
+			if (o.summary) str+="<p style='font-family:serif;'>"+o.summary+"</p>";					// Add summary
 			var p=$("#"+e.currentTarget.id).offset();												// Get position
 			this.Popup(str,20,p.left-220,p.top+24);													// Show popup	
 			});
@@ -337,10 +343,42 @@ class SearchUI  {
 			this.SendMessage(this.curResults[num].url_html);										// Send message
 			});
 		$(".sui-itemPlus").on("click",(e)=> { 														// ON MORE BUTTON CLICK
-			this.ShowItemMore(e.currentTarget.id.substring(13))
+			this.ShowItemMore(e.currentTarget.id.substring(13));									// Shoe more info below
 			});
 	}	
 		
+	DrawListItem(num)																				// DRAW A LIST ITEM
+	{
+		var i;
+		var o=this.curResults[num];																	// Point at list item
+		var str="<div class='sui-item'>";
+		str+="<div class='sui-itemPlus' id='sui-itemPlus-"+num+"'>&#xe669</div>";
+		str+="<div class='sui-itemIcon' id='sui-itemIcon-"+num+"' style='background-color:"+this.assets[o.asset_type].c+"'>";
+		str+=this.assets[o.asset_type].g+"</div>";
+		str+="<div class='sui-itemTitle' id='sui-itemTitle-"+num+"'>"+o.title+"</div>";
+		if (o.feature_types_ss) {																	// If a feature
+			str+="<span style='color:"+this.assets[o.asset_type].c+"'>&nbsp;&bull;&nbsp;</span>";	// Add dot
+			str+="<div class='sui-itemFeature'>&nbsp;"+o.feature_types_ss.join(", ")+"</div>";		// Add feature(s)
+			}
+		str+="<div class='sui-itemId'>"+o.uid;
+		if (o.collection_title)																		// If a collection
+			str+="<div style='text-align:right;margin-top:2px;'>&#xe633&nbsp;"+o.collection_title+"</div>";		// Add title
+		str+="</div>";																				// Close title div
+		if (o.ancestors_txt && o.ancestors_txt.length > 1) {										// If has an ancestors trail
+			str+="<div class='sui-itemTrail'>";														// Holds trail
+			for (i=0;i<o.ancestors_txt.length;++i) {												// For each trail member
+				str+="<span class='sui-itemAncestor' onclick='sui.SendMessage(\"";					// Add ancestor
+				str+="https://mandala.shanti.virginia.edu/"+o.asset_type.toLowerCase()+"/";			// URL stem
+				str+=o.ancestor_ids_is[i+1]+"/overview/nojs#search\")'>";							// URL end
+				str+=o.ancestors_txt[i]+"</span>";													// Finish ancestor link
+				if (i < o.ancestors_txt.length-1)	str+=" > ";										// Add separator
+				}
+			str+="</div>";																			// Close trail div
+			}
+		str+="<div class='sui-itemMore' id='sui-itemMore-"+num+"'></div>";							// More area
+		return str+"</div>";																		// Return items markup
+	}
+
 	ShowItemMore(num)																			// SHOW MORE INFO
 	{
 		var j,o,s1,str="";
@@ -358,7 +396,7 @@ class SearchUI  {
 		if (o.summary || o.caption) {																// If a summary or caption
 			s1=o.summary || o.caption;																// Use either summary or caption
 			if (s1.length > 137)	s1=s1.substr(0,137)+"...";										// Limit size
-			str+="<br>&#xe636&nbsp;&nbsp;<i>"+s1+"</i>";											// Add summary
+			str+="<br><div style='display:inline-block;background-color:#ccc;width:4px;height:18px;margin:2px 10px 0 5px;vertical-align:-4px'></div>&nbsp;<i>"+s1+"</i>";	// Add summary
 			}
 		str+="</div>";																				// Close info div
 		if (o.summary) str+="<br><div style='font-family:serif'>"+o.summary+"</div>";				// Add summary
@@ -402,39 +440,7 @@ class SearchUI  {
 			});
 	}
 
-	DrawList(num)																				// DRAW A LIST ITEM
-	{
-		var i;
-		var o=this.curResults[num];																	// Point at list item
-		var str="<div class='sui-item'>";
-		str+="<div class='sui-itemPlus' id='sui-itemPlus-"+num+"'>&#xe669</div>";
-		str+="<div class='sui-itemIcon' id='sui-itemIcon-"+num+"' style='background-color:"+this.assets[o.asset_type].c+"'>";
-		str+=this.assets[o.asset_type].g+"</div>";
-		str+="<div class='sui-itemTitle' id='sui-itemTitle-"+num+"'>"+o.title+"</div>";
-		if (o.feature_types_ss) {																	// If a feature
-			str+="<span style='color:"+this.assets[o.asset_type].c+"'>&nbsp;&bull;&nbsp;</span>";	// Add dot
-			str+="<div class='sui-itemFeature'>&nbsp;"+o.feature_types_ss.join(", ")+"</div>";		// Add feature(s)
-			}
-		str+="<div class='sui-itemId'>"+o.uid;
-		if (o.collection_title)																		// If a collection
-			str+="<div style='text-align:right;margin-top:2px;'>&#xe633&nbsp;"+o.collection_title+"</div>";		// Add title
-		str+="</div>";																				// Close title div
-		if (o.ancestors_txt && o.ancestors_txt.length > 1) {										// If has an ancestors trail
-			str+="<div class='sui-itemTrail'>";														// Holds trail
-			for (i=0;i<o.ancestors_txt.length;++i) {												// For each trail member
-				str+="<span class='sui-itemAncestor' onclick='sui.SendMessage(\"";					// Add ancestor
-				str+="https://mandala.shanti.virginia.edu/terms/";									// URL stem
-				str+=o.ancestor_ids_is[i+1]+"/overview/nojs#search\")'>";							// URL end
-				str+=o.ancestors_txt[i]+"</span>";													// Finish ancestor link
-				if (i < o.ancestors_txt.length-1)	str+=" > ";										// Add separator
-				}
-			str+="</div>";																			// Close trail div
-			}
-		str+="<div class='sui-itemMore' id='sui-itemMore-"+num+"'></div>";							// More area
-		return str+"</div>";																		// Return items markup
-	}
-
-	DrawGrid(num)																				// DRAW GRID ITEM
+	DrawGridItem(num)																			// DRAW GRID ITEM
 	{
 		var str="<div class='sui-grid'>";
 		var o=this.curResults[num];																// Point at item
@@ -443,7 +449,7 @@ class SearchUI  {
 		return str;																				// Return grid markup
 	}
 
-	DrawCard(num)																				// DRAW CARD ITEM
+	DrawCardItem(num)																			// DRAW CARD ITEM
 	{
 		var str="<div class='sui-card'>";
 		var o=this.curResults[num];																// Point at item
