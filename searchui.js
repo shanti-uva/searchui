@@ -1,6 +1,6 @@
 /* MANDALA SEARCH UI
 
-	Usage: 		var sui=new SearchUI();	-- sui needs to be declared!
+	Usage: 		var sui=new SearchUI();	-- sui needs to be declared globally!
 	Requires: 	jQuery and jQueryUI
 	CSS:		searchui.css
 	Images:		img/loading.gif, img/advicon.png, img/simicon.png
@@ -18,7 +18,7 @@ class SearchUI  {
 		this.curResults="";																			// Returns results
 		this.curMode="simple";																		// Current mode - can be input, simple, or advanced
 		this.curQuery={ text:""};																	// Current query
-		this.viewMode="List";																		// Dispay mode - can be List, Grid, or Card
+		this.viewMode="Card";																		// Dispay mode - can be List, Grid, or Card
 		this.viewSort="Alpha";																		// Sort mode - can be Alpha, Date, or Auther
 		this.curType="All";																			// Current item types
 		this.curPage=0;																				// Current page being shown
@@ -302,6 +302,7 @@ class SearchUI  {
 	DrawItems()																					// DRAW RESULT ITEMS
 	{
 		var i,str="";
+		$("#sui-results").css({ "background-color":(this.viewMode == "List") ? "#fff" : "#ddd" }); 	// White b/g for list only
 		for (i=0;i<this.curResults.length;++i) {													// For each result
 			if (this.viewMode == "Card")		str+=this.DrawCardItem(i);							// Draw if shoing as cards
 			else if (this.viewMode == "Grid")	str+=this.DrawGridItem(i);							// Grid
@@ -315,7 +316,7 @@ class SearchUI  {
 			var num=e.currentTarget.id.substring(13);												// Get index of result	
 			this.SendMessage(this.curResults[num].url_html);										// Send message
 			});
-		$(".sui-gridPic").on("click",(e)=> { 														// ON GRID ITEM CLICK
+		$("[id^=sui-itemPic-]").on("click",(e)=> { 													// ON ITEM CLICK
 			var num=e.currentTarget.id.substring(12);												// Get index of result	
 			this.SendMessage(this.curResults[num].url_html);										// Send message
 			});
@@ -338,7 +339,7 @@ class SearchUI  {
 			this.Popup(str,20,p.left-220,p.top+24);													// Show popup	
 			});
 		$(".sui-gridInfo").on("mouseout",(e)=> { $("#sui-popupDiv").remove(); });					// ON INFO BUTTON OUT
-		$(".sui-itemTitle").on("click",(e)=> { 														// ON TITLE CLICK
+		$("[id^=sui-itemTitle-]").on("click",(e)=> { 												// ON TITLE CLICK
 			var num=e.currentTarget.id.substring(14);												// Get index of result	
 			this.SendMessage(this.curResults[num].url_html);										// Send message
 			});
@@ -434,28 +435,41 @@ class SearchUI  {
 		$("#sui-itemMore-"+num).html(str);															// Add to div
 		
 		$("#sui-itemMore-"+num).slideDown();														// Slide it down
-		$(".sui-itemPic").on("click",(e)=> { 														// ON MORE PIC CLICK
+		$("[id^=sui-itemPic]").on("click",(e)=> { 													// ON PIC CLICK
 			var num=e.currentTarget.id.substring(12);												// Get index of result	
 			this.SendMessage(this.curResults[num].url_html);										// Send message
 			});
-	}
+		}
 
 	DrawGridItem(num)																			// DRAW GRID ITEM
 	{
 		var str="<div class='sui-grid'>";
 		var o=this.curResults[num];																// Point at item
-		if (o.url_thumb)	str+="<img src='"+o.url_thumb+"' class='sui-gridPic' id='sui-gridPic-"+num+"'>";	// Add pic
+		if (o.url_thumb)	str+="<img src='"+o.url_thumb+"' class='sui-gridPic' id='sui-itemPic-"+num+"'>";	// Add pic
 		str+="<div id='sui-gridInfo-"+num+"' class='sui-gridInfo'>&#xe67f</div></div>";
 		return str;																				// Return grid markup
 	}
 
 	DrawCardItem(num)																			// DRAW CARD ITEM
 	{
-		var str="<div class='sui-card'>";
 		var o=this.curResults[num];																// Point at item
-		if (o.url_thumb)	str+="<img src='"+o.url_thumb+"' class='sui-cardPic' id='sui-cardPic-"+num+"'>";	// Add pic
-		str+="<div id='sui-cardInfo-"+num+"' class='sui-cardInfo'>&#xe67f</div></div>";
-		return str;																					// Return items markup
+		var g="&#xe60c";																		// Collections glyph
+		var label=o.collection_title;															// Set label
+		var str="<div class='sui-card'>";
+		str+="<img src='"+o.url_thumb+"' class='sui-cardPic' id='sui-itemPic-"+num+"'>";		// Add pic
+		str+="<div class='sui-cardInfo'><div class='sui-cardTitle' id='sui-itemTitle-"+num+"'><b>"+o.title+"</b><br></div>";	// Add title
+		str+="<div style='border-top:.5px solid #e1cb8d;height:1px;width:100%;margin:6px 0 6px 0'></div>";
+		if (o.feature_types_ss) str+="&#xe62b&nbsp;&nbsp;"+o.feature_types_ss.join(", ")+"<br>";// Add feature, if a place
+		if (o.data_phoneme_ss)  str+="&#xe635&nbsp;&nbsp;"+o.data_phoneme_ss.join(", ")+"<br>";	// Add phoneme if a term
+		if (o.node_user)  		str+="&#xe600&nbsp;&nbsp;"+o.node_user+"<br>";					// Or user 
+		if (o.duration_s) 		str+="&#xe61c&nbsp;&nbsp;"+o.duration_s+"<br>";					// Add duration
+		if (o.timestamp) 		str+="&#xe60c&nbsp;&nbsp;"+o.timestamp.substr(0,10)+"<br>";		// Add timestamp
+		if (o.name_tibt)  		str+="=&nbsp;&nbsp;"+o.name_tibt+"<br>";						// Add Tibettan name
+		str+="</div>";																			// End info div
+		if (!label)	 label=o.asset_type,g=this.assets[o.asset_type].g;							// Generic label if no collection
+		str+="<div class='sui-cardFooter'>"+g+"&nbsp;&nbsp;";									// Card footer
+		str+="<span style='font-size:11px;vertical-align:2px'>"+label+"<span></div>";			// Add label	
+		return str+"</div>";																	// Return items markup
 	}
 
 	DrawSearchUI()																				// DRAW SEARCH UI SECTION
