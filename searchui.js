@@ -12,7 +12,7 @@
 	Requires: 	jQuery and jQueryUI									// Almost any version should work
 	CSS:		searchui.css										// All styles are prefixed with 'sui-'
 	JS:			ECMA-6												// Uses lambda (arrow) functions
-	Images:		img/loading.gif, img/advicon.png, img/simicon.png
+	Images:		img/loading.gif, img/advicon.png, img/simicon.png. img/gradient.jpg
 	Messages: 	sui=page|url ->										// Hides search and send url to direct Drupal to
 				sui=query|[searchObject] -> 						// Asks Drupul to turn search object (JSON) into SOLR query string
 				sui=open ->											// Tells Drupal search page is open
@@ -44,7 +44,6 @@ class SearchUI  {
 		sui=this;																					// Save ref to class as global
 		this.wid=$("body").width();		this.hgt=$("body").height();								// Set sizes
 		this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production url
-		this.drupalUI="https://mandala.shanti.virginia.edu/sites/all/themes/shanti_sarvaka/images/default/"; // When images are stored in Drupal
 		this.curResults="";																			// Returns results
 		this.curMode="input";																		// Current mode - can be input, simple, or advanced
 		this.curQuery={ text:""};																	// Current query
@@ -138,8 +137,11 @@ class SearchUI  {
 	{
 		this.LoadingIcon(true,64);																	// Show loading icon
 		var s=this.curPage*this.pageSize;															// Starting item number
+		var asset="*";																				// Assume all assets
+		if (this.curType != "All")																	// If not all
+			asset="asset_type%3A%22"+this.curType.toLowerCase()+"%22";								// Set asset type						
 		var search=this.FormQuery();																// Form SOLR search from query object
-		var url=this.solrUrl+"/?"+"q="+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+s+"&rows="+this.pageSize;
+		var url=this.solrUrl+"/?"+"q="+asset+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+s+"&rows="+this.pageSize;
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done((data)=> {
 			var i,o;
 			this.curResults=data.response.docs;														// Save current results
@@ -149,11 +151,7 @@ class SearchUI  {
 				if (o.asset_subtype) o.asset_subtype=o.asset_subtype.charAt(0).toUpperCase()+o.asset_subtype.slice(1);	
 				if (o.ancestors_txt && o.ancestors_txt.length)	o.ancestors_txt.splice(0,1);		// Remove 1st ancestor from trail
 				if (o.asset_type == "Audio-video") 	o.asset_type="Audio-Video";						// Handle AV
-				else if (o.asset_type == "Texts") 	o.url_thumb=this.drupalUI+"generic-texts-icon.png";		// Texts icons
-				else if (o.asset_type == "Sources") o.url_thumb=this.drupalUI+"generic-sources-icon.png"; 	// Sources
-				else if (o.asset_type == "Terms") 	o.url_thumb=this.drupalUI+"generic-terms-icon.png";		// Terms
-				else if (o.asset_type == "Places") 	o.url_thumb=this.drupalUI+"generic-places-icon.png"; 	// Places
-				else if (o.asset_type == "Subjects") o.url_thumb=this.drupalUI+"generic-subjects-icon.png";	// Subjects
+				else if (!o.url_thumb)				o.url_thumb="img/gradient.jpg";					// Use gradient for generic
 				if (o.display_label) o.title=o.display_label;										// Get title form display
 				}
 			this.LoadingIcon(false);																// Hide loading icon
@@ -164,9 +162,7 @@ class SearchUI  {
 
 	FormQuery()																					// FORM SOLR QUERY FROM SEARCH OBJECT
 	{
-		var search="",asset="*";
-		if (this.curType != "All")																	// If not all
-			asset="asset_type%3A%22"+this.curType.toLowerCase()+"%22";								// Set asset type						
+		var search="";
 		if (this.curQuery.text) {																	// If a filter spec'd
 			var str="%22*"+this.curQuery.text.toLowerCase()+"*%22";									// Search term
 			search+=" AND (title%3A"+str;															// Look at title
@@ -184,7 +180,7 @@ class SearchUI  {
 		if (_this.user) 																			// If a user spec'd
 			search+=" AND node_user%3A*"+_this.user+"*";											// Look at user
 */
-	return asset+search;																			// Return formatted query
+	return search;																					// Return formatted query
 }
 
 	GetAssetCounts(search) 																		// GET ASSET COUNTS
@@ -355,10 +351,10 @@ class SearchUI  {
 			var o=this.curResults[num];																// Point at item
 			var str="";
 			if (o.title) str+="<b>"+o.title+"</b><br><br>";											// Add title
-			str+=this.assets[o.asset_type].g+"&nbsp;&nbsp;"+o.asset_type.toUpperCase();				// Add type
+			str+=this.Glyph(this.assets[o.asset_type].g)+"&nbsp;&nbsp;"+o.asset_type.toUpperCase();	// Add type
 			if (o.asset_subtype) str+=" / "+o.asset_subtype;										// Add subtype
 			str+="<br>";
-			if (o.creator) str+="<p>&#xe600&nbsp;&nbsp;"+o.creator.join(", ")+"</p>";				// Add creator
+			if (o.creator) str+="<p>"+this.Glyph("&#xe600")+"&nbsp;&nbsp;"+o.creator.join(", ")+"</p>";	// Add creator
 			if (o.summary || o.caption) {															// If a summary or caption
 				var s1=o.summary || o.caption;														// Use either summary or caption
 				if (s1.length > 80)	s1=s1.substr(0,80)+"...";										// Limit size
@@ -378,7 +374,7 @@ class SearchUI  {
 			});
 	}	
 		
-	DrawListItem(num)																				// DRAW A LIST ITEM
+	DrawListItem(num)																			// DRAW A LIST ITEM
 	{
 		var i;
 		var o=this.curResults[num];																	// Point at list item
@@ -419,7 +415,8 @@ class SearchUI  {
 			}
 		
 		o=this.curResults[num];																		// Point at item
-		if (o.url_thumb)	str+="<img src='"+o.url_thumb+"' class='sui-itemPic' id='sui-itemPic-"+num+"'>";	// Add pic
+		if (!o.url_thumb.match(/img\/gradient/)) 													// If not a generic
+			str+="<img src='"+o.url_thumb+"' class='sui-itemPic' id='sui-itemPic-"+num+"'>";		// Add pic
 		str+="<div class='sui-itemInfo'>";															// Info holder
 		str+=this.assets[o.asset_type].g+"&nbsp;&nbsp;"+o.asset_type.toUpperCase();					// Add type
 		if (o.asset_subtype) str+=" / "+o.asset_subtype;											// Add subtype
@@ -474,38 +471,41 @@ class SearchUI  {
 	DrawGridItem(num)																			// DRAW GRID ITEM
 	{
 		var str="<div class='sui-grid'>";
-		var o=this.curResults[num];																// Point at item
-		if (o.url_thumb)	str+="<img src='"+o.url_thumb+"' class='sui-gridPic' id='sui-itemPic-"+num+"'>";	// Add pic
-		str+="<div id='sui-gridInfo-"+num+"' class='sui-gridInfo'>&#xe67f</div></div>";
-		return str;																				// Return grid markup
+		var o=this.curResults[num];																	// Point at item
+		str+="<img src='"+o.url_thumb+"' class='sui-gridPic' id='sui-itemPic-"+num+"'>";			// Add pic
+		str+="<div id='sui-gridInfo-"+num+"' class='sui-gridInfo'>&#xe67f</div>";					// Add info button
+		if (o.url_thumb.match(/img\/gradient/))														// If a generic
+			 str+=`<div class='sui-gridGlyph' style='color:${this.assets[o.asset_type].c}'>${this.assets[o.asset_type].g}</div>`;
+		return str+"</div>";																		// Return grid markup
 	}
 
 	DrawCardItem(num)																			// DRAW CARD ITEM
 	{
-		var o=this.curResults[num];																// Point at item
-		var g="&#xe633";																		// Collections glyph
-		var label=o.collection_title;															// Set label
-		var str="<div class='sui-card'>";
-		str+="<img src='"+o.url_thumb+"' class='sui-cardPic' id='sui-itemPic-"+num+"'>";		// Add pic
-
-		var gg=this.assets[o.asset_type].g;														// Assume generic icon
-		if (o.asset_subtype == "Audio")			gg="&#xe60a";									// Audio
-		else if (o.asset_subtype == "Video")	gg="&#xe62d";									// Video
-		str+="<div class='sui-cardType'>"+gg+"</div>";											// Show icon
-
+		var o=this.curResults[num];																	// Point at item
+		var g="&#xe633";																			// Collections glyph
+		var c="#9e894d";																			// Color
+		var label=o.collection_title;																// Set label
+		var str="<div class='sui-card'>";															// Overall container
+		str+="<img src='"+o.url_thumb+"' class='sui-cardPic' id='sui-itemPic-"+num+"'>";			// Add pic
+		var gg=this.assets[o.asset_type].g;															// Assume generic icon
+		if (o.asset_subtype == "Audio")			gg="&#xe60a";										// Audio
+		else if (o.asset_subtype == "Video")	gg="&#xe62d";										// Video
+		str+="<div class='sui-cardType'>"+gg+"</div>";												// Show icon
+		if (o.url_thumb.match(/img\/gradient/))														// If a generic
+			 str+=`<div class='sui-cardGlyph' style='color:${this.assets[o.asset_type].c}'>${this.assets[o.asset_type].g}</div>`;
 		str+="<div class='sui-cardInfo'><div class='sui-cardTitle' id='sui-itemTitle-"+num+"'><b>"+o.title+"</b><br></div>";	// Add title
-		str+="<div style='border-top:.5px solid #e1cb8d;height:1px;width:100%;margin:6px 0 6px 0'></div>";
-		if (o.feature_types_ss) str+="&#xe62b&nbsp;&nbsp;"+o.feature_types_ss.join(", ")+"<br>";// Add feature, if a place
-		if (o.data_phoneme_ss)  str+="&#xe635&nbsp;&nbsp;"+o.data_phoneme_ss.join(", ")+"<br>";	// Add phoneme if a term
-		if (o.node_user)  		str+="&#xe600&nbsp;&nbsp;"+o.node_user+"<br>";					// Or user 
-		if (o.duration_s) 		str+="&#xe61c&nbsp;&nbsp;"+o.duration_s+"<br>";					// Add duration
-		if (o.timestamp) 		str+="&#xe60c&nbsp;&nbsp;"+o.timestamp.substr(0,10)+"<br>";		// Add timestamp
-		if (o.name_tibt)  		str+="=&nbsp;&nbsp;"+o.name_tibt+"<br>";						// Add Tibettan name
-		str+="</div>";																			// End info div
-		if (!label)	 label=o.asset_type,g=this.assets[o.asset_type].g;							// Generic label if no collection
-		str+="<div class='sui-cardFooter'>"+g+"&nbsp;&nbsp;";									// Card footer
-		str+="<span style='font-size:11px;vertical-align:2px'>"+label+"<span></div>";			// Add label	
-		return str+"</div>";																	// Return items markup
+		str+="<div style='border-top:.5px solid "+c+";height:1px;width:100%;margin:6px 0 6px 0'></div>";	// Dividing line
+		if (o.feature_types_ss) str+="&#xe62b&nbsp;&nbsp;"+o.feature_types_ss.join(", ")+"<br>";	// Add feature, if a place
+		if (o.data_phoneme_ss)  str+="&#xe635&nbsp;&nbsp;"+o.data_phoneme_ss.join(", ")+"<br>";		// Add phoneme if a term
+		if (o.node_user)  		str+="&#xe600&nbsp;&nbsp;"+o.node_user+"<br>";						// Or user 
+		if (o.duration_s) 		str+="&#xe61c&nbsp;&nbsp;"+o.duration_s+"<br>";						// Add duration
+		if (o.timestamp) 		str+="&#xe60c&nbsp;&nbsp;"+o.timestamp.substr(0,10)+"<br>";			// Add timestamp
+		if (o.name_tibt)  		str+="=&nbsp;&nbsp;"+o.name_tibt+"<br>";							// Add Tibettan name
+		str+="</div>";																				// End info div
+		if (!label)	 { label=o.asset_type; g=this.assets[o.asset_type].g; }							// Generic label if no collection
+		str+="<div class='sui-cardFooter' style='background-color:"+c+"'>"+g+"&nbsp;&nbsp;";		// Card footer
+		str+="<span style='font-size:11px;vertical-align:2px'>"+label+"<span></div>";				// Add label	
+		return str+"</div>";																		// Return items markup
 	}
 
 	DrawSearchUI()																				// DRAW SEARCH UI SECTION
@@ -548,5 +548,10 @@ class SearchUI  {
 		$("#sui-popupDiv").fadeIn(500).delay(time ? time*1000 : 3000).fadeOut(500);					// Animate in and out		
 	}
 
+	Glyph(str)																					// SHOW GLYPH
+	{
+		return `<span style='font-family:shanticon'>${str}</span>`;									// Force glyph
+
+	}
 
 } // SearchUI class closure
