@@ -87,6 +87,8 @@
 					}
 .sui-cardInfo { 	padding:10px; color:#666; font-size:11px; line-height:17px; margin-top:-6px; height:89px; overflow: hidden; 
 					}
+.sui-cardType { 	display:inline-block; margin-left:-23px; vertical-align:top; padding-top:5px; color:#fff;
+					}					
 .sui-cardFooter { 	background-color:#9e894d; height:21px; color:#fff; border-radius:0 0 5px 8px; padding: 5px 0 0 8px;
 					}
 .sui-footer { 		position:absolute; left:0; top:calc(100% - 30px); width:100%; height:24px; background-color: #888;	

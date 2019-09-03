@@ -48,7 +48,7 @@ class SearchUI  {
 		this.curResults="";																			// Returns results
 		this.curMode="input";																		// Current mode - can be input, simple, or advanced
 		this.curQuery={ text:""};																	// Current query
-		this.viewMode="List";																		// Dispay mode - can be List, Grid, or Card
+		this.viewMode="Card";																		// Dispay mode - can be List, Grid, or Card
 		this.viewSort="Alpha";																		// Sort mode - can be Alpha, Date, or Auther
 		this.curType="All";																			// Current item types
 		this.curPage=0;																				// Current page being shown
@@ -483,10 +483,16 @@ class SearchUI  {
 	DrawCardItem(num)																			// DRAW CARD ITEM
 	{
 		var o=this.curResults[num];																// Point at item
-		var g="&#xe60c";																		// Collections glyph
+		var g="&#xe633";																		// Collections glyph
 		var label=o.collection_title;															// Set label
 		var str="<div class='sui-card'>";
 		str+="<img src='"+o.url_thumb+"' class='sui-cardPic' id='sui-itemPic-"+num+"'>";		// Add pic
+
+		var gg=this.assets[o.asset_type].g;														// Assume generic icon
+		if (o.asset_subtype == "Audio")			gg="&#xe60a";									// Audio
+		else if (o.asset_subtype == "Video")	gg="&#xe62d";									// Video
+		str+="<div class='sui-cardType'>"+gg+"</div>";											// Show icon
+
 		str+="<div class='sui-cardInfo'><div class='sui-cardTitle' id='sui-itemTitle-"+num+"'><b>"+o.title+"</b><br></div>";	// Add title
 		str+="<div style='border-top:.5px solid #e1cb8d;height:1px;width:100%;margin:6px 0 6px 0'></div>";
 		if (o.feature_types_ss) str+="&#xe62b&nbsp;&nbsp;"+o.feature_types_ss.join(", ")+"<br>";// Add feature, if a place
