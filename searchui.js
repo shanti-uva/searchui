@@ -14,16 +14,15 @@
 	JS:			ECMA-6												// Uses lambda (arrow) functions
 	Images:		img/loading.gif, img/advicon.png, img/simicon.png. img/gradient.jpg
 	Messages: 	sui=page|url ->										// Hides search and send url to direct Drupal to
-				sui=query|[searchObject] -> 						// Asks Drupul to turn search object (JSON) into SOLR query string
-				sui=open ->											// Tells Drupal search page is open
+				sui=query|searchState -> 							// Asks Drupul to turn search state (JSON) into SOLR query string
+				sui=open|[searchState] ->							// Tells Drupal search page is open
 				sui=close ->										// Tells Drupal search page is closed
 				-> sui=close										// Tells search page to close
-				-> sui=open|assetType|viewMode|advanced|query		// Tells search page to open with a query
 	Usage: 		var sui=new SearchUI();								// Allocs SearchUI class (fully encapsulated)							
 	Globals:	sui													// Needs to be declared globally!
 
 
-	searchObject= {													
+	searchState= {													
 		text[],														// String(s) to search on
 		places[],													// Places
 		subjects[],													// Subjects
@@ -45,7 +44,7 @@ class SearchUI  {
 		this.wid=$("body").width();		this.hgt=$("body").height();								// Set sizes
 		this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production url
 		this.curResults="";																			// Returns results
-		this.curMode="advanced";																		// Current mode - can be input, simple, or advanced
+		this.curMode="input";																		// Current mode - can be input, simple, or advanced
 		this.curQuery={ text:""};																	// Current query
 		this.viewMode="Card";																		// Dispay mode - can be List, Grid, or Card
 		this.viewSort="Alpha";																		// Sort mode - can be Alpha, Date, or Auther
@@ -275,7 +274,7 @@ class SearchUI  {
 	{
 		var lastPage=Math.floor(this.numItems/this.pageSize);										// Calc last page
 		var str=`
-		<div style='float:left;font-size:18px;'>
+		<div style='float:left;font-size:18px'>
 			<div id='sui-viewModeList' class='sui-resDisplay' title='List view'>&#xe61f</div>
 			<div id='sui-viewModeGrid' class='sui-resDisplay' title='Grid view'>&#xe61b</div>
 			<div id='sui-viewModeCard' class='sui-resDisplay' title='Card view'>&#xe673</div>
@@ -513,28 +512,53 @@ class SearchUI  {
 		var str=`
 		<div class='sui-advTop'>Advanced search</div><br>
 		<div class='sui-advHeader' id='sui-advHeader-place'>&#xe62b&nbsp;&nbsp;LOCATION</div>
-		<div class='sui-advValue' id='sui-advValue-place'></div>
-		<div class='sui-advHeader' id= sui-advHeader-collection'>&#xe633&nbsp;&nbsp;COLLECTION</div>
-		<div class='sui-advValue' id='sui-advValue-collection'></div>
+		<div class='sui-advValue'  id='sui-advValue-place'></div>
+		<div class='sui-advHeader' id='sui-advHeader-collection'>&#xe633&nbsp;&nbsp;COLLECTION</div>
+		<div class='sui-advValue'  id='sui-advValue-collection'></div>
+		<div class='sui-advEdit'   id='sui-advEdit-collection'></div>
 		<div class='sui-advHeader' id='sui-advHeader-language'>&#xe670&nbsp;&nbsp;LANGUAGE</div>
-		<div class='sui-advValue' id='sui-advValue-language'></div>
+		<div class='sui-advValue'  id='sui-advValue-language'></div>
 		<div class='sui-advHeader' id='sui-advHeader-user'>&#xe600&nbsp;&nbsp;USER</div>
-		<div class='sui-advValue' id='sui-advValue-user'></div>
-		<div class='sui-advHeader'id='sui-advHeader-feature'>&#xe65d&nbsp;&nbsp;FEATURE TYPE</div>
-		<div class='sui-advValue' id='sui-advValue-feature'></div>
+		<div class='sui-advValue'  id='sui-advValue-user'></div>
+		<div class='sui-advHeader' id='sui-advHeader-feature'>&#xe65d&nbsp;&nbsp;FEATURE TYPE</div>
+		<div class='sui-advValue'  id='sui-advValue-feature'></div>
 		<div class='sui-advHeader' id='sui-advHeader-subject'>&#xe634&nbsp;&nbsp;SUBJECT</div>
-		<div class='sui-advValue' id='sui-advValue-subject'></div>
+		<div class='sui-advValue'  id='sui-advValue-subject'></div>
 		<div class='sui-advHeader' id='sui-advHeader-term'>&#xe635&nbsp;&nbsp;TERM</div>
-		<div class='sui-advValue' id='sui-advValue-term'></div>
+		<div class='sui-advValue'  id='sui-advValue-term'></div>
 		<div class='sui-advHeader' id='sui-advHeader-text'>&#xe623&nbsp;&nbsp;SEARCH WORD OPTIONS</div>
-		<div class='sui-advValue' id='sui-advValue-text'></div>
-		<div class='sui-advHeader 'id='sui-advHeader-relate'>&#xe638&nbsp;&nbsp;RELATIONSHIPS</div>
-		<div class='sui-advValue' id='sui-advValue-relate'></div>
+		<div class='sui-advValue'  id='sui-advValue-text'></div>
+		<div class='sui-advHeader' id='sui-advHeader-relate'>&#xe638&nbsp;&nbsp;RELATIONSHIPS</div>
+		<div class='sui-advValue'  id='sui-advValue-relate'></div>
 		`;
 		$("#sui-right").html(str.replace(/\t|\n|\r/g,""));											// Remove format and add to div
 	
 		$("#sui-advValue-collection").html("<div class='sui-advValueRem'>&#xe60f</div><i>Tibetan and Himalayan Library</i>");
-	
+		$("#sui-advHeader-collection").on("click",()=> {
+			if ($("#sui-advEdit-collection").html().length) {
+				$("#sui-advEdit-collection").slideUp();
+				$("#sui-advEdit-collection").html("");
+				return;
+				}
+			str=`
+				<span  style='vertical-align:-2px'>&#xe623&nbsp;&nbsp</span>
+				<input style='width:90px;border:1px solid #999;border-radius:12px;font-size:12px;padding-left:6px' placeholder='Search this list'>
+				<span  style='float:right;cursor:pointer'>&#xe645&nbsp;<i>see all...</i></span>
+				<hr>
+				<div class='sui-advEditLine'>&#xe633&nbsp;Tibetan and Himalayan Library</div>
+				<div class='sui-advEditLine'>&#xe633&nbsp;Oral Cultures of Bhutan</div>
+				<div class='sui-advEditLine'>&#xe633&nbsp;Larung Gar Audio Collection</div>
+				<div class='sui-advEditLine'>&#xe633&nbsp;Language Tree</div>
+				<div class='sui-advEditLine'>&#xe633&nbsp;Royal University of Bhutam</div>
+				<div class='sui-advEditLine'>&#xe633&nbsp;Tom Huber Collection</div>
+				`;
+			$("#sui-advEdit-collection").html(str.replace(/\t|\n|\r/g,""));
+			$("#sui-advEdit-collection").slideDown();
+			
+		});
+
+
+
 	}
 
 	LoadingIcon(mode, size)																		// SHOW/HIDE LOADING ICON		

@@ -108,7 +108,12 @@
 .sui-advHeader { 	border-bottom:1px solid #a4baec; padding-bottom:4px; cursor:pointer; width:calc(100% - 32px);
 					} .sui-advHeader:hover { color:#aaa;	
 					}
-.sui-advValue { 	padding: 8px 0 8px 26px; font-size:11px;
+.sui-advValue { 	padding: 8px 0 8px 26px; font-size:10px;
+					}						
+.sui-advEdit {		border:1px solid #ccc; margin-bottom:8px; width:calc(100% - 48px); background-color:#fff;
+					border-radius:4px; display:none; padding:8px; font-size:11px;
+					}
+.sui-advEditLine { 	padding-bottom:3px;
 					}
 .sui-advValueRem { 	display:inline-block; cursor:pointer; margin-right: 4px;
 					}
