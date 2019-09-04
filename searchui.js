@@ -45,7 +45,7 @@ class SearchUI  {
 		this.wid=$("body").width();		this.hgt=$("body").height();								// Set sizes
 		this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production url
 		this.curResults="";																			// Returns results
-		this.curMode="input";																		// Current mode - can be input, simple, or advanced
+		this.curMode="advanced";																		// Current mode - can be input, simple, or advanced
 		this.curQuery={ text:""};																	// Current query
 		this.viewMode="Card";																		// Dispay mode - can be List, Grid, or Card
 		this.viewSort="Alpha";																		// Sort mode - can be Alpha, Date, or Auther
@@ -511,9 +511,30 @@ class SearchUI  {
 	DrawSearchUI()																				// DRAW SEARCH UI SECTION
 	{
 		var str=`
-		<br><br><br><div style='text-align:center;color:#666'>Search UI will appear here</div>
+		<div class='sui-advTop'>Advanced search</div><br>
+		<div class='sui-advHeader' id='sui-advHeader-place'>&#xe62b&nbsp;&nbsp;LOCATION</div>
+		<div class='sui-advValue' id='sui-advValue-place'></div>
+		<div class='sui-advHeader' id= sui-advHeader-collection'>&#xe633&nbsp;&nbsp;COLLECTION</div>
+		<div class='sui-advValue' id='sui-advValue-collection'></div>
+		<div class='sui-advHeader' id='sui-advHeader-language'>&#xe670&nbsp;&nbsp;LANGUAGE</div>
+		<div class='sui-advValue' id='sui-advValue-language'></div>
+		<div class='sui-advHeader' id='sui-advHeader-user'>&#xe600&nbsp;&nbsp;USER</div>
+		<div class='sui-advValue' id='sui-advValue-user'></div>
+		<div class='sui-advHeader'id='sui-advHeader-feature'>&#xe65d&nbsp;&nbsp;FEATURE TYPE</div>
+		<div class='sui-advValue' id='sui-advValue-feature'></div>
+		<div class='sui-advHeader' id='sui-advHeader-subject'>&#xe634&nbsp;&nbsp;SUBJECT</div>
+		<div class='sui-advValue' id='sui-advValue-subject'></div>
+		<div class='sui-advHeader' id='sui-advHeader-term'>&#xe635&nbsp;&nbsp;TERM</div>
+		<div class='sui-advValue' id='sui-advValue-term'></div>
+		<div class='sui-advHeader' id='sui-advHeader-text'>&#xe623&nbsp;&nbsp;SEARCH WORD OPTIONS</div>
+		<div class='sui-advValue' id='sui-advValue-text'></div>
+		<div class='sui-advHeader 'id='sui-advHeader-relate'>&#xe638&nbsp;&nbsp;RELATIONSHIPS</div>
+		<div class='sui-advValue' id='sui-advValue-relate'></div>
 		`;
 		$("#sui-right").html(str.replace(/\t|\n|\r/g,""));											// Remove format and add to div
+	
+		$("#sui-advValue-collection").html("<div class='sui-advValueRem'>&#xe60f</div><i>Tibetan and Himalayan Library</i>");
+	
 	}
 
 	LoadingIcon(mode, size)																		// SHOW/HIDE LOADING ICON		
