@@ -67,13 +67,13 @@ class SearchUI  {
 			this.ss.pageSize=100;																	// Results per page	
 			this.ss.query={ 																		// Current query
 				text:"",																			// Search word 
-				places:[],																			// Places
-				subjects:[],																		// Subjects
-				terms:[],																			// Terms
-				assets:[],																			// Assets
+				place:[],																			// Places
+				subject:[],																			// Subjects
+				term:[],																			// Terms
+				asset:[],																			// Assets
 				dateStart:"", dateEnd:"",															// Beginning and ending dates
-				users:[],																			// Users
-				collections:[],																		// Collections
+				user:[],																			// Users
+				collection:[],																		// Collections
 				};																
 			}
 		}
@@ -517,8 +517,12 @@ class SearchUI  {
 
 //		https://ss251856-us-east-1-aws.measuredsearch.com/solr/kmassets_dev/select?q=asset_type%3A(images%20audio-video)&wt=json&rows=0&json.facet={collection:{limit:300,type:%22terms%22,field:%22collection_title%22,facet:{subtype:{field:%22collection_nid%22,type:%22terms%22}}}}
 
+
+
+
 	DrawSearchUI()																				// DRAW SEARCH UI SECTION
 	{
+this.ss.collection=["Tibetan and Himalayan Library-|-3456"];
 		var i;
 		var facets=["place","collection","language","user","feature","subject","term","relationship"];
 		var icons=["&#xe62b","&#xe633","&#xe670","&#xe600","&#xe634","&#xe634","&#xe635","&#xe638"]
@@ -536,22 +540,27 @@ class SearchUI  {
 		<div class='sui-advEdit'   id='sui-advEdit-text'></div>`;
 		$("#sui-adv").html(str.replace(/\t|\n|\r/g,""));											// Remove format and add to div
 	
-		$("#sui-advValue-collection").html(`
-			<div class='sui-advValueRem' id='sui-advKill-collection-0'>&#xe60f</div>
+		var s=this.ss.collection[0].split("-|-")[0];
+		
+		$("#sui-advValue-collection").html(
+			`<div class='sui-advValueRem' id='sui-advKill-collection-0'>&#xe60f</div>
 			<div class='sui-advEditBool' id='sui-advBool-collection-0' title='Change boolean method'>AND</div>
-			<i> Tibetan and Himalayan Library</i>
+			<i> ${s.replace(/^-|\|/,"")}</i>
 			`);
 		
 		$("[id^=sui-advBool-]").on("click",(e)=> {
+			var c="";
 			var b=$("#"+e.currentTarget.id).html();													// Get current boolean state
-			if (b == "AND")		b="OR";																// Toggle through options
-			else if (b == "OR") b="NOT";
-			else 				b="AND";
+			if (b == "AND")		{ b="OR"; c="|"; }													// Toggle through options
+			else if (b == "OR") { b="NOT"; c="-"; }													// Set prefix
+			else 				  b="AND";															// Set label
 			$("#"+e.currentTarget.id).html(b);														// Set new value
+			var v=e.currentTarget.id.split("-");													// Get ids
+			this.ss[v[2]][v[3]]=c+this.ss[v[2]][v[3]].replace(/^-|\|/,"");							// Replace boolean character
 		});
 			
 		$("[id^=sui-advKill-]").on("click",(e)=> {
-			var v=$("#"+e.currentTarget.id).html();													// Get ids
+			var v=e.currentTarget.id.split("-");													// Get ids
 		});
 
 		var curFacet;
