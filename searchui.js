@@ -12,7 +12,7 @@
 	Requires: 	jQuery and jQueryUI									// Almost any version should work
 	CSS:		searchui.css										// All styles are prefixed with 'sui-'
 	JS:			ECMA-6												// Uses lambda (arrow) functions
-	Images:		img/loading.gif, img/advicon.png, img/simicon.png. img/gradient.jpg
+	Images:		img/loading.gif, img/gradient.jpg
 	Messages: 	sui=page|url ->										// Hides search and send url to direct Drupal to
 				sui=query|searchState -> 							// Asks Drupul to turn search state (JSON) into SOLR query string
 				sui=open|[searchState] ->							// Tells Drupal search page is open
@@ -20,19 +20,6 @@
 				-> sui=close										// Tells search page to close
 	Usage: 		var sui=new SearchUI();								// Allocs SearchUI class (fully encapsulated)							
 	Globals:	sui													// Needs to be declared globally!
-
-
-	searchState= {													
-		text[],														// String(s) to search on
-		places[],													// Places
-		subjects[],													// Subjects
-		terms[],													// Terms
-		asssets[],													// Assets
-		dateStart, dateEnd,											// Beginning and ending dates
-		user[],														// Users
-		collections[],												// Collections
-		...	
-		}
 
 */
 
@@ -42,19 +29,9 @@ class SearchUI  {
 	{
 		sui=this;																					// Save ref to class as global
 		this.wid=$("body").width();		this.hgt=$("body").height();								// Set sizes
-		this.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";		// SOLR production url
 		this.curResults="";																			// Returns results
-		this.curMode="input";																		// Current mode - can be input, simple, or advanced
-		this.curQuery={ text:""};																	// Current query
-		this.viewMode="Card";																		// Dispay mode - can be List, Grid, or Card
-		this.viewSort="Alpha";																		// Sort mode - can be Alpha, Date, or Auther
-		this.curType="All";																			// Current item types
-		this.curPage=0;																				// Current page being shown
-		this.pageSize=100;																			// Results per page	
-		this.pageStart=0;
-		this.numItems=0;
-		this.AddFrame();																			// Add div framework
-	
+		this.numItems=0;																			// Number of items																						
+		this.ss={};																					// Holds search state
 		this.assets={};
 		this.assets.All=	 { c:"#5b66cb", g:"&#xe60b", n:1421 };									// All assets
 		this.assets.Places=	 { c:"#6faaf1", g:"&#xe62b", n:1200};									// Places
@@ -66,14 +43,41 @@ class SearchUI  {
 		this.assets.Subjects={ c:"#cc4c39", g:"&#xe634", n:39 };									// Subjects
 		this.assets.Terms=   { c:"#a2733f", g:"&#xe635", n:39 };									// Terms
 	
+		this.SetSearchState(null);																	// Init search state to default
+		this.AddFrame();																			// Add div framework
 		this.Query();																				// Get intial data
 		this.Draw();																				// Draw
-	
+		
 		window.onresize=()=> {																		// ON WIMDOW RESIZE
 			this.wid=$("body").width();		this.hgt=$("body").height();							// Set size
 			this.Draw();																			// Redraw																		
 			};
 		}
+
+	SetSearchState(state)																		// SET OR INIT SEARCH STATE
+	{
+		if (!state) {
+			this.ss={};																				// Clear search state
+			this.ss.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";	// SOLR production url
+			this.ss.mode="input";																	// Current mode - can be input, simple, or advanced
+			this.ss.view="Card";																	// Dispay mode - can be List, Grid, or Card
+			this.ss.sort="Alpha";																	// Sort mode - can be Alpha, Date, or Auther
+			this.ss.type="All";																		// Current item types
+			this.ss.page=0;																			// Current page being shown
+			this.ss.pageSize=100;																	// Results per page	
+			this.ss.query={ 																		// Current query
+				text:"",																			// Search word 
+				places:[],																			// Places
+				subjects:[],																		// Subjects
+				terms:[],																			// Terms
+				assets:[],																			// Assets
+				dateStart:"", dateEnd:"",															// Beginning and ending dates
+				users:[],																			// Users
+				collections:[],																		// Collections
+				};																
+			}
+		}
+
 
 	AddFrame()																					// ADD DIV FRAMEWORK
 	{
@@ -85,7 +89,7 @@ class SearchUI  {
 				<div id='sui-clear' class='sui-search3'>&#xe610</div>
 				</div>
 				<div id='sui-searchgo' class='sui-search4'>&#xe623</div>
-				<img id='sui-mode' class='sui-search5' src='img/advicon.png' title='Advanced search'>
+				<div id='sui-mode' class='sui-search5' title='Advanced search'>&#xe669</div>
 			</div>
 			<div id='sui-header' class='sui-header'>
 				<div id='sui-headLeft' class='sui-headLeft'></div>
@@ -94,31 +98,31 @@ class SearchUI  {
 			div id='sui-left' class='sui-left'>
 				<div id='sui-results' class='sui-results scrollbar'></div>
 				<div id='sui-footer' class='sui-footer'></div>
-				<div id='sui-right' class='sui-right'></div>
+				<div id='sui-adv' class='sui-adv'></div>
 			</div>`;
 		$("body").append(str.replace(/\t|\n|\r/g,""));												// Remove formatting and add framework to body
 
 		$("#sui-clear").on("mouseover",function() { $(this).html("&#xe60d"); });					// Highlight						
 		$("#sui-clear").on("mouseout", function() { $(this).html("&#xe610"); });					// Normal						
 		$("#sui-clear").on("click",()=> { 															// ON ERASE
-			$("#sui-search").val("");	this.curQuery.text=""; 										// Clear input and query												
+			$("#sui-search").val("");	this.ss.query.text=""; 										// Clear input and query												
 			this.Query(); 																			// Load and redraw
 			});					
 		$("#sui-search").on("change", ()=> { 														// ON SEARCH CHANGE
-			this.curQuery.text=$("#sui-search").val(); 												// Get query
-			if (this.curMode == "input") this.curMode="simple";										// Toggle simple mode
-			this.curPage=0;																			// Start at beginning
+			this.ss.query.text=$("#sui-search").val(); 												// Get query
+			if (this.ss.mode == "input") this.ss.mode="simple";										// Toggle simple mode
+			this.ss.page=0;																			// Start at beginning
 			this.Query(); 																			// Load and redraw
 			});	
 		$("#sui-searchgo").on("click", ()=> { 														// ON SEARCH GO
-			this.curQuery.text=$("#sui-search").val(); 												// Get query
-			if (this.curMode == "input") this.curMode="simple";										// Toggle simple mode
-			this.curPage=0;																			// Start at beginning
+			this.ss.query.text=$("#sui-search").val(); 												// Get query
+			if (this.ss.mode == "input") this.ss.mode="simple";										// Toggle simple mode
+			this.ss.page=0;																			// Start at beginning
 			this.Query(); 																			// Load and redraw
 			});	
 		$("#sui-mode").on("click",()=> { 															// ON CHANGE MODE
-			if (this.curMode == "advanced") this.curMode="simple";									// Go to simple mode
-			else							this.curMode="advanced";								// Go to advanced mode
+			if (this.ss.mode == "advanced") this.ss.mode="simple";									// Go to simple mode
+			else							this.ss.mode="advanced";								// Go to advanced mode
 			this.Draw(); 																			// Redraw
 			});	
 	}
@@ -127,7 +131,7 @@ class SearchUI  {
 	{
 		$("#sui-main").css({ height:this.hgt+"px", width:this.wid+"px" });							// Position main area
 		$("#sui-typeList").remove();																// Remove type list
-		if (mode) this.curMode=mode;																// If mode spec'd, use it
+		if (mode) this.ss.mode=mode;																// If mode spec'd, use it
 		this.DrawResults();																			// Draw results page if active
 		this.DrawSearchUI();																		// Draw search UI if active
 	}
@@ -135,12 +139,12 @@ class SearchUI  {
 	Query()																						// QUERY AND UPDATE RESULTS
 	{
 		this.LoadingIcon(true,64);																	// Show loading icon
-		var s=this.curPage*this.pageSize;															// Starting item number
+		var s=this.ss.page*this.ss.pageSize;														// Starting item number
 		var asset="*";																				// Assume all assets
-		if (this.curType != "All")																	// If not all
-			asset="asset_type%3A%22"+this.curType.toLowerCase()+"%22";								// Set asset type						
+		if (this.ss.type != "All")																	// If not all
+			asset="asset_type%3A%22"+this.ss.type.toLowerCase()+"%22";								// Set asset type						
 		var search=this.FormQuery();																// Form SOLR search from query object
-		var url=this.solrUrl+"/?"+"q="+asset+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+s+"&rows="+this.pageSize;
+		var url=this.ss.solrUrl+"/?"+"q="+asset+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+s+"&rows="+this.ss.pageSize;
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done((data)=> {
 			var i,o;
 			this.curResults=data.response.docs;														// Save current results
@@ -162,8 +166,8 @@ class SearchUI  {
 	FormQuery()																					// FORM SOLR QUERY FROM SEARCH OBJECT
 	{
 		var search="";
-		if (this.curQuery.text) {																	// If a filter spec'd
-			var str="%22*"+this.curQuery.text.toLowerCase()+"*%22";									// Search term
+		if (this.ss.query.text) {																	// If a filter spec'd
+			var str="%22*"+this.ss.query.text.toLowerCase()+"*%22";									// Search term
 			search+=" AND (title%3A"+str;															// Look at title
 			search+=" OR caption%3A"+str;															// Or caption 
 			search+=" OR summary%3A"+str+")";														// Or summary
@@ -185,7 +189,7 @@ class SearchUI  {
 	GetAssetCounts(search) 																		// GET ASSET COUNTS
 	{
 		var i,val;
-		var url=this.solrUrl+"?"+"q=*"+search+"&wt=json&rows=0&json.facet={assetType:{limit:300,type:%22terms%22,field:%22asset_type%22}}";
+		var url=this.ss.solrUrl+"?"+"q=*"+search+"&wt=json&rows=0&json.facet={assetType:{limit:300,type:%22terms%22,field:%22asset_type%22}}";
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done((data)=> {				// Get asset counts
 			for (i in this.assets) this.assets[i].n=0;												// Zero them out
 			if (!data || !data.facets || !data.facets.assetType || !data.facets.assetType.buckets)	// If no buckets
@@ -204,26 +208,26 @@ class SearchUI  {
 	DrawResults()																				// DRAW RESULTS SECTION
 	{
 		$("#sui-results").scrollTop(0);																// Scroll to top
-		this.numItems=this.assets[this.curType].n;													// Set number of items
-		if (this.curMode == "input") {																// Just the search box
+		this.numItems=this.assets[this.ss.type].n;													// Set number of items
+		if (this.ss.mode == "input") {																// Just the search box
 			$("#sui-header").css({ display:"none"});												// Show header
 			$("#sui-left").css({ display:"none" });													// Hide results
-			$("#sui-right").css({ display:"none" });												// Hide search ui
+			$("#sui-adv").css({ display:"none" });												// Hide search ui
 			$("#sui-headLeft").css({ display:"none" });												// Hide left header
 			return;																					// Quit
 			}
-		else if (this.curMode == "simple") {														// Simple search
+		else if (this.ss.mode == "simple") {														// Simple search
 			$("#sui-left").css({ width:"100%" });													// Size and show results area
-			$("#sui-right").css({ display:"none"});													// Hide search ui
+			$("#sui-adv").css({ display:"none"});													// Hide search ui
 			$("#sui-left").slideDown();																// Slide down
 			}
-		else if (this.curMode == "advanced") {														// Advanced search
-			$("#sui-left").css({ width:this.wid-$("#sui-right").width()-4+"px",display:"inline-block"});	// Size and show results area
-			$("#sui-right").css({ display:"inline-block" });										// Show search ui
+		else if (this.ss.mode == "advanced") {														// Advanced search
+			$("#sui-left").css({ width:this.wid-$("#sui-adv").width()-4+"px",display:"inline-block"});	// Size and show results area
+			$("#sui-adv").css({ display:"inline-block" });										// Show search ui
 			}
 		$("#sui-headLeft").css({ display:"inline-block" });											// Show left header
-		$("#sui-mode").prop({"title": this.curMode == "advanced" ? "Regular search" : "Advanced search" } );	// Set tooltip
-		$("#sui-mode").prop({"src": this.curMode == "advanced" ? "img/simicon.png" : "img/advicon.png" } );	// Set mode icon	
+		$("#sui-mode").prop({"title": this.ss.mode == "advanced" ? "Regular search" : "Advanced search" } );	// Set tooltip
+		$("#sui-mode").html(this.ss.mode == "advanced" ? "&#xe66a" : "&#xe669" );					// Set mode icon	
 		$("#sui-header").css({display:"inline-block"} );											// Show header
 		$("#sui-typeList").remove();																// Remove type list
 		this.DrawHeader();																			// Draw header
@@ -233,9 +237,9 @@ class SearchUI  {
 
 	DrawHeader()																				// DRAW RESULTS HEADER
 	{
-		var s=this.curPage*this.pageSize+1;															// Starting item number
-		var e=Math.min(s+this.pageSize,this.numItems);												// Ending number
-		var n=this.assets[this.curType].n;															// Get number of items in current asset
+		var s=this.ss.page*this.ss.pageSize+1;														// Starting item number
+		var e=Math.min(s+this.ss.pageSize,this.numItems);											// Ending number
+		var n=this.assets[this.ss.type].n;															// Get number of items in current asset
 		if (n >= 1000)	n=Math.floor(n/1000)+"K";													// Shorten if need be
 		var str=`
 			<span id='sui-resClose' class='sui-resClose'>&#xe60f</span>
@@ -245,8 +249,8 @@ class SearchUI  {
 		str=`
 			SHOW&nbsp; 
 			<div id='sui-type' class='sui-type' title='Choose asset type'>
-			<div id='sui-typeIcon' class='sui-typeIcon' style='background-color:${this.assets[this.curType].c}'>
-			${this.assets[this.curType].g}</div>${this.curType} (${n}) 
+			<div id='sui-typeIcon' class='sui-typeIcon' style='background-color:${this.assets[this.ss.type].c}'>
+			${this.assets[this.ss.type].g}</div>${this.ss.type} (${n}) 
 			<div id='sui-typeSet' class='sui-typeSet'>&#xe609</div>
 			</div>
 			`;
@@ -258,12 +262,12 @@ class SearchUI  {
 			for (var k in this.assets) {															// For each asset type														
 				n=this.assets[k].n;																	// Get number of items
 				if (n > 1000)	n=Math.floor(n/1000)+"K";											// Shorten
-				str+="<div id='sui-tl-"+k+"'><span style='font-size:18px; line-height: 24px; vertical-align:-3px; color:"+this.assets[k].c+"'>"+this.assets[k].g+" </span> "+k+" ("+n+")</div>";
+				str+="<div class='sui-typeItem' id='sui-tl-"+k+"'><span style='font-size:18px; line-height: 24px; vertical-align:-3px; color:"+this.assets[k].c+"'>"+this.assets[k].g+" </span> "+k+" ("+n+")</div>";
 				}
 			$("#sui-main").append(str);																// Add to main div
 			
 			$("[id^=sui-tl-]").on("click", (e)=> {													// ON CLICK ON ASSET 
-				this.curType=e.currentTarget.id.substring(7);										// Get asset name		
+				this.ss.type=e.currentTarget.id.substring(7);										// Get asset name		
 				$("#sui-typeList").remove();														// Remove type list
 				this.Query(); 																		// Get new results
 				});							
@@ -272,7 +276,7 @@ class SearchUI  {
 
 	DrawFooter()																				// DRAW RESULTS FOOTER
 	{
-		var lastPage=Math.floor(this.numItems/this.pageSize);										// Calc last page
+		var lastPage=Math.floor(this.numItems/this.ss.pageSize);										// Calc last page
 		var str=`
 		<div style='float:left;font-size:18px'>
 			<div id='sui-viewModeList' class='sui-resDisplay' title='List view'>&#xe61f</div>
@@ -295,31 +299,31 @@ class SearchUI  {
 			</div>`;
 		$("#sui-footer").html(str.replace(/\t|\n|\r/g,""));											// Remove format and add to div
 		
-		$("#sui-typePage").val(this.curPage+1);														// Set page number
+		$("#sui-typePage").val(this.ss.page+1);														// Set page number
 		$("[id^=sui-viewMode]").css("color","#ddd");												// Reset modes
-		$("#sui-viewMode"+this.viewMode).css("color","#fff");										// Highlight current mode
+		$("#sui-viewMode"+this.ss.view).css("color","#fff");										// Highlight current mode
 		$("[id^=sui-viewMode]").on("click",(e)=> { 													// ON MODE CLICK
-			this.viewMode=e.currentTarget.id.substring(12);											// Get/set mode name		
+			this.ss.view=e.currentTarget.id.substring(12);											// Get/set mode name		
 			this.DrawResults(); 																	// Redraw
 			});		
 
 		$("[id^=sui-viewSort]").css("color","#ddd");												// Reset modes
-		$("#sui-viewSort"+this.viewSort).css("color","#fff");										// Highlight current mode
+		$("#sui-viewSort"+this.ss.sort).css("color","#fff");										// Highlight current mode
 		$("[id^=sui-viewSort]").on("click",(e)=> { 													// ON SORT CLICK
-			this.viewSort=e.currentTarget.id.substring(12);											// Get/set mode name		
+			this.ss.sort=e.currentTarget.id.substring(12);											// Get/set mode name		
 			this.DrawResults(); 																	// Redraw
 			});		
 			
 		$("[id^=sui-page]").css("color","#fff");													// Reset pagers
-		if (this.curPage == 0) 		  	  { $("#sui-page1").css("color","#ddd"); $("#sui-pageP").css("color","#ddd"); }	// No back
-		if (this.curPage == lastPage)     { $("#sui-pageN").css("color","#ddd"); $("#sui-pageL").css("color","#ddd"); }	// No forward
-		$("#sui-page1").on("click",()=> { this.curPage=0; this.Query(); });									// ON FIRST CLICK
-		$("#sui-pageP").on("click", ()=> { this.curPage=Math.max(this.curPage-1,0);  this.Query(); });		// ON PREVIOUS CLICK
-		$("#sui-pageN").on("click", ()=> { this.curPage=Math.min(this.curPage+1,lastPage); this.Query(); });// ON NEXT CLICK
-		$("#sui-pageL").on("click", ()=> { this.curPage=lastPage; this.Query(); });					// ON LAST CLICK
+		if (this.ss.page == 0) 		  	  { $("#sui-page1").css("color","#ddd"); $("#sui-pageP").css("color","#ddd"); }	// No back
+		if (this.ss.page == lastPage)     { $("#sui-pageN").css("color","#ddd"); $("#sui-pageL").css("color","#ddd"); }	// No forward
+		$("#sui-page1").on("click",()=> { this.ss.page=0; this.Query(); });									// ON FIRST CLICK
+		$("#sui-pageP").on("click", ()=> { this.ss.page=Math.max(this.ss.page-1,0);  this.Query(); });		// ON PREVIOUS CLICK
+		$("#sui-pageN").on("click", ()=> { this.ss.page=Math.min(this.ss.page+1,lastPage); this.Query(); });// ON NEXT CLICK
+		$("#sui-pageL").on("click", ()=> { this.ss.page=lastPage; this.Query(); });					// ON LAST CLICK
 		$("#sui-typePage").on("change", ()=> {														// ON TYPE PAGE
 			var p=$("#sui-typePage").val();															// Get value
-			if (!isNaN(p))   this.curPage=Math.max(Math.min(p-1,lastPage),0);						// If a number, cap 0-last	
+			if (!isNaN(p))   this.ss.page=Math.max(Math.min(p-1,lastPage),0);						// If a number, cap 0-last	
 			this.Query(); 																			// Get new results
 		});							
 	}
@@ -327,10 +331,10 @@ class SearchUI  {
 	DrawItems()																					// DRAW RESULT ITEMS
 	{
 		var i,str="";
-		$("#sui-results").css({ "background-color":(this.viewMode == "List") ? "#fff" : "#ddd" }); 	// White b/g for list only
+		$("#sui-results").css({ "background-color":(this.ss.view == "List") ? "#fff" : "#ddd" }); 	// White b/g for list only
 		for (i=0;i<this.curResults.length;++i) {													// For each result
-			if (this.viewMode == "Card")		str+=this.DrawCardItem(i);							// Draw if shoing as cards
-			else if (this.viewMode == "Grid")	str+=this.DrawGridItem(i);							// Grid
+			if (this.ss.view == "Card")			str+=this.DrawCardItem(i);							// Draw if shoing as cards
+			else if (this.ss.view == "Grid")	str+=this.DrawGridItem(i);							// Grid
 			else								str+=this.DrawListItem(i);							// List
 			}	
 		if (!this.curResults.length)																// No results
@@ -510,55 +514,77 @@ class SearchUI  {
 	DrawSearchUI()																				// DRAW SEARCH UI SECTION
 	{
 		var str=`
-		<div class='sui-advTop'>Advanced search</div><br>
+		<div class='sui-advTop'>Advanced search
+			<div id='sui-advClose'style='float:right;font-size:12px;cursor:pointer' 
+				title='Hide' onclick='$("#sui-mode").trigger("click")'>
+				&#xe684&nbsp;&nbsp;&nbsp;
+				</div>
+			</div><br>
 		<div class='sui-advHeader' id='sui-advHeader-place'>&#xe62b&nbsp;&nbsp;LOCATION</div>
 		<div class='sui-advValue'  id='sui-advValue-place'></div>
+		<div class='sui-advEdit'   id='sui-advEdit-place'></div>
 		<div class='sui-advHeader' id='sui-advHeader-collection'>&#xe633&nbsp;&nbsp;COLLECTION</div>
 		<div class='sui-advValue'  id='sui-advValue-collection'></div>
 		<div class='sui-advEdit'   id='sui-advEdit-collection'></div>
 		<div class='sui-advHeader' id='sui-advHeader-language'>&#xe670&nbsp;&nbsp;LANGUAGE</div>
 		<div class='sui-advValue'  id='sui-advValue-language'></div>
+		<div class='sui-advEdit'   id='sui-advEdit-language'></div>
 		<div class='sui-advHeader' id='sui-advHeader-user'>&#xe600&nbsp;&nbsp;USER</div>
 		<div class='sui-advValue'  id='sui-advValue-user'></div>
+		<div class='sui-advEdit'   id='sui-advEdit-user'></div>
 		<div class='sui-advHeader' id='sui-advHeader-feature'>&#xe65d&nbsp;&nbsp;FEATURE TYPE</div>
 		<div class='sui-advValue'  id='sui-advValue-feature'></div>
+		<div class='sui-advEdit'   id='sui-advEdit-feature'></div>
 		<div class='sui-advHeader' id='sui-advHeader-subject'>&#xe634&nbsp;&nbsp;SUBJECT</div>
 		<div class='sui-advValue'  id='sui-advValue-subject'></div>
+		<div class='sui-advEdit'   id='sui-advEdit-subject'></div>
 		<div class='sui-advHeader' id='sui-advHeader-term'>&#xe635&nbsp;&nbsp;TERM</div>
 		<div class='sui-advValue'  id='sui-advValue-term'></div>
+		<div class='sui-advEdit'   id='sui-advEdit-term'></div>
 		<div class='sui-advHeader' id='sui-advHeader-text'>&#xe623&nbsp;&nbsp;SEARCH WORD OPTIONS</div>
 		<div class='sui-advValue'  id='sui-advValue-text'></div>
+		<div class='sui-advEdit'   id='sui-advEdit-text'></div>
 		<div class='sui-advHeader' id='sui-advHeader-relate'>&#xe638&nbsp;&nbsp;RELATIONSHIPS</div>
 		<div class='sui-advValue'  id='sui-advValue-relate'></div>
+		<div class='sui-advEdit'   id='sui-advEdit-relate'></div>
 		`;
-		$("#sui-right").html(str.replace(/\t|\n|\r/g,""));											// Remove format and add to div
+		$("#sui-adv").html(str.replace(/\t|\n|\r/g,""));											// Remove format and add to div
 	
 		$("#sui-advValue-collection").html("<div class='sui-advValueRem'>&#xe60f</div><i>Tibetan and Himalayan Library</i>");
-		$("#sui-advHeader-collection").on("click",()=> {
-			if ($("#sui-advEdit-collection").html().length) {
-				$("#sui-advEdit-collection").slideUp();
-				$("#sui-advEdit-collection").html("");
-				return;
+		
+		var curFacet;
+
+		$("[id^=sui-advHeader-]").on("click",(e)=> {
+			var n="6",tot="121";
+			var id=e.currentTarget.id.substring(14);												// Get facet name		
+			curFacet=id;
+			if ($("#sui-advEdit-"+id).html().length) {												// If open
+				$("#sui-advEdit-"+id).slideUp(400,function() { $(this).html(""); });				// Close it and erase contents
+				return;																			
 				}
+			n=Math.min(tot,n);																		// Cap at max
+			if (tot > 300) tot="300+";																// Too many
 			str=`
-				<span  style='vertical-align:-2px'>&#xe623&nbsp;&nbsp</span>
-				<input style='width:90px;border:1px solid #999;border-radius:12px;font-size:12px;padding-left:6px' placeholder='Search this list'>
-				<span  style='float:right;cursor:pointer'>&#xe645&nbsp;<i>see all...</i></span>
-				<hr>
-				<div class='sui-advEditLine'>&#xe633&nbsp;Tibetan and Himalayan Library</div>
-				<div class='sui-advEditLine'>&#xe633&nbsp;Oral Cultures of Bhutan</div>
-				<div class='sui-advEditLine'>&#xe633&nbsp;Larung Gar Audio Collection</div>
-				<div class='sui-advEditLine'>&#xe633&nbsp;Language Tree</div>
-				<div class='sui-advEditLine'>&#xe633&nbsp;Royal University of Bhutam</div>
-				<div class='sui-advEditLine'>&#xe633&nbsp;Tom Huber Collection</div>
+				<input style='width:90px;border:1px solid #999;border-radius:12px;font-size:11px;padding-left:6px' placeholder='Search this list'>
+				<div class='sui-advEditSort' id='sui-advEditSort' title='Sort'>&#xe652&nbsp;</div>
+				<div class='sui-advEditNums'>Showing: ${n}/${tot}</div>
+				<div class='sui-advEditList'>
+					<div class='sui-advEditLine'>&#xe633&nbsp;Tibetan and Himalayan Library</div>
+					<div class='sui-advEditLine'>&#xe633&nbsp;Oral Cultures of Bhutan</div>
+					<div class='sui-advEditLine'>&#xe633&nbsp;Larung Gar Audio Collection</div>
+					<div class='sui-advEditLine'>&#xe633&nbsp;Language Tree</div>
+					<div class='sui-advEditLine'>&#xe633&nbsp;Royal University of Bhutam</div>
+					<div class='sui-advEditLine'>&#xe633&nbsp;Tom Huber Collection</div>
+				</div>
 				`;
-			$("#sui-advEdit-collection").html(str.replace(/\t|\n|\r/g,""));
-			$("#sui-advEdit-collection").slideDown();
-			
+			$("#sui-advEdit-"+id).html(str.replace(/\t|\n|\r/g,""));
+			$("#sui-advEdit-"+id).slideDown();
+			});
+		$("[id^=sui-advEditLine-]").on("click",(e)=> {
+//			var id=e.currentTarget.id.substring(12);												// Get facet name		
+			$("#sui-advEdit-"+curFacet).slideUp(400,function() { $(this).html(""); });				// Close it and erase contents
 		});
-
-
-
+	
 	}
 
 	LoadingIcon(mode, size)																		// SHOW/HIDE LOADING ICON		
