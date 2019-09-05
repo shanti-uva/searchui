@@ -89,7 +89,7 @@
 .sui-gridInfo { 	display:inline-block; cursor:pointer; color:#fff; border-radius:16px; margin-left:-24px; vertical-align:10px;
 					padding-top:1px; text-align:center; margin-right:17px; text-shadow:1px 1px 2px #666;
 					}
-.sui-gridGlyph{ 	position:absolute; font-size:36px; pointer-events:none; width:150px; height:100px; margin-top:-70px; text-align:center;
+.sui-gridGlyph{ 	position:absolute; font-size:36px; pointer-events:none; width:150px; height:100px; margin-top:-80px; text-align:center;
 					}					
 .sui-gridPopup {	position:absolute; width:300px; padding:16px; left:calc(50% - 250px); top:calc(50% - 50px);
 					border-radius:8px; background-color:#fff; border:1px solid #ccc; display:none; font-size:12px;
@@ -121,7 +121,7 @@
 					}
 
 .sui-advHeader { 	border-bottom:1px solid #a4baec; padding-bottom:4px; cursor:pointer; width:calc(100% - 32px);
-					} .sui-advHeader:hover { color:#aaa;	
+					} .sui-advHeader:hover { color:#668eec;	
 					}
 .sui-advValue { 	padding: 8px 0 8px 26px; font-size:10px;
 					}						
@@ -133,18 +133,20 @@
 					}
 .sui-advEditNums { 	float:right; font-size:9px; padding-top:5px;
 					}
+.sui-advEditBool { 	display:inline-block; cursor:pointer; }   .sui-advEditBool:hover	{ color: #668eec;
+					}
 .sui-advEditList {	overflow-x:hidden; max-height:110px; border-top:2px solid #a4baec; margin-top:6px; padding-top:8px;
 					}
 .sui-advEditLine { 	cursor:pointer; padding:2px; border-radius:5px;}	.sui-advEditLine:hover { background-color: #dee7f1
 					}					
-.sui-advValueRem { 	display:inline-block; cursor:pointer; margin-right: 4px;
+.sui-advValueRem { 	display:inline-block; cursor:pointer; margin-right: 4px; } .sui-advValueRem:hover { color: #668eec;
 					}
 
 @font-face {		font-family: 'shanticon'; src: url('shanticon.ttf?ueun15') format('truetype'); font-weight: normal; font-style: normal;
 					}
 
 ::-webkit-scrollbar { width: 12px }
-::-webkit-scrollbar-track { background:#eee }
+::-webkit-scrollbar-track {border-left:1px solid #aaa }
 ::-webkit-scrollbar-thumb { border-radius:2px ;background:#aaa }
 ::-webkit-scrollbar-thumb:hover { background: #888 }
 ::-webkit-input-placeholder { color: #bbb }	::placeholder { color: #bbb }

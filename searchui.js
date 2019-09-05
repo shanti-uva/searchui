@@ -515,52 +515,48 @@ class SearchUI  {
 		return str+"</div>";																		// Return items markup
 	}
 
+//		https://ss251856-us-east-1-aws.measuredsearch.com/solr/kmassets_dev/select?q=asset_type%3A(images%20audio-video)&wt=json&rows=0&json.facet={collection:{limit:300,type:%22terms%22,field:%22collection_title%22,facet:{subtype:{field:%22collection_nid%22,type:%22terms%22}}}}
+
 	DrawSearchUI()																				// DRAW SEARCH UI SECTION
 	{
-		https://ss251856-us-east-1-aws.measuredsearch.com/solr/kmassets_dev/select?q=asset_type%3A(images%20audio-video)&wt=json&rows=0&json.facet={collection:{limit:300,type:%22terms%22,field:%22collection_title%22,facet:{subtype:{field:%22collection_nid%22,type:%22terms%22}}}}
-		var str=`
-		<div class='sui-advTop'>Advanced search
-			<div id='sui-advClose'style='float:right;font-size:12px;cursor:pointer' 
-				title='Hide' onclick='$("#sui-mode").trigger("click")'>
-				&#xe684&nbsp;&nbsp;&nbsp;
-				</div>
-			</div><br>
-		<div class='sui-advHeader' id='sui-advHeader-place'>&#xe62b&nbsp;&nbsp;PLACE</div>
-		<div class='sui-advValue'  id='sui-advValue-place'></div>
-		<div class='sui-advEdit'   id='sui-advEdit-place'></div>
-		<div class='sui-advHeader' id='sui-advHeader-collection'>&#xe633&nbsp;&nbsp;COLLECTION</div>
-		<div class='sui-advValue'  id='sui-advValue-collection'></div>
-		<div class='sui-advEdit'   id='sui-advEdit-collection'></div>
-		<div class='sui-advHeader' id='sui-advHeader-language'>&#xe670&nbsp;&nbsp;LANGUAGE</div>
-		<div class='sui-advValue'  id='sui-advValue-language'></div>
-		<div class='sui-advEdit'   id='sui-advEdit-language'></div>
-		<div class='sui-advHeader' id='sui-advHeader-user'>&#xe600&nbsp;&nbsp;USER</div>
-		<div class='sui-advValue'  id='sui-advValue-user'></div>
-		<div class='sui-advEdit'   id='sui-advEdit-user'></div>
-		<div class='sui-advHeader' id='sui-advHeader-feature'>&#xe65d&nbsp;&nbsp;FEATURE TYPE</div>
-		<div class='sui-advValue'  id='sui-advValue-feature'></div>
-		<div class='sui-advEdit'   id='sui-advEdit-feature'></div>
-		<div class='sui-advHeader' id='sui-advHeader-subject'>&#xe634&nbsp;&nbsp;SUBJECT</div>
-		<div class='sui-advValue'  id='sui-advValue-subject'></div>
-		<div class='sui-advEdit'   id='sui-advEdit-subject'></div>
-		<div class='sui-advHeader' id='sui-advHeader-term'>&#xe635&nbsp;&nbsp;TERM</div>
-		<div class='sui-advValue'  id='sui-advValue-term'></div>
-		<div class='sui-advEdit'   id='sui-advEdit-term'></div>
-		<div class='sui-advHeader' id='sui-advHeader-text'>&#xe623&nbsp;&nbsp;SEARCH WORD OPTIONS</div>
+		var i;
+		var facets=["place","collection","language","user","feature","subject","term","relationship"];
+		var icons=["&#xe62b","&#xe633","&#xe670","&#xe600","&#xe634","&#xe634","&#xe635","&#xe638"]
+		var str=`<div class='sui-advTop'>Advanced search<div id='sui-advClose'style='float:right;font-size:12px;cursor:pointer' 
+			title='Hide' onclick='$("#sui-mode").trigger("click")'>
+			&#xe684&nbsp;&nbsp;&nbsp;</div></div><br>`;
+		for (i=0;i<facets.length;++i) {
+			str+=`<div class='sui-advHeader' id='sui-advHeader-${facets[i]}'>
+			${icons[i]}&nbsp;&nbsp;${facets[i].toUpperCase()}S</div>
+			<div class='sui-advValue'  id='sui-advValue-${facets[i]}'></div>
+			<div class='sui-advEdit'   id='sui-advEdit-${facets[i]}'></div>	`;
+			}
+		str+=`<div class='sui-advHeader' id='sui-advHeader-text'>&#xe623&nbsp;&nbsp;SEARCH WORD OPTIONS</div>
 		<div class='sui-advValue'  id='sui-advValue-text'></div>
-		<div class='sui-advEdit'   id='sui-advEdit-text'></div>
-		<div class='sui-advHeader' id='sui-advHeader-relationship'>&#xe638&nbsp;&nbsp;RELATIONSHIPS</div>
-		<div class='sui-advValue'  id='sui-advValue-relationship'></div>
-		<div class='sui-advEdit'   id='sui-advEdit-relationship'></div>
-		`;
+		<div class='sui-advEdit'   id='sui-advEdit-text'></div>`;
 		$("#sui-adv").html(str.replace(/\t|\n|\r/g,""));											// Remove format and add to div
 	
-		$("#sui-advValue-collection").html("<div class='sui-advValueRem'>&#xe60f</div><i>Tibetan and Himalayan Library</i>");
+		$("#sui-advValue-collection").html(`
+			<div class='sui-advValueRem' id='sui-advKill-collection-0'>&#xe60f</div>
+			<div class='sui-advEditBool' id='sui-advBool-collection-0' title='Change boolean method'>AND</div>
+			<i> Tibetan and Himalayan Library</i>
+			`);
 		
+		$("[id^=sui-advBool-]").on("click",(e)=> {
+			var b=$("#"+e.currentTarget.id).html();													// Get current boolean state
+			if (b == "AND")		b="OR";																// Toggle through options
+			else if (b == "OR") b="NOT";
+			else 				b="AND";
+			$("#"+e.currentTarget.id).html(b);														// Set new value
+		});
+			
+		$("[id^=sui-advKill-]").on("click",(e)=> {
+			var v=$("#"+e.currentTarget.id).html();													// Get ids
+		});
+
 		var curFacet;
 
 		$("[id^=sui-advHeader-]").on("click",(e)=> {
-			
 			var tot=121;
 			if (tot > 300) tot="300+";																// Too many
 			var id=e.currentTarget.id.substring(14);												// Get facet name		
