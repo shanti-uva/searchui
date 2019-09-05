@@ -477,8 +477,12 @@ class SearchUI  {
 		var o=this.curResults[num];																	// Point at item
 		str+="<img src='"+o.url_thumb+"' class='sui-gridPic' id='sui-itemPic-"+num+"'>";			// Add pic
 		str+="<div id='sui-gridInfo-"+num+"' class='sui-gridInfo'>&#xe67f</div>";					// Add info button
-		if (o.url_thumb.match(/img\/gradient/))														// If a generic
-			 str+=`<div class='sui-gridGlyph' style='color:${this.assets[o.asset_type].c}'>${this.assets[o.asset_type].g}</div>`;
+		if (o.url_thumb.match(/img\/gradient/))	{													// If a generic
+			 str+=`<div class='sui-gridGlyph' style='color:${this.assets[o.asset_type].c}'>
+			 ${this.assets[o.asset_type].g}
+			 <p style='font-size:14px;margin-top:0'>${o.asset_type.toUpperCase()}</p>
+			 </div>`;
+			  }
 		return str+"</div>";																		// Return grid markup
 	}
 
@@ -513,6 +517,7 @@ class SearchUI  {
 
 	DrawSearchUI()																				// DRAW SEARCH UI SECTION
 	{
+		https://ss251856-us-east-1-aws.measuredsearch.com/solr/kmassets_dev/select?q=asset_type%3A(images%20audio-video)&wt=json&rows=0&json.facet={collection:{limit:300,type:%22terms%22,field:%22collection_title%22,facet:{subtype:{field:%22collection_nid%22,type:%22terms%22}}}}
 		var str=`
 		<div class='sui-advTop'>Advanced search
 			<div id='sui-advClose'style='float:right;font-size:12px;cursor:pointer' 
@@ -520,7 +525,7 @@ class SearchUI  {
 				&#xe684&nbsp;&nbsp;&nbsp;
 				</div>
 			</div><br>
-		<div class='sui-advHeader' id='sui-advHeader-place'>&#xe62b&nbsp;&nbsp;LOCATION</div>
+		<div class='sui-advHeader' id='sui-advHeader-place'>&#xe62b&nbsp;&nbsp;PLACE</div>
 		<div class='sui-advValue'  id='sui-advValue-place'></div>
 		<div class='sui-advEdit'   id='sui-advEdit-place'></div>
 		<div class='sui-advHeader' id='sui-advHeader-collection'>&#xe633&nbsp;&nbsp;COLLECTION</div>
@@ -544,9 +549,9 @@ class SearchUI  {
 		<div class='sui-advHeader' id='sui-advHeader-text'>&#xe623&nbsp;&nbsp;SEARCH WORD OPTIONS</div>
 		<div class='sui-advValue'  id='sui-advValue-text'></div>
 		<div class='sui-advEdit'   id='sui-advEdit-text'></div>
-		<div class='sui-advHeader' id='sui-advHeader-relate'>&#xe638&nbsp;&nbsp;RELATIONSHIPS</div>
-		<div class='sui-advValue'  id='sui-advValue-relate'></div>
-		<div class='sui-advEdit'   id='sui-advEdit-relate'></div>
+		<div class='sui-advHeader' id='sui-advHeader-relationship'>&#xe638&nbsp;&nbsp;RELATIONSHIPS</div>
+		<div class='sui-advValue'  id='sui-advValue-relationship'></div>
+		<div class='sui-advEdit'   id='sui-advEdit-relationship'></div>
 		`;
 		$("#sui-adv").html(str.replace(/\t|\n|\r/g,""));											// Remove format and add to div
 	
@@ -555,26 +560,27 @@ class SearchUI  {
 		var curFacet;
 
 		$("[id^=sui-advHeader-]").on("click",(e)=> {
-			var n="6",tot="121";
+			
+			var tot=121;
+			if (tot > 300) tot="300+";																// Too many
 			var id=e.currentTarget.id.substring(14);												// Get facet name		
 			curFacet=id;
 			if ($("#sui-advEdit-"+id).html().length) {												// If open
 				$("#sui-advEdit-"+id).slideUp(400,function() { $(this).html(""); });				// Close it and erase contents
 				return;																			
 				}
-			n=Math.min(tot,n);																		// Cap at max
-			if (tot > 300) tot="300+";																// Too many
-			str=`
+				str=`
 				<input style='width:90px;border:1px solid #999;border-radius:12px;font-size:11px;padding-left:6px' placeholder='Search this list'>
-				<div class='sui-advEditSort' id='sui-advEditSort' title='Sort'>&#xe652&nbsp;</div>
-				<div class='sui-advEditNums'>Showing: ${n}/${tot}</div>
+				<div class='sui-advEditBut' id='sui-advEditSort' title='Sort'>&#xe652</div>
+				<div class='sui-advEditBut' id='sui-advMap' title='Map or List view'>&#xe638</div>
+				<div class='sui-advEditNums'>${tot+" "+id+"s"}</div>
 				<div class='sui-advEditList'>
-					<div class='sui-advEditLine'>&#xe633&nbsp;Tibetan and Himalayan Library</div>
-					<div class='sui-advEditLine'>&#xe633&nbsp;Oral Cultures of Bhutan</div>
-					<div class='sui-advEditLine'>&#xe633&nbsp;Larung Gar Audio Collection</div>
-					<div class='sui-advEditLine'>&#xe633&nbsp;Language Tree</div>
-					<div class='sui-advEditLine'>&#xe633&nbsp;Royal University of Bhutam</div>
-					<div class='sui-advEditLine'>&#xe633&nbsp;Tom Huber Collection</div>
+					<div class='sui-advEditLine'>&#xe67c&nbsp;Tibetan and Himalayan Library</div>
+					<div class='sui-advEditLine'>&#xe67c&nbsp;Oral Cultures of Bhutan</div>
+					<div class='sui-advEditLine'>&#xe67c&nbsp;Larung Gar Audio Collection</div>
+					<div class='sui-advEditLine'>&#xe67c&nbsp;Language Tree</div>
+					<div class='sui-advEditLine'>&#xe67c&nbsp;Royal University of Bhutam</div>
+					<div class='sui-advEditLine'>&#xe67c&nbsp;Tom Huber Collection</div>
 				</div>
 				`;
 			$("#sui-advEdit-"+id).html(str.replace(/\t|\n|\r/g,""));
