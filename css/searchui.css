@@ -1,7 +1,8 @@
+
 .sui-main {			position: absolute; left:0; top:0; font-family:Verdana,Geneva,sans-serif,shanticon;
 					font-size:14px; box-sizing:border-box; padding:0; margin:0; 
 					}
-.sui-top {			padding-left:calc(100% - 480px); height:36px; width:480px; user-select:none; padding-top:6px;
+.sui-top {			padding-left:calc(100% - 495px); height:36px; width:480px; user-select:none; padding-top:6px;
 					}
 .sui-search1 {		float:left; background-color:#fafafa; font-size:16px; color: #ccc; height:22px; width:236px; padding: 6px 8px 0 8px;
 					border-radius:16px 0 0 16px; border-left: 1px solid #999; border-top:1px solid #999; border-bottom:1px solid #999;
@@ -16,14 +17,16 @@
 					}
 .sui-search5 {		display:inline-block; font-size:16px; cursor:pointer; color:#999; padding:7px 0 0 12px;  } .sui-search5:hover{ opacity:.66; 
 					}
+
 .sui-header {		height:52px; width:100%; user-select:none; background-color: #888; color:#fff; 
 					}
-.sui-resClose {		cursor:pointer; margin: 0 18px 0 10px;	} .sui-resclose:hover{ opacity:.66;
-					}
-.sui-headLeft {		width:calc(100% - 400px); user-select:none; height:100%; float:left; padding:12px; font-size: 20px;
+					.sui-headLeft {		width:calc(100% - 450px); user-select:none; height:100%; float:left; padding:12px; font-size: 20px;
 					}				
 .sui-headRight { 	float:right; user-select:none; height:100%; padding:0; margin:10px 10px 0 0;
 					}	
+
+.sui-resClose {		cursor:pointer; margin: 0 18px 0 10px;	} .sui-resclose:hover{ opacity:.66;
+					}
 .sui-type {			background-color:#fff; font-size:12px; color:#666; border-radius:8px; display:inline-block; width:220px; 
 					}	
 .sui-typeIcon {		display:inline-block; border-radius:8px 0 0 8px; width:25px; height:20px; padding:6px; vertical-align: -3px;
@@ -117,13 +120,15 @@
 .sui-adv { 			position:absolute; left:100%; top:0; height:calc(100% - 32px); width:314px; background-color:#eee; display:none;
 					border-left:1px solid #aaa; border-right:2px solid #aaa; padding:16px;color:#333;
 					}
-.sui-advTop { 		text-align:center;  color:#fff; background-color:#a4baec; padding: 8px; margin:-16px 0  4px -16px ; 
+.sui-advTop { 		text-align:center;  color:#fff; background-color:#a4baec; padding: 8px; margin:-16px 0 0 -16px; width:calc(100% + 16px);
 					}
 
 .sui-advHeader { 	border-bottom:1px solid #a4baec; padding-bottom:4px; cursor:pointer; width:calc(100% - 32px);
 					} .sui-advHeader:hover { color:#668eec;	
 					}
-.sui-advValue { 	padding: 8px 0 8px 26px; font-size:10px;
+.sui-advTermRem { 	display:inline-block; cursor:pointer; margin-right: 4px; } .sui-advValueRem:hover { color: #668eec;
+					}
+.sui-advTerm { 		padding:6px 0 6px 6px; font-size:10px; line-height:15px;
 					}						
 .sui-advEdit {		border:1px solid #ccc; margin-bottom:8px; width:calc(100% - 48px); background-color:#fff;
 					border-radius:5px; display:none; padding:8px; font-size:11px; color:#666;
@@ -139,14 +144,12 @@
 					}
 .sui-advEditLine { 	cursor:pointer; padding:2px; border-radius:5px;}	.sui-advEditLine:hover { background-color: #dee7f1
 					}					
-.sui-advValueRem { 	display:inline-block; cursor:pointer; margin-right: 4px; } .sui-advValueRem:hover { color: #668eec;
-					}
 
 @font-face {		font-family: 'shanticon'; src: url('shanticon.ttf?ueun15') format('truetype'); font-weight: normal; font-style: normal;
 					}
 
-::-webkit-scrollbar { width: 12px }
+::-webkit-scrollbar { width: 10px }
 ::-webkit-scrollbar-track { background:#eee }
-::-webkit-scrollbar-thumb { border-radius:2px ;background:#aaa }
+::-webkit-scrollbar-thumb { border-radius:8px ;background:#aaa }
 ::-webkit-scrollbar-thumb:hover { background: #888 }
 ::-webkit-input-placeholder { color: #bbb }	::placeholder { color: #bbb }

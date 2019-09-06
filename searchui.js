@@ -12,7 +12,7 @@
 	Requires: 	jQuery and jQueryUI									// Almost any version should work
 	CSS:		searchui.css										// All styles are prefixed with 'sui-'
 	JS:			ECMA-6												// Uses lambda (arrow) functions
-	Images:		img/loading.gif, img/gradient.jpg
+	Images:		loading.gif, gradient.jpg
 	Messages: 	sui=page|url ->										// Hides search and send url to direct Drupal to
 				sui=query|searchState -> 							// Asks Drupul to turn search state (JSON) into SOLR query string
 				sui=open|[searchState] ->							// Tells Drupal search page is open
@@ -43,6 +43,7 @@ class SearchUI  {
 		this.assets.Subjects={ c:"#cc4c39", g:"&#xe634", n:39 };									// Subjects
 		this.assets.Terms=   { c:"#a2733f", g:"&#xe635", n:39 };									// Terms
 	
+		this.GetFacetData();																		// Get data about SOLR categories
 		this.SetSearchState(null);																	// Init search state to default
 		this.AddFrame();																			// Add div framework
 		this.Query();																				// Get intial data
@@ -58,13 +59,14 @@ class SearchUI  {
 	{
 		if (!state) {
 			this.ss={};																				// Clear search state
-			this.ss.solrUrl="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select";	// SOLR production url
+			this.ss.solrUrl="https://ss251856-us-east-1-aws.measuredsearch.com/solr/kmassets_dev/select";	// SOLR production url
 			this.ss.mode="input";																	// Current mode - can be input, simple, or advanced
 			this.ss.view="Card";																	// Dispay mode - can be List, Grid, or Card
 			this.ss.sort="Alpha";																	// Sort mode - can be Alpha, Date, or Auther
 			this.ss.type="All";																		// Current item types
 			this.ss.page=0;																			// Current page being shown
 			this.ss.pageSize=100;																	// Results per page	
+			this.collection=[];																		// Hold all possible collections
 			this.ss.query={ 																		// Current query
 				text:"",																			// Search word 
 				place:[],																			// Places
@@ -76,8 +78,22 @@ class SearchUI  {
 				collection:[],																		// Collections
 				};																
 			}
+this.ss.query.collection=[{ title:"Tibetan and Himalayan Library", val:"collections-3456", bool:"IN" }];
 		}
 
+		GetFacetData()
+		{
+			var type="collection";
+			var url="https://ss251856-us-east-1-aws.measuredsearch.com/solr/kmassets_dev/select?q=asset_type%3A(images%20audio-video)&wt=json&rows=0&json.facet=%7Bcollection:%7Blimit:300,type:%22terms%22,field:%22collection_title%22,facet:%7Bcollection_nid:%7Bfield:%22collection_nid%22,type:%22terms%22%7D%7D%7D%7D";
+			$.ajax( { url:url, dataType:'jsonp', jsonp:'json.wrf' }).done((data)=> {				// Get facets
+				var i,val;
+				if (!data || !data.facets || !data.facets[type] || !data.facets[type].buckets)		// If no buckets
+					return;																			// Quit
+				var buckets=data.facets[type].buckets;												// Point at buckets
+				for (i=0;i<buckets.length;++i)  													// For each bucket
+					this[type].push({ title: buckets[i].val, id:'' });								// Add to list								
+				});
+		}
 
 	AddFrame()																					// ADD DIV FRAMEWORK
 	{
@@ -94,8 +110,7 @@ class SearchUI  {
 			<div id='sui-header' class='sui-header'>
 				<div id='sui-headLeft' class='sui-headLeft'></div>
 				<div id='sui-headRight' class='sui-headRight'></div>
-			</div><
-			div id='sui-left' class='sui-left'>
+			</div><			div id='sui-left' class='sui-left'>
 				<div id='sui-results' class='sui-results scrollbar'></div>
 				<div id='sui-footer' class='sui-footer'></div>
 				<div id='sui-adv' class='sui-adv'></div>
@@ -133,16 +148,20 @@ class SearchUI  {
 		$("#sui-typeList").remove();																// Remove type list
 		if (mode) this.ss.mode=mode;																// If mode spec'd, use it
 		this.DrawResults();																			// Draw results page if active
-		this.DrawSearchUI();																		// Draw search UI if active
+		this.DrawAdvanced();																		// Draw search UI if active
 	}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  QUERY
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	Query()																						// QUERY AND UPDATE RESULTS
 	{
 		this.LoadingIcon(true,64);																	// Show loading icon
 		var s=this.ss.page*this.ss.pageSize;														// Starting item number
-		var asset="*";																				// Assume all assets
+		var asset="";																				// Assume all assets
 		if (this.ss.type != "All")																	// If not all
-			asset="asset_type%3A%22"+this.ss.type.toLowerCase()+"%22";								// Set asset type						
+			asset="asset_type%3A"+this.ss.type.toLowerCase();										// Set asset type						
 		var search=this.FormQuery();																// Form SOLR search from query object
 		var url=this.ss.solrUrl+"/?"+"q="+asset+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+s+"&rows="+this.ss.pageSize;
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done((data)=> {
@@ -154,9 +173,10 @@ class SearchUI  {
 				if (o.asset_subtype) o.asset_subtype=o.asset_subtype.charAt(0).toUpperCase()+o.asset_subtype.slice(1);	
 				if (o.ancestors_txt && o.ancestors_txt.length)	o.ancestors_txt.splice(0,1);		// Remove 1st ancestor from trail
 				if (o.asset_type == "Audio-video") 	o.asset_type="Audio-Video";						// Handle AV
-				else if (!o.url_thumb)				o.url_thumb="img/gradient.jpg";					// Use gradient for generic
+				else if (!o.url_thumb)				o.url_thumb="gradient.jpg";						// Use gradient for generic
 				if (o.display_label) o.title=o.display_label;										// Get title form display
 				}
+			this.assets[this.ss.type].n=data.response.numFound;										// Set counts
 			this.LoadingIcon(false);																// Hide loading icon
 			this.DrawResults();																		// Draw results page if active
 			});
@@ -165,16 +185,17 @@ class SearchUI  {
 
 	FormQuery()																					// FORM SOLR QUERY FROM SEARCH OBJECT
 	{
-		var search="";
+		var str="",search="*";																		// Assume not filtering of words
 		if (this.ss.query.text) {																	// If a filter spec'd
-			var str="%22*"+this.ss.query.text.toLowerCase()+"*%22";									// Search term
-			search+=" AND (title%3A"+str;															// Look at title
+			str="*"+this.ss.query.text.toLowerCase()+"*";											// Search term
+			search=" (title%3A"+str;																// Look at title
 			search+=" OR caption%3A"+str;															// Or caption 
 			search+=" OR summary%3A"+str+")";														// Or summary
 			}
-/*		if (_this.filterCollect) {																	// If a collection filter spec'd
-			str="*"+_this.filterCollect.toLowerCase()+"*";											// Search term
+/*		if (this.ss.query.collection.length) {														// If a collection filter spec'd
+			str="*"+this.ss.query.collection[0].title.toLowerCase()+"*";							// Search term
 			search+=" AND collection_title%3A"+str;													// And collection title
+			trace(search)	
 			}
 		if (_this.placeFilter)																		// If a place filter spec'd 
 			search+=" AND kmapid%3A%28%22"+_this.placeFilter.toLowerCase()+"%22%29";				// Place search term 
@@ -183,7 +204,7 @@ class SearchUI  {
 		if (_this.user) 																			// If a user spec'd
 			search+=" AND node_user%3A*"+_this.user+"*";											// Look at user
 */
-	return search;																					// Return formatted query
+		return search;																					// Return formatted query
 }
 
 	GetAssetCounts(search) 																		// GET ASSET COUNTS
@@ -205,6 +226,10 @@ class SearchUI  {
 			});
 	}
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  RESULTS
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	DrawResults()																				// DRAW RESULTS SECTION
 	{
 		$("#sui-results").scrollTop(0);																// Scroll to top
@@ -222,7 +247,7 @@ class SearchUI  {
 			$("#sui-left").slideDown();																// Slide down
 			}
 		else if (this.ss.mode == "advanced") {														// Advanced search
-			$("#sui-left").css({ width:this.wid-$("#sui-adv").width()-4+"px",display:"inline-block"});	// Size and show results area
+			$("#sui-left").css({ width:this.wid-$("#sui-adv").width()-35+"px",display:"inline-block"});	// Size and show results area
 			$("#sui-adv").css({ display:"inline-block" });										// Show search ui
 			}
 		$("#sui-headLeft").css({ display:"inline-block" });											// Show left header
@@ -325,7 +350,7 @@ class SearchUI  {
 			var p=$("#sui-typePage").val();															// Get value
 			if (!isNaN(p))   this.ss.page=Math.max(Math.min(p-1,lastPage),0);						// If a number, cap 0-last	
 			this.Query(); 																			// Get new results
-		});							
+			});							
 	}
 
 	DrawItems()																					// DRAW RESULT ITEMS
@@ -418,7 +443,7 @@ class SearchUI  {
 			}
 		
 		o=this.curResults[num];																		// Point at item
-		if (!o.url_thumb.match(/img\/gradient/)) 													// If not a generic
+		if (!o.url_thumb.match(/gradient.jpg/)) 													// If not a generic
 			str+="<img src='"+o.url_thumb+"' class='sui-itemPic' id='sui-itemPic-"+num+"'>";		// Add pic
 		str+="<div class='sui-itemInfo'>";															// Info holder
 		str+=this.assets[o.asset_type].g+"&nbsp;&nbsp;"+o.asset_type.toUpperCase();					// Add type
@@ -477,7 +502,7 @@ class SearchUI  {
 		var o=this.curResults[num];																	// Point at item
 		str+="<img src='"+o.url_thumb+"' class='sui-gridPic' id='sui-itemPic-"+num+"'>";			// Add pic
 		str+="<div id='sui-gridInfo-"+num+"' class='sui-gridInfo'>&#xe67f</div>";					// Add info button
-		if (o.url_thumb.match(/img\/gradient/))	{													// If a generic
+		if (o.url_thumb.match(/gradient.jpg/))	{														// If a generic
 			 str+=`<div class='sui-gridGlyph' style='color:${this.assets[o.asset_type].c}'>
 			 ${this.assets[o.asset_type].g}
 			 <p style='font-size:14px;margin-top:0'>${o.asset_type.toUpperCase()}</p>
@@ -498,7 +523,7 @@ class SearchUI  {
 		if (o.asset_subtype == "Audio")			gg="&#xe60a";										// Audio
 		else if (o.asset_subtype == "Video")	gg="&#xe62d";										// Video
 		str+="<div class='sui-cardType'>"+gg+"</div>";												// Show icon
-		if (o.url_thumb.match(/img\/gradient/))														// If a generic
+		if (o.url_thumb.match(/gradient.jpg/))														// If a generic
 			 str+=`<div class='sui-cardGlyph' style='color:${this.assets[o.asset_type].c}'>${this.assets[o.asset_type].g}</div>`;
 		str+="<div class='sui-cardInfo'><div class='sui-cardTitle' id='sui-itemTitle-"+num+"'><b>"+o.title+"</b><br></div>";	// Add title
 		str+="<div style='border-top:.5px solid "+c+";height:1px;width:100%;margin:6px 0 6px 0'></div>";	// Dividing line
@@ -515,87 +540,91 @@ class SearchUI  {
 		return str+"</div>";																		// Return items markup
 	}
 
-//		https://ss251856-us-east-1-aws.measuredsearch.com/solr/kmassets_dev/select?q=asset_type%3A(images%20audio-video)&wt=json&rows=0&json.facet={collection:{limit:300,type:%22terms%22,field:%22collection_title%22,facet:{subtype:{field:%22collection_nid%22,type:%22terms%22}}}}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  ADVANCED SEARCH
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-	DrawSearchUI()																				// DRAW SEARCH UI SECTION
+	DrawAdvanced()																				// DRAW SEARCH UI SECTION
 	{
-this.ss.collection=["Tibetan and Himalayan Library-|-3456"];
-		var i;
-		var facets=["place","collection","language","user","feature","subject","term","relationship"];
+		var i,j;
+		var facets=["place","collection","language","feature","subject","term","relationship"];
 		var icons=["&#xe62b","&#xe633","&#xe670","&#xe600","&#xe634","&#xe634","&#xe635","&#xe638"]
 		var str=`<div class='sui-advTop'>Advanced search<div id='sui-advClose'style='float:right;font-size:12px;cursor:pointer' 
 			title='Hide' onclick='$("#sui-mode").trigger("click")'>
 			&#xe684&nbsp;&nbsp;&nbsp;</div></div><br>`;
 		for (i=0;i<facets.length;++i) {
 			str+=`<div class='sui-advHeader' id='sui-advHeader-${facets[i]}'>
-			${icons[i]}&nbsp;&nbsp;${facets[i].toUpperCase()}S</div>
-			<div class='sui-advValue'  id='sui-advValue-${facets[i]}'></div>
-			<div class='sui-advEdit'   id='sui-advEdit-${facets[i]}'></div>	`;
+			${icons[i]}&nbsp;&nbsp;
+			${facets[i].toUpperCase()}S</div>
+			<div class='sui-advTerm' id='sui-advTerm-${facets[i]}'></div>
+			<div class='sui-advEdit' id='sui-advEdit-${facets[i]}'></div>`;
 			}
-		str+=`<div class='sui-advHeader' id='sui-advHeader-text'>&#xe623&nbsp;&nbsp;SEARCH WORD OPTIONS</div>
-		<div class='sui-advValue'  id='sui-advValue-text'></div>
-		<div class='sui-advEdit'   id='sui-advEdit-text'></div>`;
+		str+=`<div class='sui-advHeader' id='sui-advOptions-text'>&#xe623&nbsp;&nbsp;SEARCH WORD OPTIONS</div>
+			<div class='sui-advTerm' id='sui-advTerm-text'></div>
+			<div class='sui-advEdit' id='sui-advEdit-text'></div>`;
 		$("#sui-adv").html(str.replace(/\t|\n|\r/g,""));											// Remove format and add to div
+
+i=1;	//		for (i=0;i<facets.length;++i) 
+
+			for (j=0;j<this.ss.query[facets[i]].length;++j) {										// For each facet	
+				var o=sui.ss.query[facets[i]][j];													// Point at facet to add to div
+					var str=`<div><div class='sui-advTermRem' id='sui-advKill-${facets[i]}-${j}'>&#xe60f</div>
+						<div class='sui-advEditBool' id='sui-advBool-${facets[i]}-${j}' title='Change boolean method'>${o.bool}</div>
+						<i> ${o.title}</i></div>`;
+						$("#sui-advTerm-"+facets[i]).append(str);
+				}
 	
-		var s=this.ss.collection[0].split("-|-")[0];
-		
-		$("#sui-advValue-collection").html(
-			`<div class='sui-advValueRem' id='sui-advKill-collection-0'>&#xe60f</div>
-			<div class='sui-advEditBool' id='sui-advBool-collection-0' title='Change boolean method'>AND</div>
-			<i> ${s.replace(/^-|\|/,"")}</i>
-			`);
-		
 		$("[id^=sui-advBool-]").on("click",(e)=> {
-			var c="";
 			var b=$("#"+e.currentTarget.id).html();													// Get current boolean state
-			if (b == "AND")		{ b="OR"; c="|"; }													// Toggle through options
-			else if (b == "OR") { b="NOT"; c="-"; }													// Set prefix
-			else 				  b="AND";															// Set label
+			if (b == "IN")	  b="ALSO"; 															// Toggle through options
+			else if (b == "ALSO") b="NOT";												
+			else 				  b="IN";															
 			$("#"+e.currentTarget.id).html(b);														// Set new value
 			var v=e.currentTarget.id.split("-");													// Get ids
-			this.ss[v[2]][v[3]]=c+this.ss[v[2]][v[3]].replace(/^-|\|/,"");							// Replace boolean character
-		});
+			this.ss.query[v[2]][v[3]].bool=b;														// Set state
+			});
 			
 		$("[id^=sui-advKill-]").on("click",(e)=> {
 			var v=e.currentTarget.id.split("-");													// Get ids
-		});
+			this.ss.query[v[2]].splice(v[3],1);														// Remove
+			this.DrawAdvanced();																	// Redraw
+			});
 
 		var curFacet;
 
 		$("[id^=sui-advHeader-]").on("click",(e)=> {
-			var tot=121;
-			if (tot > 300) tot="300+";																// Too many
 			var id=e.currentTarget.id.substring(14);												// Get facet name		
 			curFacet=id;
-			if ($("#sui-advEdit-"+id).html().length) {												// If open
-				$("#sui-advEdit-"+id).slideUp(400,function() { $(this).html(""); });				// Close it and erase contents
+	id="collection";
+			var tot=this[id].length;																// Number of items
+			if (tot > 300) tot="300+";																// Too many, cap to 300
+			if ($("#sui-advEdit-"+curFacet).html().length) {										// If open
+				$("#sui-advEdit-"+curFacet).slideUp(400,function() { $(this).html(""); });			// Close it and erase contents
 				return;																			
 				}
-				str=`
-				<input style='width:90px;border:1px solid #999;border-radius:12px;font-size:11px;padding-left:6px' placeholder='Search this list'>
+			str=`<input style='width:90px;border:1px solid #999;border-radius:12px;font-size:11px;padding-left:6px' placeholder='Search this list'>
 				<div class='sui-advEditBut' id='sui-advEditSort' title='Sort'>&#xe652</div>
 				<div class='sui-advEditBut' id='sui-advMap' title='Map or List view'>&#xe638</div>
-				<div class='sui-advEditNums'>${tot+" "+id+"s"}</div>
-				<div class='sui-advEditList'>
-					<div class='sui-advEditLine'>&#xe67c&nbsp;Tibetan and Himalayan Library</div>
-					<div class='sui-advEditLine'>&#xe67c&nbsp;Oral Cultures of Bhutan</div>
-					<div class='sui-advEditLine'>&#xe67c&nbsp;Larung Gar Audio Collection</div>
-					<div class='sui-advEditLine'>&#xe67c&nbsp;Language Tree</div>
-					<div class='sui-advEditLine'>&#xe67c&nbsp;Royal University of Bhutam</div>
-					<div class='sui-advEditLine'>&#xe67c&nbsp;Tom Huber Collection</div>
-				</div>
-				`;
-			$("#sui-advEdit-"+id).html(str.replace(/\t|\n|\r/g,""));
-			$("#sui-advEdit-"+id).slideDown();
+				<div class='sui-advEditNums'>${tot+" "+curFacet+"s"}</div>
+				<div class='sui-advEditList'>`;
+
+			var n=Math.min(300,this[id].length);													// Cap at 300
+			for (i=0;i<n;++i)																		// For each one
+				str+=`<div class='sui-advEditLine' id='sui-advEditLine-${id}-${i}'>&#xe67c&nbsp;${this[id][i].title}</div>`;		// Add item to list
+				
+			$("#sui-advEdit-"+curFacet).html(str+"</div>".replace(/\t|\n|\r/g,""));					// Add to div
+			$("#sui-advEdit-"+curFacet).slideDown();												// Show it
+			
+			$("[id^=sui-advEditLine-]").on("click",(e)=> {											// ON ITEM CLICK
+				var v=e.currentTarget.id.split("-");												// Get ids		
+				var num=this.ss.query[v[2]].length;													// Number to add to												
+				this.ss.query[v[2]].push({});														// Add obj
+				this.ss.query[v[2]][num].title=this[v[2]][v[3]].title;								// Get title
+				this.ss.query[v[2]][num].id=this[v[2]][v[3]].id;									// Id
+				this.ss.query[v[2]][num].bool="IN";													// Bool
+				this.DrawAdvanced();																// Redraw
+				});
 			});
-		$("[id^=sui-advEditLine-]").on("click",(e)=> {
-//			var id=e.currentTarget.id.substring(12);												// Get facet name		
-			$("#sui-advEdit-"+curFacet).slideUp(400,function() { $(this).html(""); });				// Close it and erase contents
-		});
-	
 	}
 
 	LoadingIcon(mode, size)																		// SHOW/HIDE LOADING ICON		
@@ -604,7 +633,7 @@ this.ss.collection=["Tibetan and Himalayan Library-|-3456"];
 			$("#sui-loadingIcon").remove();															// Remove it
 			return;																					// Quit
 			}
-		var str="<img src='img/loading.gif' width='"+size+"' ";										// Img
+		var str="<img src='loading.gif' width='"+size+"' ";											// Img
 		str+="id='sui-loadingIcon' style='position:absolute;top:calc(50% - "+size/2+"px);left:calc(50% - "+size/2+"px);z-index:5000'>";	
 		$("#sui-results").append(str);																// Add icon to results
 	}
