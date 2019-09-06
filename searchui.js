@@ -161,7 +161,7 @@ this.ss.query.collection=[{ title:"Tibetan and Himalayan Library", val:"collecti
 		var s=this.ss.page*this.ss.pageSize;														// Starting item number
 		var asset="";																				// Assume all assets
 		if (this.ss.type != "All")																	// If not all
-			asset="asset_type%3A"+this.ss.type.toLowerCase();										// Set asset type						
+			asset="asset_type%3A"+this.ss.type.toLowerCase()+" AND ";								// Set asset type						
 		var search=this.FormQuery();																// Form SOLR search from query object
 		var url="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmassets/select/?"+"q="+asset+search+"&fl=*&wt=json&json.wrf=?&sort=id asc&start="+s+"&rows="+this.ss.pageSize;
 		$.ajax( { url: url,  dataType: 'jsonp', jsonp: 'json.wrf' }).done((data)=> {
