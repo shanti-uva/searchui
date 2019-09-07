@@ -143,7 +143,23 @@
 .sui-advEditList {	overflow-x:hidden; max-height:110px; border-top:2px solid #a4baec; margin-top:6px; padding-top:8px;
 					}
 .sui-advEditLine { 	cursor:pointer; padding:2px; border-radius:5px;}	.sui-advEditLine:hover { background-color: #dee7f1
-					}					
+					}
+
+/* TREE */
+
+.sui-tree {      	user-select: none; overflow-x:hidden; max-height:110px; border-top:2px solid #a4baec; margin-top:6px; 
+					padding:0 6px; font-size:12px;
+					}
+.sui-tree ul { 		list-style: none outside none; padding: 0 }
+.sui-tree li a { 	line-height: 18px; cursor: pointer; }
+.sui-tree > ul > li > a { color: #3B4C56; display: block;  font-weight: normal; position: relative; text-decoration: none; }
+.sui-tree li.parent > a { padding: 0 0 0 16px;  }
+.sui-tree li.parent > a:before { background-image: url("../treebuts.png"); content: ""; display: block;
+								height: 11px; left: 0; position: absolute; top: 3px; width: 11px;  background-position: 0px;
+					}
+.sui-tree ul li.active > a:before { background-position: 22px; }
+.sui-tree ul li ul 	{ border-left: 1px solid #ccc;  display: none; margin: 0 0 0 5px; padding: 0 0 0 10px; }
+.sui-tree ul li ul li { position: relative; }
 
 @font-face {		font-family: 'shanticon'; src: url('shanticon.ttf?ueun15') format('truetype'); font-weight: normal; font-style: normal;
 					}

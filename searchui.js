@@ -92,9 +92,10 @@ class SearchUI  {
 				var i,val;
 				if (!data || !data.facets || !data.facets[type] || !data.facets[type].buckets)		// If no buckets
 					return;																			// Quit
-				var buckets=data.facets[type].buckets;												// Point at buckets
+					var buckets=data.facets[type].buckets;											// Point at buckets
 				for (i=0;i<buckets.length;++i)  													// For each bucket
-					this[type].push({ title: buckets[i].val, id:'' });								// Add to list								
+					this[type].push({ title: buckets[i].val, count:buckets[i].count, id:'' });		// Add to list								
+				this[type].sort((a,b) => (a.count > b.count) ? -1 : 1);								// Sort by counts
 				});
 		}
 
@@ -561,9 +562,8 @@ class SearchUI  {
 			<div class='sui-advEdit' id='sui-advEdit-text'></div>`;
 		$("#sui-adv").html(str.replace(/\t|\n|\r/g,""));											// Remove format and add to div
 
-i=1;	//		for (i=0;i<facets.length;++i) 
-
-			for (j=0;j<this.ss.query[facets[i]].length;++j) {										// For each facet	
+		for (i=0;i<2;++i) 																			// For each face
+			for (j=0;j<this.ss.query[facets[i]].length;++j) {										// For each term in facet	
 				var o=sui.ss.query[facets[i]][j];													// Point at facet to add to div
 					var str=`<div><div class='sui-advTermRem' id='sui-advKill-${facets[i]}-${j}'>&#xe60f</div>
 						<div class='sui-advEditBool' id='sui-advBool-${facets[i]}-${j}' title='Change boolean method'>${this[o.bool]}</div>
@@ -580,23 +580,23 @@ i=1;	//		for (i=0;i<facets.length;++i)
 			$("#"+e.currentTarget.id).html(this[b]);												// Set new value
 			this.ss.query[v[2]][v[3]].bool=b;														// Set state
 			this.Query();																			// Run query and show results
-		});
+			});
 			
 		$("[id^=sui-advKill-]").on("click",(e)=> {
 			var v=e.currentTarget.id.split("-");													// Get ids
 			this.ss.query[v[2]].splice(v[3],1);														// Remove
 			this.DrawAdvanced();																	// Redraw
 			this.Query();																			// Run query and show results
-		});
-
+			});
 
 		$("[id^=sui-advHeader-]").on("click",(e)=> {												// ON FLACET HEADER CLICK
 			var id=e.currentTarget.id.substring(14);												// Get facet name		
-			this.DrawFacetList(id);																	// Open list view
+			if (id.match(/place|subject|term/))		this.DrawFacetTree(id);							// Open tree tree				
+			else									this.DrawFacetList(id);							// Open list view
 			});
 		}
 		
-		DrawFacetList(id)
+	DrawFacetList(id)
 		{
 			var i;
 			var sorted=0;
@@ -622,15 +622,9 @@ i=1;	//		for (i=0;i<facets.length;++i)
 			
 			$("[id^=sui-advEditLine-]").on("click",(e)=> {											// ON ITEM CLICK
 				var v=e.currentTarget.id.split("-");												// Get ids		
-				var num=this.ss.query[id].length;													// Number to add to												
-				this.ss.query[id].push({});															// Add obj
-				this.ss.query[id][num].title=items[v[2]].title;										// Get title
-				this.ss.query[id][num].id=items[v[2]].id;											// Id
-				this.ss.query[id][num].bool="AND";													// Bool
-				this.DrawAdvanced();																// Redraw
-				this.Query();																		// Run query and show results
+				this.AddNewTerm(id,items[v[2]].title,items[v[2]].id,"AND");							// Add term to search state
 				});
-			
+
 			$("#sui-advEditFilter").on("keydown",(e)=> {											// ON FILTER CHANGE
 				var line,found=0;
 				var r=$("#sui-advEditFilter").val();												// Get filter text
@@ -671,6 +665,159 @@ i=1;	//		for (i=0;i<facets.length;++i)
 				$("#sui-advMap").css("color","#668eec");											// On
 				});                  
 		}
+
+		AddNewTerm(facet, title, id, bool)														// ADD NEW TERM TO SEARCH STATE
+		{
+			var num=this.ss.query[facet].length;													// Number to add to												
+			this.ss.query[facet].push({});															// Add obj
+			this.ss.query[facet][num].title=title;													// Get title
+			this.ss.query[facet][num].id=id;														// Id
+			this.ss.query[facet][num].bool=bool;													// Bool
+			this.DrawAdvanced();																	// Redraw
+			this.Query();																			// Run query and show results
+		}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TREE 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	DrawFacetTree(id)  																			// DRAW FACET TREE
+	{
+		var div="#sui-tree"+id;																		// Tree div
+		if ($(div).css("display") == "block") {														// If showing
+			$(div).css("display","none");															// Hide it
+			return;																					// Quit
+			}
+		else																						// Not showing	
+			$(div).css("display","block");															// Show it
+
+		if (!$(div).length) {																		// If doesn't exist
+			var str=`<input id='sui-advEditFilter' style='width:90px;border:1px solid #999;border-radius:12px;font-size:11px;padding-left:6px' placeholder='Search this list'>
+			<div id='sui-tree${id}' class='sui-tree'><ul>`;		
+			if (id == "place") {
+				str+="<li class='parent'><a id='places-13738' data-path='13735/13738'>Africa</a>";
+				str+="<li class='parent'><a id='places-13742' data-path='13735/13742'>Antarctica</a>";
+				str+="<li class='parent'><a id='places-13740' data-path='13735/13740'>Asia</a>";
+				str+="<li class='parent'><a id='places-13739' data-path='13735/13739'>Europe</a>";
+				str+="<li class='parent'><a id='places-13736' data-path='13735/13736'>North America</a>";
+				str+="<li class='parent'><a id='places-13741' data-path='13735/13741'>Oceania</a>";
+				str+="<li class='parent'><a id='places-13737' data-path='13735/13737'>South America</a>";
+				}
+			else{
+				str+="<li class='parent'><a id='subjects-8868' data-path='8868'>Cultural Landscapes</a>";
+				str+="<li class='parent'><a id='subjects-6793' data-path='6793'>General</a>";
+				str+="<li class='parent'><a id='subjects-20'   data-path='20'  >Geographic Features</a>";
+				str+="<li class='parent'><a id='subjects-6404' data-path='6404'>Higher Education Digital Tools</a>";
+				str+="<li class='parent'><a id='subjects-6664' data-path='6664'>Mesoamerican Studies</a>";
+				str+="<li class='parent'><a id='subjects-7174' data-path='7174'>Politics</a>";
+				str+="<li class='parent'><a id='subjects-6844' data-path='6844'>Teaching Resources</a>";
+				str+="<li class='parent'><a id='subjects-6403' data-path='6403'>Tibet and Himalayas</a>";
+				}
+				$("#sui-advEdit-"+id).html(str+"</ul></div>".replace(/\t|\n|\r/g,""));					// Add to div
+				$("#sui-advEdit-"+id).slideDown();														// Show it
+	
+			$('.sui-tree li').each( function() {                                						// For each element
+				if ($(this).children('ul').length > 0)                       							// If has children 
+					$(this).addClass('parent');                              							// Make parent class
+				});
+
+			$('.sui-tree li > a').on("click", function(e) {												// ON CLICK OF NODE TEXT
+				handleClick($(this),e);  																// Handle
+				});      
+			}
+			
+		function handleClick(row, e)																// HANDLE NODE CLICK
+		{
+			if (e.offsetX < 12) {                                         				  				// In icon
+				if (row.parent().children().length == 1) 												// If no children
+					LazyLoad(row);																		// Lazy load from SOLR
+				else{																					// Open or close
+					row.parent().toggleClass('active');                         						// Toggle active class on or off
+					row.parent().children('ul').slideToggle('fast');            						// Slide into place
+					}
+				}
+			else sui.AddNewTerm(id,$("#"+e.target.id).text(),e.target.id,"AND");						// Add term to search state and refresh
+		}
+
+		function LazyLoad(row) 															// ADD NEW NODES TO TREE
+		{
+			if (row.parent().children().length == 1) {										// If no children, lazy load 
+				var base="https://ss395824-us-east-1-aws.measuredsearch.com/solr/kmterms_prod";	// Base url
+				var path=""+row.data().path;												// Get path	as string										
+					var lvla=path.split("/").length+1;										// Get level
+				var type=row.prop("id").split('-')[0];										// Get type
+				var url=buildQuery(base,type,path,lvla,lvla);								// Build query
+				$.ajax( { url: url, dataType: 'jsonp' } ).done(function(res) {				// Run query
+					var o,i,re;
+					var str="<ul style='display:none'>";									// Wrapper
+					var f=res.facet_counts.facet_fields.ancestor_id_path.join();			// List of facets
+					res.response.docs.sort(function(a,b) { return (a.header > b.header) ? 1 : -1 }); // Sort
+					for (i=0;i<res.response.docs.length;++i) {								// For each child
+						o=res.response.docs[i];												// Point at child
+						re=new RegExp("\/"+o.id.split("-")[1]);								// Id
+						str+="<li";															// Start row
+						if (f && f.match(re))	str+=" class='parent'"						// If has children, add parent class
+						str+="><a id='"+o.id;												// Add id
+						str+="' data-path='"+o.ancestor_id_path+"'>";						// Add path
+						str+=o.header+"</a></li>";											// Add label
+						}
+					if (res.response.docs.length) {
+						row.after(str+"</ul>");												// Add to tree
+						row.parent().toggleClass('active');                         		// Toggle active class on or off
+						row.parent().children('ul').slideToggle('fast');            		// Slide into place
+						$('.sui-tree li > a').off();										// Clear handlers
+						$('.sui-tree li > a').on("click",function(e) { handleClick($(this),e); }); 	// Restore handler
+						}
+					});
+				}
+			}
+
+	// THIS FUNCTION IS STRAIGHT FROM YUJI 3/15/18 --  sites/all/libraries/shanti_kmaps_tree/js/jquery.kmapstree.js
+
+	function buildQuery(termIndexRoot, type, path, lvla, lvlb) 
+	{
+		path = path.replace(/^\//, "").replace(/\s\//, " ");  // remove root slashes
+		if (path === "") {
+			path = "*";
+		}
+
+		var fieldList = [
+			"header",
+			"id",
+			"ancestor*",
+			"caption_eng",
+			"level_i"
+		].join(",");
+
+		var result =
+			termIndexRoot + "/select?" +
+			"df=ancestor_id_path" +
+			"&q=" + path +
+			"&wt=json" +
+			"&indent=true" +
+			"&limit=" + 2000 +
+			"&facet=true" +
+			"&fl=" + fieldList +
+			"&indent=true" +
+
+			"&fq=tree:" + type +
+			"&fq=level_i:[" + lvla + "+TO+" + (lvlb + 1) + "]" +
+			"&fq={!tag=hoot}level_i:[" + lvla + "+TO+" + lvlb + "]" +
+
+			"&facet.mincount=2" +
+			"&facet.limit=-1" +
+			"&sort=level_i+ASC" +
+			"&facet.sort=ancestor_id_path" +
+			"&facet.field={!ex=hoot}ancestor_id_path" +
+
+			"&wt=json" +
+			"&json.wrf=?" +
+
+			"&rows=" + 2000;
+
+			return result;
+		}
+	}
 
 	LoadingIcon(mode, size)																		// SHOW/HIDE LOADING ICON		
 	{
