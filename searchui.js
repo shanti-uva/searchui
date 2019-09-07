@@ -28,6 +28,7 @@ class SearchUI  {
 	constructor()   																			// CONSTRUCTOR
 	{
 		sui=this;																					// Save ref to class as global
+		this.AND="IN";	this.OR="ALSO";	this.NOT="NOT";												// Boolean display names
 		this.wid=$("body").width();		this.hgt=$("body").height();								// Set sizes
 		this.curResults="";																			// Returns results
 		this.numItems=0;																			// Number of items																						
@@ -70,15 +71,17 @@ class SearchUI  {
 			this.ss.query={ 																		// Current query
 				text:"",																			// Search word 
 				place:[],																			// Places
+				collection:[],																		// Collections
+				language:[],																		// Languages
+				feature:[],																			// Feature types
 				subject:[],																			// Subjects
 				term:[],																			// Terms
-				asset:[],																			// Assets
-				dateStart:"", dateEnd:"",															// Beginning and ending dates
+				relationship:[],																	// Relationships
 				user:[],																			// Users
-				collection:[],																		// Collections
+				asset:[],																			// Assets
+				dateStart:"", dateEnd:""															// Beginning and ending dates
 				};																
 			}
-this.ss.query.collection=[{ title:"Tibetan and Himalayan Library", val:"collections-3456", bool:"IN" }];
 		}
 
 		GetFacetData()
@@ -185,27 +188,21 @@ this.ss.query.collection=[{ title:"Tibetan and Himalayan Library", val:"collecti
 
 	FormQuery()																					// FORM SOLR QUERY FROM SEARCH OBJECT
 	{
-		var str="",search="*";																		// Assume not filtering of words
+		var i,str,search="*";																		// Assume not filtering of words
 		if (this.ss.query.text) {																	// If a filter spec'd
 			str="*"+this.ss.query.text.toLowerCase()+"*";											// Search term
 			search=" (title%3A"+str;																// Look at title
 			search+=" OR caption%3A"+str;															// Or caption 
 			search+=" OR summary%3A"+str+")";														// Or summary
 			}
-/*		if (this.ss.query.collection.length) {														// If a collection filter spec'd
-			str="*"+this.ss.query.collection[0].title.toLowerCase()+"*";							// Search term
-			search+=" AND collection_title%3A"+str;													// And collection title
-			trace(search)	
-			}
-		if (_this.placeFilter)																		// If a place filter spec'd 
-			search+=" AND kmapid%3A%28%22"+_this.placeFilter.toLowerCase()+"%22%29";				// Place search term 
-		if (_this.subjectFilter) 																	// If subject filter spec'd 
-			search+=" AND kmapid%3A%28%22"+_this.subjectFilter.toLowerCase()+"%22%29";				// Subject search term
-		if (_this.user) 																			// If a user spec'd
-			search+=" AND node_user%3A*"+_this.user+"*";											// Look at user
-*/
-		return search;																					// Return formatted query
-}
+		var o=this.ss.query.collection;																// Point at collection
+		if (o.length) 																				// If spec'd
+			for (i=0;i<o.length;++i) {																// For each term
+				str="*"+o[i].title.toLowerCase()+"*";												// Search term
+				search+=" "+o[i].bool+" collection_title%3A"+str;									// Boolean and title
+				}
+		return search;																				// Return formatted query
+	}
 
 	GetAssetCounts(search) 																		// GET ASSET COUNTS
 	{
@@ -569,63 +566,111 @@ i=1;	//		for (i=0;i<facets.length;++i)
 			for (j=0;j<this.ss.query[facets[i]].length;++j) {										// For each facet	
 				var o=sui.ss.query[facets[i]][j];													// Point at facet to add to div
 					var str=`<div><div class='sui-advTermRem' id='sui-advKill-${facets[i]}-${j}'>&#xe60f</div>
-						<div class='sui-advEditBool' id='sui-advBool-${facets[i]}-${j}' title='Change boolean method'>${o.bool}</div>
+						<div class='sui-advEditBool' id='sui-advBool-${facets[i]}-${j}' title='Change boolean method'>${this[o.bool]}</div>
 						<i> ${o.title}</i></div>`;
 						$("#sui-advTerm-"+facets[i]).append(str);
 				}
 	
 		$("[id^=sui-advBool-]").on("click",(e)=> {
-			var b=$("#"+e.currentTarget.id).html();													// Get current boolean state
-			if (b == "IN")	  b="ALSO"; 															// Toggle through options
-			else if (b == "ALSO") b="NOT";												
-			else 				  b="IN";															
-			$("#"+e.currentTarget.id).html(b);														// Set new value
 			var v=e.currentTarget.id.split("-");													// Get ids
+			var b=this.ss.query[v[2]][v[3]].bool;													// Get current boolean state
+			if (b == "AND")	 		b="OR"; 														// Toggle through options
+			else if (b == "OR") 	b="NOT";												
+			else 				  	b="AND";															
+			$("#"+e.currentTarget.id).html(this[b]);												// Set new value
 			this.ss.query[v[2]][v[3]].bool=b;														// Set state
-			});
+			this.Query();																			// Run query and show results
+		});
 			
 		$("[id^=sui-advKill-]").on("click",(e)=> {
 			var v=e.currentTarget.id.split("-");													// Get ids
 			this.ss.query[v[2]].splice(v[3],1);														// Remove
 			this.DrawAdvanced();																	// Redraw
-			});
+			this.Query();																			// Run query and show results
+		});
 
-		var curFacet;
 
-		$("[id^=sui-advHeader-]").on("click",(e)=> {
+		$("[id^=sui-advHeader-]").on("click",(e)=> {												// ON FLACET HEADER CLICK
 			var id=e.currentTarget.id.substring(14);												// Get facet name		
-			curFacet=id;
-	id="collection";
-			var tot=this[id].length;																// Number of items
+			this.DrawFacetList(id);																	// Open list view
+			});
+		}
+		
+		DrawFacetList(id)
+		{
+			var i;
+			var sorted=0;
 			if (tot > 300) tot="300+";																// Too many, cap to 300
-			if ($("#sui-advEdit-"+curFacet).html().length) {										// If open
-				$("#sui-advEdit-"+curFacet).slideUp(400,function() { $(this).html(""); });			// Close it and erase contents
+			if ($("#sui-advEdit-"+id).html().length) {												// If open
+				$("#sui-advEdit-"+id).slideUp(400,function() { $(this).html(""); });				// Close it and erase contents
 				return;																			
 				}
-			str=`<input style='width:90px;border:1px solid #999;border-radius:12px;font-size:11px;padding-left:6px' placeholder='Search this list'>
-				<div class='sui-advEditBut' id='sui-advEditSort' title='Sort'>&#xe652</div>
-				<div class='sui-advEditBut' id='sui-advMap' title='Map or List view'>&#xe638</div>
-				<div class='sui-advEditNums'>${tot+" "+curFacet+"s"}</div>
-				<div class='sui-advEditList'>`;
+			var items=this["collection"];															// Point at items
+			var tot=items.length;																	// Number of items
+			var n=Math.min(300,items.length);														// Cap at 300
+			if (tot > 300) tot="300+";																// Too many, cap to 300
 
-			var n=Math.min(300,this[id].length);													// Cap at 300
+			var str=`<input id='sui-advEditFilter' style='width:90px;border:1px solid #999;border-radius:12px;font-size:11px;padding-left:6px' placeholder='Search this list'>
+					<div class='sui-advEditBut' id='sui-advEditSort' title='Sort'>&#xe652</div>
+					<div class='sui-advEditBut' id='sui-advMap' title='Map or List view'>&#xe638</div>
+					<div class='sui-advEditNums'> <span id='sui-advListNum'>${tot}</span> ${id}s</div>
+					<div class='sui-advEditList'>`;
 			for (i=0;i<n;++i)																		// For each one
-				str+=`<div class='sui-advEditLine' id='sui-advEditLine-${id}-${i}'>&#xe67c&nbsp;${this[id][i].title}</div>`;		// Add item to list
-				
-			$("#sui-advEdit-"+curFacet).html(str+"</div>".replace(/\t|\n|\r/g,""));					// Add to div
-			$("#sui-advEdit-"+curFacet).slideDown();												// Show it
+				str+=`<div class='sui-advEditLine' id='sui-advEditLine-${i}'>&#xe67c&nbsp;${items[i].title}</div>`;		// Add item to list
+			$("#sui-advEdit-"+id).html(str+"</div>".replace(/\t|\n|\r/g,""));						// Add to div
+			$("#sui-advEdit-"+id).slideDown();														// Show it
 			
 			$("[id^=sui-advEditLine-]").on("click",(e)=> {											// ON ITEM CLICK
 				var v=e.currentTarget.id.split("-");												// Get ids		
-				var num=this.ss.query[v[2]].length;													// Number to add to												
-				this.ss.query[v[2]].push({});														// Add obj
-				this.ss.query[v[2]][num].title=this[v[2]][v[3]].title;								// Get title
-				this.ss.query[v[2]][num].id=this[v[2]][v[3]].id;									// Id
-				this.ss.query[v[2]][num].bool="IN";													// Bool
+				var num=this.ss.query[id].length;													// Number to add to												
+				this.ss.query[id].push({});															// Add obj
+				this.ss.query[id][num].title=items[v[2]].title;										// Get title
+				this.ss.query[id][num].id=items[v[2]].id;											// Id
+				this.ss.query[id][num].bool="AND";													// Bool
 				this.DrawAdvanced();																// Redraw
+				this.Query();																		// Run query and show results
 				});
-			});
-	}
+			
+			$("#sui-advEditFilter").on("keydown",(e)=> {											// ON FILTER CHANGE
+				var line,found=0;
+				var r=$("#sui-advEditFilter").val();												// Get filter text
+				if ((e.keyCode > 31) && (e.keyCode < 91)) r+=e.key;									// Add current key if a-Z
+				var r=RegExp(r,"i");																// Tuun into regex
+				for (i=0;i<n;++i) {																	// For each item
+					line=$("#sui-advEditLine-"+i);													// Point at line
+					if (line.text().match(r))	line.css("display","block"),found++;				// Show item if it matches
+					else						line.css("display","none");							// Hide
+					}
+				if (found == tot)	$("#sui-advListNum").text(tot);									// All
+				else 				$("#sui-advListNum").text(found+"/"+tot);						// Show ones found	
+				});
+
+			$("#sui-advEditSort").on("click",()=> {													// ON SORT BUTTON CLICK
+				sorted=1-sorted;																	// Toggle flag	
+				if (!sorted) {																		// If not sorted
+					$(".sui-advEditList").empty();													// Remove items from list
+					for (i=0;i<n;++i)																// For each one
+						$(".sui-advEditList").append(`<div class='sui-advEditLine' id='sui-advEditLine-${i}'>&#xe67c&nbsp;${items[i].title}</div>`);	// Add item to list
+					$("#sui-advEditSort").css("color","#666");										// Off
+					return;																			// Quit
+					}
+				var itms=$(".sui-advEditLine");														// Items to sort
+				itms.sort(function(a,b) {															// Sort
+					var an=$(a).text().substr(2);													// A name past icon and space
+					var bn=$(b).text().substr(2);													// B name
+					if (an > bn) 		return 1;													// Higher
+					else if (an < bn) 	return -1;													// Lower
+					else				return 0;													// The same
+					i
+					});
+				itms.detach().appendTo($(".sui-advEditList"));
+				$("#sui-advEditSort").css("color","#668eec");										// On
+				});                  
+			
+			$("#sui-advMap").on("click",()=> {														// ON MAP BUTTON CLICK
+				$("#sui-advMap").css("color","#668eec");											// On
+				});                  
+		}
 
 	LoadingIcon(mode, size)																		// SHOW/HIDE LOADING ICON		
 	{
