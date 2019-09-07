@@ -12,7 +12,7 @@
 	Requires: 	jQuery and jQueryUI									// Almost any version should work
 	CSS:		searchui.css										// All styles are prefixed with 'sui-'
 	JS:			ECMA-6												// Uses lambda (arrow) functions
-	Images:		loading.gif, gradient.jpg
+	Images:		loading.gif, gradient.jpg, treebuts.png
 	Messages: 	sui=page|url ->										// Hides search and send url to direct Drupal to
 				sui=query|searchState -> 							// Asks Drupul to turn search state (JSON) into SOLR query string
 				sui=open|[searchState] ->							// Tells Drupal search page is open
@@ -202,6 +202,11 @@ class SearchUI  {
 				str="*"+o[i].title.toLowerCase()+"*";												// Search term
 				search+=" "+o[i].bool+" collection_title%3A"+str;									// Boolean and title
 				}
+		o=this.ss.query.place;																		// Point at place
+		if (o.length) 																				// If spec'd
+			for (i=0;i<o.length;++i) 																// For each term
+				search+=" "+o[i].bool+" kmapid%3A%28%22"+o[i].id.toLowerCase()+"%22%29";			// Place search term 
+
 		return search;																				// Return formatted query
 	}
 
@@ -692,8 +697,7 @@ class SearchUI  {
 			$(div).css("display","block");															// Show it
 
 		if (!$(div).length) {																		// If doesn't exist
-			var str=`<input id='sui-advEditFilter' style='width:90px;border:1px solid #999;border-radius:12px;font-size:11px;padding-left:6px' placeholder='Search this list'>
-			<div id='sui-tree${id}' class='sui-tree'><ul>`;		
+			var str=`<div id='sui-tree${id}' class='sui-tree'><ul>`;		
 			if (id == "place") {
 				str+="<li class='parent'><a id='places-13738' data-path='13735/13738'>Africa</a>";
 				str+="<li class='parent'><a id='places-13742' data-path='13735/13742'>Antarctica</a>";
@@ -728,7 +732,7 @@ class SearchUI  {
 			
 		function handleClick(row, e)																// HANDLE NODE CLICK
 		{
-			if (e.offsetX < 12) {                                         				  				// In icon
+			if (e.offsetX < 20) {                                         				  				// In icon
 				if (row.parent().children().length == 1) 												// If no children
 					LazyLoad(row);																		// Lazy load from SOLR
 				else{																					// Open or close

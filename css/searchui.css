@@ -147,18 +147,17 @@
 
 /* TREE */
 
-.sui-tree {      	user-select: none; overflow-x:hidden; max-height:110px; border-top:2px solid #a4baec; margin-top:6px; 
-					padding:0 6px; font-size:12px;
+.sui-tree {      	user-select: none; overflow-x:hidden; max-height:120px; padding-left:6px; font-size:12px;
 					}
-.sui-tree ul { 		list-style: none outside none; padding: 0 }
-.sui-tree li a { 	line-height: 18px; cursor: pointer; }
+.sui-tree ul { 		list-style:none outside none; padding:0; margin:0 }
+.sui-tree li a { 	line-height: 19px; cursor: pointer; }
 .sui-tree > ul > li > a { color: #3B4C56; display: block;  font-weight: normal; position: relative; text-decoration: none; }
-.sui-tree li.parent > a { padding: 0 0 0 16px;  }
+.sui-tree li.parent > a { padding: 0 0 2px 20px;  }
 .sui-tree li.parent > a:before { background-image: url("../treebuts.png"); content: ""; display: block;
-								height: 11px; left: 0; position: absolute; top: 3px; width: 11px;  background-position: 0px;
+								height: 15px; left:0; position: absolute; top:2px; width: 15px;  background-position:0;
 					}
-.sui-tree ul li.active > a:before { background-position: 22px; }
-.sui-tree ul li ul 	{ border-left: 1px solid #ccc;  display: none; margin: 0 0 0 5px; padding: 0 0 0 10px; }
+.sui-tree ul li.active > a:before { background-position: 30px; }
+.sui-tree ul li ul 	{ border-left: 1px solid #a4baec;  display: none; margin: 0 0 0 7px; padding: 0 0 0 12px; }
 .sui-tree ul li ul li { position: relative; }
 
 @font-face {		font-family: 'shanticon'; src: url('shanticon.ttf?ueun15') format('truetype'); font-weight: normal; font-style: normal;
