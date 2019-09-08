@@ -138,13 +138,16 @@
 					}
 .sui-advEditNums { 	float:right; font-size:9px; padding-top:5px;
 					}
-.sui-advEditBool { 	display:inline-block; cursor:pointer; }   .sui-advEditBool:hover	{ color: #668eec;
+.sui-advEditBool { 	display:inline-block; cursor:pointer; color:#668eec;}   .sui-advEditBool:hover	{ color:#ccc
 					}
 .sui-advEditList {	overflow-x:hidden; max-height:110px; border-top:2px solid #a4baec; margin-top:6px; padding-top:8px;
 					}
 .sui-advEditLine { 	cursor:pointer; padding:2px; border-radius:5px;}	.sui-advEditLine:hover { background-color: #dee7f1
 					}
-
+.sui-advViewListPage { 	display:inline-block; } .sui-advViewListPage:hover { color:#668eec;	
+					}	
+.sui-advViewTreePage { 	display:inline-block; padding:0 4px; color:#ccc; } .sui-advViewTreePage:hover { color: #a4baec;
+					}														
 /* TREE */
 
 .sui-tree {      	user-select: none; overflow-x:hidden; max-height:120px; padding-left:6px; font-size:12px;
