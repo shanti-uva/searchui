@@ -9,18 +9,18 @@
 	The UI retreats to only the search button.
 	A sui=close message is sent to host.
 
-	Requires: 	jQuery and jQueryUI									// Almost any version should work
+	Requires: 	jQuery 												// Almost any version should work
 	CSS:		searchui.css										// All styles are prefixed with 'sui-'
 	JS:			ECMA-6												// Uses lambda (arrow) functions
 	Images:		loading.gif, gradient.jpg, treebuts.png
-	Messages: 	sui=page|url ->										// Hides search and send url to direct Drupal to
-				sui=query|searchState -> 							// Asks Drupul to turn search state (JSON) into SOLR query string
-				sui=open|[searchState] ->							// Tells Drupal search page is open
-				sui=close ->										// Tells Drupal search page is closed
-				-> sui=close										// Tells search page to close
-	Usage: 		var sui=new SearchUI();								// Allocs SearchUI class (fully encapsulated)							
 	Globals:	sui													// Needs to be declared globally!
-
+	Usage: 		var sui=new SearchUI();								// Allocs SearchUI class (fully encapsulated)							
+	Messages: 	sui=page|url ->										// Hides search and send url to direct Drupal to display
+				sui=open|searchState ->								// Tells Drupal search page is open w/ current search state (ss object)
+				sui=query|searchState ->							// Asks Drupul to turn search state (JSON) into SOLR query string
+				sui=close ->										// Tells Drupal search page is closed
+				-> sui=open|[searchState] 							// Open search page is to search state
+				-> sui=close										// Close search page 
 */
 
 class SearchUI  {																					
@@ -64,7 +64,7 @@ class SearchUI  {
 			this.ss.solrUrl="https://ss251856-us-east-1-aws.measuredsearch.com/solr/kmassets_dev/select";	// SOLR production url
 			this.ss.mode="input";																	// Current mode - can be input, simple, or advanced
 			this.ss.view="Card";																	// Dispay mode - can be List, Grid, or Card
-			this.ss.sort="Alpha";																	// Sort mode - can be Alpha, Date, or Auther
+			this.ss.sort="Alpha";																	// Sort mode - can be Alpha, Date, or Author
 			this.ss.type="All";																		// Current item types
 			this.ss.page=0;																			// Current page being shown
 			this.ss.pageSize=100;																	// Results per page	
@@ -104,10 +104,7 @@ class SearchUI  {
 	{
 		var i;
 		var icons=["&#xe62b","&#xe633","&#xe670","&#xe600","&#xe634","&#xe634","&#xe635","&#xe638"];
-		var str=`<div class='sui-advTop'>Advanced search<div id='sui-advClose'style='float:right;font-size:12px;cursor:pointer' 
-			title='Hide' onclick='$("#sui-mode").trigger("click")'>
-			&#xe684&nbsp;&nbsp;&nbsp;</div></div><br>
-			<div id='sui-main' class='sui-main'>
+		var str=`<div id='sui-main' class='sui-main'>
 			<div id='sui-top' class='sui-top'>
 				<div class='sui-search1'>
 				<input type='text' id='sui-search' class='sui-search2' placeholder='Enter Search'>
@@ -123,7 +120,10 @@ class SearchUI  {
 			<div id='sui-left' class='sui-left'>
 				<div id='sui-results' class='sui-results scrollbar'></div>
 				<div id='sui-footer' class='sui-footer'></div>
-				<div id='sui-adv' class='sui-adv'>`;
+				<div id='sui-adv' class='sui-adv'>
+					<div class='sui-advTop'>Advanced search<div id='sui-advClose'style='float:right;font-size:12px;cursor:pointer' 
+					title='Hide' onclick='$("#sui-mode").trigger("click")'>
+					&#xe684&nbsp;&nbsp;&nbsp;</div></div><br>`
 					for (i=0;i<this.facets.length;++i)
 						str+=`<div class='sui-advHeader' id='sui-advHeader-${this.facets[i]}'>
 						${icons[i]}&nbsp;&nbsp;
