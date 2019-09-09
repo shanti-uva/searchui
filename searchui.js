@@ -29,7 +29,6 @@ class SearchUI  {
 	{
 		sui=this;																					// Save ref to class as global
 		this.AND="IN";	this.OR="ALSO";	this.NOT="NOT";												// Boolean display names
-		this.wid=$("body").width();		this.hgt=$("body").height();								// Set sizes
 		this.facets=["place","collection","language","feature","subject","term","relationship"];
 		this.curResults="";																			// Returns results
 		this.numItems=0;																			// Number of items																						
@@ -51,10 +50,7 @@ class SearchUI  {
 		this.Query();																				// Get intial data
 		this.Draw();																				// Draw
 		
-		window.onresize=()=> {																		// ON WIMDOW RESIZE
-			this.wid=$("body").width();		this.hgt=$("body").height();							// Set size
-			this.Draw();																			// Redraw																		
-			};
+		window.onresize=()=> {	this.Draw(); };														// On windo resize,
 		}
 
 	SetSearchState(state)																		// SET OR INIT SEARCH STATE
@@ -171,7 +167,6 @@ class SearchUI  {
 
 	Draw(mode)																					// DRAW SEARCH
 	{
-		$("#sui-main").css({ height:this.hgt+"px", width:this.wid+"px" });							// Position main area
 		$("#sui-typeList").remove();																// Remove type list
 		if (mode) this.ss.mode=mode;																// If mode spec'd, use it
 		this.DrawResults();																			// Draw results page if active
@@ -262,7 +257,7 @@ class SearchUI  {
 		if (this.ss.mode == "input") {																// Just the search box
 			$("#sui-header").css({ display:"none"});												// Show header
 			$("#sui-left").css({ display:"none" });													// Hide results
-			$("#sui-adv").css({ display:"none" });												// Hide search ui
+			$("#sui-adv").css({ display:"none" });													// Hide search ui
 			$("#sui-headLeft").css({ display:"none" });												// Hide left header
 			return;																					// Quit
 			}
@@ -272,7 +267,7 @@ class SearchUI  {
 			$("#sui-left").slideDown();																// Slide down
 			}
 		else if (this.ss.mode == "advanced") {														// Advanced search
-			$("#sui-left").css({ width:this.wid-$("#sui-adv").width()-35+"px",display:"inline-block"});	// Size and show results area
+			$("#sui-left").css({ width:$("body").width()-$("#sui-adv").width()-35+"px",display:"inline-block"});	// Size and show results area
 			$("#sui-adv").css({ display:"inline-block" });										// Show search ui
 			}
 		$("#sui-headLeft").css({ display:"inline-block" });											// Show left header
