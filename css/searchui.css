@@ -123,6 +123,7 @@
 .sui-advTop { 		text-align:center; color:#fff; background-color:#a4baec; padding: 8px; margin:-16px 0 0 -16px; width:calc(100% + 16px);
 					}
 
+					
 .sui-advHeader { 	border-bottom:1px solid #a4baec; padding-bottom:4px; cursor:pointer; width:calc(100% - 32px);
 					} .sui-advHeader:hover { color:#668eec;	
 					}
